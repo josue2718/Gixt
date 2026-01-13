@@ -35,24 +35,15 @@ class _CrearcuentaState extends State<Crearcuenta> {
   final _first_nameController= TextEditingController();
   final _last_nameController= TextEditingController();
   final _phoneController= TextEditingController();
+  final _generoController= TextEditingController();
   final _fecha_nacimientoController= TextEditingController();
   bool _isObscured = true;
-  bool _isObscured1 = true;
   final PageController _controller = PageController();
   int _paginaActual = 0;
-  File? _image;
-  String? _genero;
+File? _image;
 
 void _Crear() async {
-    if (_image == null) {
-      mostrarAlerta(
-        context,
-        titulo: 'Imagen requerida',
-        mensaje: 'Por favor selecciona una imagen de perfil',
-        tipo: TipoAlerta.advertencia,
-      );
-      return;
-    }
+    if (!(_formKeyImg.currentState?.validate() ?? false)) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -69,7 +60,7 @@ void _Crear() async {
       ciudad: "_ciudadController.text",
       longitud:11,
       latitud: 11,
-      genero: _genero ?? "",
+      genero: _generoController.text,
       fechaNacimiento: _fecha_nacimientoController.text,
       tokenFcm: "cfddds",
     );
@@ -79,7 +70,7 @@ void _Crear() async {
 
     if (result['success'] == true) {
       final data = result['data'];
-      String message = "Bienvenido ${data['username']}";
+      String message = "Bienvenido ${data['user']}";
       mostrarAlerta(context,titulo:  "Bienvenido", mensaje:  message, tipo: TipoAlerta.exito);
     } else {
       mostrarAlerta(context,titulo:  "Error", mensaje:  result['message'], tipo: TipoAlerta.error);
@@ -213,6 +204,20 @@ Widget _dot(int index) {
             ),
     );
   }
+  Widget _buidlogo() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: Padding(
+        padding: const EdgeInsets.only(top: 40.0),
+        child: SvgPicture.asset(
+          'assets/logo.svg',
+          width: 300,
+          height: 300,
+          color: colorWhite,
+        ),
+      ),
+    );
+  }
 
   Widget _buidTitle() {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -223,7 +228,7 @@ Widget _dot(int index) {
         constraints: BoxConstraints(maxHeight: screenHeight * 0.2),
         padding: const EdgeInsets.all(3),
         decoration: const BoxDecoration(
-          color: colorprimario,
+          color: colorfondo1,
           borderRadius: BorderRadius.only(
             bottomLeft: Radius.circular(60),
             bottomRight: Radius.circular(0),
@@ -353,7 +358,7 @@ Widget _dot(int index) {
               const SizedBox(height: 20),
                TextFormField(
                 controller: _passwordconfirmarController,
-                obscureText: _isObscured1,
+                obscureText: _isObscured,
                 style: const TextStyle(color: colorWhite),
                 cursorColor: colorWhite,
                 decoration: InputDecoration(
@@ -369,12 +374,12 @@ Widget _dot(int index) {
                   border: const UnderlineInputBorder(),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isObscured1 ? Icons.visibility : Icons.visibility_off,
+                      _isObscured ? Icons.visibility : Icons.visibility_off,
                       color: colorWhite,
                     ),
                     onPressed: () {
                       setState(() {
-                        _isObscured1 = !_isObscured1;
+                        _isObscured = !_isObscured;
                       });
                     },
                   ),
@@ -390,15 +395,6 @@ Widget _dot(int index) {
               const SizedBox(height: 70),
               ElevatedButton(
                 onPressed: () {
-                  if (_passwordController.text != _passwordconfirmarController.text) {
-                    mostrarAlerta(
-                      context,
-                      titulo: 'Las contraseñas no coinciden',
-                      mensaje: 'Por favor, revisa la contraseña',
-                      tipo: TipoAlerta.advertencia,
-                    );
-                    return;
-                  }
                 if (!(_formKey.currentState?.validate() ?? false)) return;
                  _controller.nextPage(
                   duration: const Duration(milliseconds: 300),
@@ -570,70 +566,11 @@ Widget _dot(int index) {
                   return null;
                 },
               ),
-              const SizedBox(height: 20),
-                Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Género',
-                    style: TextStyle(
-                      color: colorWhite,
-                      fontSize: 15,
-                      // fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RadioListTile<String>(
-                          value: 'H',
-                          groupValue: _genero,
-                          activeColor: colorWhite,
-                          title: const Text(
-                            'Hombre',
-                            style: TextStyle(color: colorWhite),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _genero = value;
-                            });
-                          },
-                        ),
-                      ),
-                      Expanded(
-                        child: RadioListTile<String>(
-                          value: 'M',
-                          groupValue: _genero,
-                          activeColor: colorWhite,
-                          title: const Text(
-                            'Mujer',
-                            style: TextStyle(color: colorWhite),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _genero = value;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 50),
+
+              const SizedBox(height: 70),
               ElevatedButton(
                 onPressed: () {
                 if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
-                if (_genero == null) {
-                          mostrarAlerta(
-                            context,
-                            titulo: 'Género requerido',
-                            mensaje: 'Por favor, selecciona tu género',
-                            tipo: TipoAlerta.advertencia,
-                          );
-                          return;
-                        }
                  _controller.nextPage(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeInOut,
@@ -734,7 +671,7 @@ Widget _dot(int index) {
                 child: 
                 Container(
                   decoration: BoxDecoration(
-                  color: colorprimario,
+                  color: colorfondo1,
                   borderRadius: BorderRadius.circular(50)),
                   width: 50,
                   height: 50,

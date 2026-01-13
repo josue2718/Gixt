@@ -49,3 +49,8 @@ flutter:
   assets:
   - .env
   - assets/logo.svg
+  - assets/correcto.png
+  - assets/alerta.png
+  - assets/error.png
+
+

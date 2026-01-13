@@ -4,6 +4,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/CrearCuenta.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/alert.dart';
+import 'package:gixt/pages/root.dart';
 import 'package:gixt/services/auth_service.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
@@ -21,7 +22,7 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   final _formKey = GlobalKey<FormState>(); // Clave para el formulario
-  final _usernameController = TextEditingController(); // Controlador para el nombre de usuario
+  final _emailController = TextEditingController(); // Controlador para el nombre de usuario
   final _passwordController = TextEditingController(); // Controlador para la contraseña
   bool _isObscured = true;
   void _login() async {
@@ -33,7 +34,7 @@ class _LoginState extends State<Login> {
     );
 
     final result = await AuthService.login(
-      email: _usernameController.text,
+      email: _emailController.text,
       password: _passwordController.text,
     );
 
@@ -42,22 +43,15 @@ class _LoginState extends State<Login> {
     if (result['success'] == true) {
       final data = result['data'];
       String message = "Bienvenido ${data['username']}";
-
-      mostrarAlerta(context, "Bienvenido", message);
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (_) => RootPage()),
-      // );
+      Future.microtask(() async {
+        await mostrarAlerta(context,titulo:  "Bienvenido", mensaje:  message, tipo: TipoAlerta.exito);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => RootPage()),
+        );
+      });
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            result['message'],
-            style: const TextStyle(color: colorprimario),
-          ),
-          backgroundColor: colorWhite,
-        ),
-      );
+      mostrarAlerta(context,titulo:  "Error", mensaje:  result['message'], tipo: TipoAlerta.error);
     }
   }
 
@@ -98,7 +92,7 @@ class _LoginState extends State<Login> {
             constraints: BoxConstraints(minHeight: screenHeight * 0.6),
             padding: const EdgeInsets.all(30),
             decoration: const BoxDecoration(
-              color: colorfondo1,
+              color: colorprimario,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(60),
                 topRight: Radius.circular(0),
@@ -128,7 +122,7 @@ class _LoginState extends State<Login> {
                   ),
                   const SizedBox(height: 40),
                   TextFormField(
-                    controller: _usernameController,
+                    controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: colorWhite),
                     cursorColor: colorWhite,

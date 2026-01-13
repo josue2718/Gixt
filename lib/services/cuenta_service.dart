@@ -39,7 +39,7 @@ class CuentaService {
         request.fields['ciudad'] = ciudad;
         request.fields['longitud'] = longitud.toString();
         request.fields['latitud'] = latitud.toString();
-        request.fields['genero'] = "puto";
+        request.fields['genero'] = genero;
         request.fields['fecha_nacimiento'] = fechaNacimiento;
         request.fields['token_fcm'] = tokenFcm;
 
@@ -67,6 +67,14 @@ class CuentaService {
         }
 
         if (streamedResponse.statusCode == 401) {
+          return {
+            'success': false,
+            'message': jsonDecode(responseString)['message'],
+          };
+        }
+
+        if(streamedResponse.statusCode == 400)
+        {
           return {
             'success': false,
             'message': jsonDecode(responseString)['message'],
