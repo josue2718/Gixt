@@ -14,6 +14,7 @@ class AuthService {
     http.Response? response;
 
     while (attempts < maxAttempts) {
+      print('llamando a login');
       try {
         response = await http
             .post(

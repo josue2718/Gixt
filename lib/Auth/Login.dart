@@ -4,8 +4,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/CrearCuenta.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/alert.dart';
+import 'package:gixt/cache.dart';
 import 'package:gixt/pages/root.dart';
-import 'package:gixt/services/auth_service.dart';
+import 'package:gixt/services/Auth/auth_service.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -25,6 +26,21 @@ class _LoginState extends State<Login> {
   final _emailController = TextEditingController(); // Controlador para el nombre de usuario
   final _passwordController = TextEditingController(); // Controlador para la contraseña
   bool _isObscured = true;
+  final PreferencesService _preferencesService = PreferencesService();
+  String? _token;
+  String? _inicio;
+  String? _id;
+
+  Future<void> _saveToken(String token, String inicio, String id) async {
+    await _preferencesService.savePreferences(token, inicio, id );
+    setState(() {
+      _token = token;
+      _inicio = inicio;
+      _id = id;
+      
+    });
+  }
+  
   void _login() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     showDialog(
@@ -44,6 +60,7 @@ class _LoginState extends State<Login> {
       final data = result['data'];
       String message = "Bienvenido ${data['username']}";
       Future.microtask(() async {
+        await _saveToken(data['token'], "true", data['id'].toString());
         await mostrarAlerta(context,titulo:  "Bienvenido", mensaje:  message, tipo: TipoAlerta.exito);
         Navigator.pushReplacement(
           context,

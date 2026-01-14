@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:gixt/services/Auth/auth_service.dart';
 import 'package:http/http.dart' as http;
 
 class CuentaService {
@@ -60,12 +61,26 @@ class CuentaService {
         print(responseString);
 
         if (streamedResponse.statusCode == 200) {
-          return {
-            'success': true,
-            'data': jsonDecode(responseString),
-          };
-        }
 
+          final result = await AuthService.login(
+            email: email,
+            password: password,
+          );
+
+          if (result['success'] == true) {
+            final data = result['data'];
+            print(data);
+            return {
+              'success': true,
+              'data': data,
+            };
+          } else {
+            return {
+            'success': false,
+            'message': result['message'],
+            };
+          }
+        }
         if (streamedResponse.statusCode == 401) {
           return {
             'success': false,

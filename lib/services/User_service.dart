@@ -67,7 +67,7 @@ class ApiUser {
   print("fetch user");
 
   final prefs = await SharedPreferences.getInstance();
-
+  String? id_user = prefs.getString('id');
   // ⏱ cache config
   const cacheDuration = Duration(minutes: 10);
 
@@ -84,6 +84,7 @@ class ApiUser {
           cacheDuration) {
 
     print("✔ Usando cache");
+    print("datos cache: " + cachedData);
     
     final Map<String, dynamic> jsonData =
     json.decode(cachedData);
@@ -103,7 +104,7 @@ class ApiUser {
     isLoading = true;
 
     final response = await http.get(
-      Uri.parse('${dotenv.env['API_URL']}/api/Users/id/019bb83c-cf89-78e5-a366-f9a19c043cf2'),
+      Uri.parse('${dotenv.env['API_URL']}/api/Users/id/${id_user}'),
       headers: headers,
     );
 

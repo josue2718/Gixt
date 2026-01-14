@@ -5,7 +5,9 @@ import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
-import 'package:gixt/services/cuenta_service.dart';
+import 'package:gixt/cache.dart';
+import 'package:gixt/pages/root.dart';
+import 'package:gixt/services/Auth/cuenta_service.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -39,11 +41,25 @@ class _CrearcuentaState extends State<Crearcuenta> {
   bool _isObscured = true;
   bool _isObscured1 = true;
   final PageController _controller = PageController();
+  final PreferencesService _preferencesService = PreferencesService();
   int _paginaActual = 0;
   File? _image;
   String? _genero;
+  String? _token;
+  String? _inicio;
+  String? _id;
 
-void _Crear() async {
+  Future<void> _saveToken(String token, String inicio, String id) async {
+    await _preferencesService.savePreferences(token, inicio, id );
+    setState(() {
+      _token = token;
+      _inicio = inicio;
+      _id = id;
+      
+    });
+  }
+
+  void _Crear() async {
     if (_image == null) {
       mostrarAlerta(
         context,
@@ -74,62 +90,60 @@ void _Crear() async {
       tokenFcm: "cfddds",
     );
 
-
-    Navigator.pop(context); // cerrar loader
+    Navigator.pop(context); 
 
     if (result['success'] == true) {
-      final data = result['data'];
+       final data = result['data'];
       String message = "Bienvenido ${data['username']}";
-      mostrarAlerta(context,titulo:  "Bienvenido", mensaje:  message, tipo: TipoAlerta.exito);
+      Future.microtask(() async {
+        await _saveToken(data['token'], "true", data['id'].toString());
+        await mostrarAlerta(context,titulo:  "Bienvenido", mensaje:  message, tipo: TipoAlerta.exito);
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => RootPage()),
+        );
+      });
+
     } else {
       mostrarAlerta(context,titulo:  "Error", mensaje:  result['message'], tipo: TipoAlerta.error);
     }
   }
 
   Future<void> _pickImage() async {
-  final picker = ImagePicker();
+    final picker = ImagePicker();
 
-  final XFile? pickedFile =
-      await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
-  if (pickedFile == null) return;
+    if (pickedFile == null) return;
 
-  final croppedFile = await ImageCropper().cropImage(
-    sourcePath: pickedFile.path,
-    uiSettings: [
-      AndroidUiSettings(
-        toolbarTitle: 'Recortar imagen',
-        toolbarColor: Colors.black,
-        toolbarWidgetColor: Colors.white,
-        lockAspectRatio: true,
-        initAspectRatio: CropAspectRatioPreset.square,
-      ),
-       IOSUiSettings(
-    title: 'Recortar imagen',
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Recortar imagen',
+          toolbarColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+          lockAspectRatio: true,
+          initAspectRatio: CropAspectRatioPreset.square,
+        ),
+        IOSUiSettings(
+          title: 'Recortar imagen',
+          aspectRatioLockEnabled: true,
+          aspectRatioPresets: [CropAspectRatioPreset.square],
+          doneButtonTitle: 'Listo',
+          cancelButtonTitle: 'Cancelar',
+          resetAspectRatioEnabled: false,
+          rotateButtonsHidden: true,
+        ),
+      ],
+    );
 
-    // 🔒 Bloquea relación de aspecto
-    aspectRatioLockEnabled: true,
-    // ⬜ Fuerza 1:1
-    aspectRatioPresets: [CropAspectRatioPreset.square],
+    if (croppedFile == null) return;
 
-    // UI
-    doneButtonTitle: 'Listo',
-    cancelButtonTitle: 'Cancelar',
-
-    // Opcional (recomendado)
-    resetAspectRatioEnabled: false,
-    rotateButtonsHidden: true,
-  ),
-    ],
-
-  );
-
-  if (croppedFile == null) return;
-
-  setState(() {
-    _image = File(croppedFile.path);
-  });
-}
+    setState(() {
+      _image = File(croppedFile.path);
+    });
+  }
 
 
   @override

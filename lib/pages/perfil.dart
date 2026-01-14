@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:carousel_slider/carousel_slider.dart';
@@ -9,8 +10,11 @@ import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/services/Auth/update_service%20copy.dart';
 import 'package:gixt/services/User_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_cropper/image_cropper.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -37,22 +41,87 @@ class _PerfilPageState extends State<PerfilPage> {
   final _phoneController= TextEditingController();
   final _fecha_nacimientoController= TextEditingController();
   String? _genero;
+  String? _imageUrl;
+  File? _image;
 
   void initState() {
     super.initState();
-
-    // 👇 SE EJECUTA AL ENTRAR A LA PÁGINA
     print("Entré a Mi perfil");
     user.fetchData();
   }
-Future<void> _onRefresh() async {
+  Future<void> _onRefresh() async {
     setState(() {
       print('Actualizando datos...');
-
-    user.updatedata();
+      user.updatedata();
       hasMore = true;
     });
   }
+
+  void _Crear() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) =>  Indicador()
+    );
+
+    final result = await UpdateService.Crear(
+      firstName: _first_nameController.text,
+      lastName: _last_nameController.text,
+      imagen: _image ,
+      phone: _phoneController.text,
+      ciudad: "_ciudadController.text",
+      longitud:11,
+      latitud: 11,
+      genero: _genero ?? "",
+      fechaNacimiento: _fecha_nacimientoController.text,
+      tokenFcm: "cfddds",
+    );
+
+    Navigator.pop(context);
+
+    if (result['success'] == true) {
+      final data = result['data'];
+      mostrarAlerta(context,titulo:  "Datos Actualizados", mensaje:  'tus datos se actualizo correctamente', tipo: TipoAlerta.exito);
+      user.updatedata();
+    } else {
+      mostrarAlerta(context,titulo:  "Error", mensaje:  result['message'], tipo: TipoAlerta.error);
+    }
+  }
+
+  Future<void> _pickImage() async {
+  final picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+  if (pickedFile == null) return;
+
+  final croppedFile = await ImageCropper().cropImage(
+    sourcePath: pickedFile.path,
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Recortar imagen',
+        toolbarColor: Colors.black,
+        toolbarWidgetColor: Colors.white,
+        lockAspectRatio: true,
+        initAspectRatio: CropAspectRatioPreset.square,
+      ),
+       IOSUiSettings(
+        title: 'Recortar imagen',
+        aspectRatioLockEnabled: true,
+        aspectRatioPresets: [CropAspectRatioPreset.square],
+        doneButtonTitle: 'Listo',
+        cancelButtonTitle: 'Cancelar',
+        resetAspectRatioEnabled: false,
+        rotateButtonsHidden: true,
+      ),
+    ],
+  );
+
+  if (croppedFile == null) return;
+
+  setState(() {
+    _image = File(croppedFile.path);
+  });
+}
   @override
   Widget build(BuildContext context) {
     return KeyboardDismisser(
@@ -146,6 +215,7 @@ Future<void> _onRefresh() async {
   }
 
   Widget _buildIMGPerfil() {
+    _imageUrl = "${user.user[0].url_img}?v=${DateTime.now().millisecondsSinceEpoch}";
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Column(
@@ -158,8 +228,10 @@ Future<void> _onRefresh() async {
             width: 150,
             height: 150,
             child: CircleAvatar(
-              backgroundImage: NetworkImage(user.user[0].url_img),
-            ),
+             backgroundImage: _image!= null
+              ? FileImage(_image!)
+              : NetworkImage(_imageUrl!)
+            ),  
           ),
 
           SizedBox(height: 25),
@@ -177,7 +249,8 @@ Future<void> _onRefresh() async {
               height: 50,
               child: IconButton(
                 onPressed: () {
-                  // _pickImage();
+                    _pickImage();
+                    
                 },
                 icon: const Icon(
                   Icons.add_a_photo_outlined,
@@ -192,104 +265,6 @@ Future<void> _onRefresh() async {
     );
   }
 
-  Widget _buildInformacion() {
-    _usernameController.text = user.user[0].first_name;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
-      child: Form(
-        child: Container(
-          child: Column(
-            children: [
-              Text(
-                'Información Personal',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colortitulo3,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Nombre'),
-                validator: (value) =>
-                    value!.isEmpty ? 'Por favor ingresa tu nombre' : null,
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Apellido'),
-              ),
-              const SizedBox(height: 30),
-              Text(
-                'Información de Contacto',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: colorsecundario,
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Correo Electrónico',
-                ),
-              ),
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Teléfono'),
-              ),
-              const SizedBox(height: 70),
-              ElevatedButton(
-                onPressed: () {
-                  // Acción al presionar el botón
-                },
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(300, 50),
-                  backgroundColor: colorprimario,
-                  foregroundColor:colorsecundario,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      'Actualizar Información',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: colortitulo
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              TextButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: colorsecundario,
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      'Eliminar Cuenta',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-
- 
   Widget _buidFormularioInfo() {
     final screenHeight = MediaQuery.of(context).size.height;
     _first_nameController.text =  user.user[0].first_name;
@@ -297,8 +272,9 @@ Future<void> _onRefresh() async {
     _emailController.text = user.user[0].email;
     _phoneController.text =user.user[0].phone;
     _fecha_nacimientoController.text = user.user[0].fecnac;
-    _genero =user.user[0].genero;
-    
+   _genero = user.user[0].genero;
+ 
+
     return Padding(
         padding: const EdgeInsets.all(15),
         child: Form(
@@ -378,6 +354,7 @@ Future<void> _onRefresh() async {
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: colorWhite),
                     cursorColor: colorWhite,
+                    enabled: false,
                     decoration: InputDecoration(
                       labelText: 'Correo',
                       labelStyle: const TextStyle(color: colorWhite),
@@ -515,19 +492,7 @@ Future<void> _onRefresh() async {
               ),
               const SizedBox(height: 50),
               ElevatedButton(
-                onPressed: () {
-                if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
-                if (_genero == null) {
-                  mostrarAlerta(
-                    context,
-                    titulo: 'Género requerido',
-                    mensaje: 'Por favor, selecciona tu género',
-                    tipo: TipoAlerta.advertencia,
-                  );
-                  return;
-                }
-                 
-                },
+                onPressed:_Crear,
                 style: ElevatedButton.styleFrom(
                   fixedSize: const Size(300, 50),
                   backgroundColor: colorWhite,

@@ -5,7 +5,7 @@ import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
-import 'package:gixt/services/cuenta_service.dart';
+import 'package:gixt/services/Auth/cuenta_service.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
