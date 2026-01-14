@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gixt/pages/home.dart';
 import 'package:gixt/pages/perfil.dart';
 import 'colors.dart'; // Asegúrate de tener colorfondo1, colorWhite y colorfondo
 
@@ -13,10 +14,10 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
   int _currentIndex = 1; // Iniciamos en el medio (Home)
 
   final List<Widget> _pages = const [
+    HomePage(),
     Center(child: Text('Buscar', style: TextStyle(fontSize: 24, color: Colors.white))),
+    Center(child: Text('Express', style: TextStyle(fontSize: 24, color: Colors.white))),
     Center(child: Text('Agenda', style: TextStyle(fontSize: 24, color: Colors.white))),
-    Center(child: Text('Home', style: TextStyle(fontSize: 24, color: Colors.white))),
-    Center(child: Text('Categorias', style: TextStyle(fontSize: 24, color: Colors.white))),
     PerfilPage(),
   ];
 
@@ -53,13 +54,11 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-            _buildNavItem(Icons.search_rounded, Icons.search, 0, "Buscar"),
-            _buildNavItem(Icons.calendar_today_rounded, Icons.calendar_today, 1, "Agenda"),
-            
+            _buildNavItem(Icons.home_rounded, Icons.home_rounded ,0, "Home"),
+            _buildNavItem(Icons.search_rounded, Icons.search, 1, "Buscar"),
             // BOTÓN CENTRAL ESTILO "CHIC"
-            _buildMiddleItem(Icons.home_rounded, 2),
-            
-            _buildNavItem(Icons.grid_view_rounded, Icons.grid_view_rounded, 3, "Categorias"),
+            _buildMiddleItem(Icons.flash_on, 2),
+            _buildNavItem(Icons.calendar_today_rounded, Icons.calendar_today, 3, "Agenda"),
             _buildNavItem(Icons.person_rounded, Icons.person, 4, "Perfil"),
         ],
       ),
@@ -113,7 +112,7 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
           ] : [],
         ),
         child: Icon(
-          isSelected ? Icons.home : Icons.home,
+          isSelected ? Icons.flash_on : Icons.flash_on,
           color: isSelected ? Colors.white : colorWhite,
           size: 30,
         ),

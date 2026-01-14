@@ -5,6 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gixt/Componets/cardsRestraurantes.dart';
+import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/Componets/opciones.dart';
+import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
+import 'package:gixt/Componets/sketor/opciones.dart';
+import 'package:gixt/services/Auth/categorias_service.dart';
+import 'package:gixt/services/Auth/servicios_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -201,10 +208,10 @@ class _HomePageState extends State<HomePage> {
             Spacer(),
             InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CategoriasPage()),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
+                // );
               },
               child: Icon(
                 Icons.arrow_forward_ios,
@@ -236,10 +243,10 @@ class _HomePageState extends State<HomePage> {
             Spacer(),
             InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => CategoriasPage()),
-                );
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
+                // );
               },
               child: Icon(
                 Icons.arrow_forward_ios,

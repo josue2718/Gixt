@@ -715,15 +715,10 @@ Widget _dot(int index) {
                   ),
                 ]
               ),
-              const SizedBox(height: 40),
-             Container(
-              decoration: BoxDecoration(
-              color:  Color.fromARGB(0, 103, 10, 10),
-              borderRadius: BorderRadius.circular(50)),
-              width: 250,
-              height: 270,
-              child:  Column(
-              children: [
+              SizedBox(height: 20),
+              Column
+              (
+                children: [
                 _image == null
                 ?  Container(
                     decoration: BoxDecoration(
@@ -731,41 +726,54 @@ Widget _dot(int index) {
                     borderRadius: BorderRadius.circular(100)),
                     width: 200,
                     height: 200,
-                   child:  IconButton(
-                    onPressed: () {
-                    },
-                    icon: const Icon(Icons.person ), // Usa un icono de calendario
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    iconSize: 65,
+                    child:  IconButton(
+                      onPressed: () {
+                      },
+                      icon: const Icon(Icons.person ), // Usa un icono de calendario
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      iconSize: 65,
+                    ),
+                  ) :
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(0, 103, 10, 10),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    width: 200,
+                    height: 200,
+                    child: CircleAvatar(
+                    backgroundImage:
+                      FileImage(_image!)
+                    ),  
                   ),
-                )
-                :  ClipOval(
-                child: Image.file(_image!, height: 200, fit: BoxFit.cover), // Ajusta la imagen al círculo
-                ),
-                SizedBox(height: 20),
-                Transform.translate(
-                offset: Offset(60, -70), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                child: 
-                Container(
-                  decoration: BoxDecoration(
-                  color: colorprimario,
-                  borderRadius: BorderRadius.circular(50)),
-                  width: 50,
-                  height: 50,
-                  child: 
-                  IconButton(
-                    onPressed: () {
-                    _pickImage();
-                    },
-                    icon: const Icon(Icons.add_a_photo_outlined ), // Usa un icono de calendario
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    iconSize: 25,
+                  SizedBox(height: 25),
+                  Transform.translate(
+                    offset: Offset(
+                      60,
+                      -70,
+                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorprimario,
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      width: 50,
+                      height: 50,
+                      child: IconButton(
+                        onPressed: () {
+                            _pickImage();
+                            
+                        },
+                        icon: const Icon(
+                          Icons.add_a_photo_outlined,
+                        ), // Usa un icono de calendario
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        iconSize: 25,
+                      ),
+                    ),
                   ),
-                )
-                )
-              ],
-              )
-            ),
+                ],
+              ),
               const SizedBox(height: 70),
               ElevatedButton(
                 onPressed: _Crear,
