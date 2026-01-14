@@ -7,62 +7,53 @@ class OptionsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 1,
-      color: colorprimario,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            const SizedBox(width: 20),
-
-            /// Icon skeleton
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.25),
-                borderRadius: BorderRadius.circular(10),
-              ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      width: 85, // Mismo ancho que el componente real
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          /// Icon Circle Skeleton
+          Container(
+            height: 65,
+            width: 65,
+            decoration: BoxDecoration(
+              color: colorWhite, // Fondo tenue
+              shape: BoxShape.circle,
             ),
+          ),
+          
+          const SizedBox(height: 12),
 
-            const SizedBox(width: 20),
-
-            /// Text skeleton
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    height: 14,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 14,
-                    width: MediaQuery.of(context).size.width * 0.4,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.20),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                ],
-              ),
+          /// Text Line Skeleton (Primera línea)
+          Container(
+            height: 10,
+            width: 50,
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(5),
             ),
-          ],
-        ),
+          ),
+          
+          const SizedBox(height: 6),
+
+          /// Text Line Skeleton (Segunda línea opcional)
+          Container(
+            height: 10,
+            width: 30,
+            decoration: BoxDecoration(
+              color: Colors.grey.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(5),
+            ),
+          ),
+        ],
       ),
     )
-        // 🔥 Skeleton animation
-        .animate(onPlay: (c) => c.repeat())
-        .fade(duration: 600.ms, begin: 0.3)
-        .shimmer(duration: 1200.ms);
+    .animate(onPlay: (c) => c.repeat())
+    .shimmer(
+      duration: 1200.ms, 
+      color: Colors.white.withOpacity(0.5),
+    )
+    .fade(duration: 800.ms, begin: 0.4, end: 0.8);
   }
 }
