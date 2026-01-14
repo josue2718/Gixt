@@ -45,19 +45,24 @@ class _CrearcuentaState extends State<Crearcuenta> {
   int _paginaActual = 0;
   File? _image;
   String? _genero;
-  String? _token;
+    String? _token;
   String? _inicio;
   String? _id;
+  String? _img;
+  String? _user;
 
-  Future<void> _saveToken(String token, String inicio, String id) async {
-    await _preferencesService.savePreferences(token, inicio, id );
+  Future<void> _saveToken(String token, String inicio, String id, String user,String img) async {
+    await _preferencesService.savePreferences(token, inicio, id, img ,user );
     setState(() {
       _token = token;
       _inicio = inicio;
       _id = id;
+      _img = img;
+      _user = user;
       
     });
   }
+  
 
   void _Crear() async {
     if (_image == null) {
@@ -96,7 +101,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
        final data = result['data'];
       String message = "Bienvenido ${data['username']}";
       Future.microtask(() async {
-        await _saveToken(data['token'], "true", data['id'].toString());
+        await _saveToken(data['token'], "true", data['id'].toString(), data['username'], data['img']);
         await mostrarAlerta(context,titulo:  "Bienvenido", mensaje:  message, tipo: TipoAlerta.exito);
         Navigator.pushReplacement(
           context,

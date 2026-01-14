@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/colors.dart';
 
 class CardsEmpresa extends StatelessWidget {
@@ -56,14 +57,7 @@ class CardsEmpresa extends StatelessWidget {
                             ) {
                               if (loadingProgress == null) return child;
                               return Center(
-                                child: CircularProgressIndicator(
-                                  value:
-                                      loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded /
-                                            loadingProgress.expectedTotalBytes!
-                                      : null,
-                                  color: const Color(0xFF670A0A),
-                                ),
+                                child: Indicador()
                               );
                             },
                         errorBuilder: (context, object, stackTrace) {
@@ -74,7 +68,7 @@ class CardsEmpresa extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                    const Divider(
-                          color: colortitulo2, 
+                          color: colortitulo, 
                           thickness: 2,
                           indent: 50, 
                           endIndent: 50, 
@@ -105,7 +99,7 @@ class CardsEmpresa extends StatelessWidget {
                               children: [
                                 const Icon(
                                   Icons.groups_sharp,
-                                  color: colortitulo2,
+                                  color: colortitulo,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 10),
@@ -125,7 +119,7 @@ class CardsEmpresa extends StatelessWidget {
                               children: [
                                 const Icon(
                                   Icons.star_rounded,
-                                  color: colortitulo2,
+                                  color: colortitulo,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 10),

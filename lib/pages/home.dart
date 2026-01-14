@@ -47,8 +47,8 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      img = prefs.getString('url_img');
-      username = prefs.getString('username');
+      img = prefs.getString('img');
+      username = prefs.getString('user');
     });
   }
 
@@ -95,12 +95,11 @@ class _HomePageState extends State<HomePage> {
                             _buildCategorias(),
                             const SizedBox(height: 20),
                             _buildCategoriaItem(),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 0),
                             _buildTitle(),
                             const SizedBox(height: 20),
                             _buildRestaurantes(),
-                            const SizedBox(height: 20),
-                            _buildRestaurantes(),
+                            const SizedBox(height: 100),
                           ]),
                         ),
                       ),
@@ -125,7 +124,7 @@ class _HomePageState extends State<HomePage> {
       elevation: 0,
       toolbarHeight: 50, // 🔵 altura de la barrita azul
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
@@ -134,7 +133,7 @@ class _HomePageState extends State<HomePage> {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: colortitulo2,
+            color: colorsecundario,
           ),
         ),
         background: Container(
@@ -192,7 +191,7 @@ class _HomePageState extends State<HomePage> {
   
   Widget _buildTitle() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       child: Container(
         alignment: Alignment.topLeft,
         child: Row(
@@ -202,7 +201,7 @@ class _HomePageState extends State<HomePage> {
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: colortitulo3,
+                color: colortitulo,
               ),
             ),
             Spacer(),
@@ -216,7 +215,7 @@ class _HomePageState extends State<HomePage> {
               child: Icon(
                 Icons.arrow_forward_ios,
                 size: 20,
-                color: colortitulo3,
+                color: colortitulo,
               ),
             ),
           ],
@@ -227,7 +226,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCategorias() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       child: Container(
         alignment: Alignment.topLeft,
         child: Row(
@@ -237,7 +236,7 @@ class _HomePageState extends State<HomePage> {
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: colortitulo3,
+                color: colortitulo,
               ),
             ),
             Spacer(),
@@ -251,7 +250,7 @@ class _HomePageState extends State<HomePage> {
               child: Icon(
                 Icons.arrow_forward_ios,
                 size: 20,
-                color: colortitulo3,
+                color: colortitulo,
               ),
             ),
           ],
@@ -265,15 +264,15 @@ class _HomePageState extends State<HomePage> {
   final isLoading = apicategoria.categorias.isEmpty;
 
   return SizedBox(
-    height: 100,
+    height: 150,
     child: GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       scrollDirection: Axis.horizontal,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 1,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.45,
+        childAspectRatio: 1.5,
       ),
       itemCount: isLoading
           ? 3 //  skeletons visibles
@@ -282,7 +281,6 @@ class _HomePageState extends State<HomePage> {
             if (isLoading) {
               return const OptionsSkeleton();
             }
-
         final categoria = apicategoria.categorias[index];
         return Options(nombre: categoria.nombre);
       },
@@ -333,6 +331,7 @@ Widget _buildRestaurantes() {
         height: 150,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
+          color: colorprimario,
           image: const DecorationImage(
             image: AssetImage('assets/promo.png'),
             fit: BoxFit.cover,

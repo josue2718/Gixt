@@ -10,6 +10,7 @@ import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/cache.dart';
 import 'package:gixt/services/Auth/update_service%20copy.dart';
 import 'package:gixt/services/User_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -40,10 +41,22 @@ class _PerfilPageState extends State<PerfilPage> {
   final _last_nameController= TextEditingController();
   final _phoneController= TextEditingController();
   final _fecha_nacimientoController= TextEditingController();
+    final PreferencesService _preferencesService = PreferencesService();
   String? _genero;
   String? _imageUrl;
   File? _image;
-
+  String? _img;
+  String? _user;
+  
+  Future<void> _updateUser( String user,String img) async {
+    await _preferencesService.savePreferencesUser(img ,user );
+    setState(() {
+      _img = img;
+      _user = user;
+      
+    });
+  }
+  
   void initState() {
     super.initState();
     print("Entré a Mi perfil");
@@ -82,7 +95,10 @@ class _PerfilPageState extends State<PerfilPage> {
     if (result['success'] == true) {
       final data = result['data'];
       mostrarAlerta(context,titulo:  "Datos Actualizados", mensaje:  'tus datos se actualizo correctamente', tipo: TipoAlerta.exito);
-      user.updatedata();
+ 
+      await user.updatedata();
+      _updateUser(user.user[0].username, user.user[0].url_img);
+
     } else {
       mostrarAlerta(context,titulo:  "Error", mensaje:  result['message'], tipo: TipoAlerta.error);
     }
