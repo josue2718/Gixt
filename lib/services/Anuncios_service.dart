@@ -31,8 +31,8 @@ class Anuncio_service {
   List<Anuncio> anuncio = []; // Lista de empresas
   bool isLoading = false;
   bool hasMore = true;
-  static const String _cacheKey = 'user_cache';
-  static const String _cacheTimeKey = 'user_cache_time';
+  static const String _cacheKey = 'anuncio_cache';
+  static const String _cacheTimeKey = 'anuncio_cache_time';
 
   set loading(bool loading) {}
  
@@ -86,8 +86,6 @@ class Anuncio_service {
 
     if (response.statusCode == 200) {
       final List<dynamic> jsonResponse = json.decode(response.body);
-      anuncio.clear();
-      anuncio.addAll(jsonResponse.map((item) => Anuncio.fromJson(item)).toList());
       print( jsonResponse); 
       anuncio
         ..clear()

@@ -148,44 +148,79 @@ class _HomePageState extends State<HomePage> {
             direction: Axis.horizontal,
             children: [
               const SizedBox(width: 40),
-              Text(
-                username ?? '',
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  color: colortitulo,
-                ),
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    username ?? '',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      color: colortitulo,
+                    ),
+                  ),
+                  Row(
+                 children: [
+                  Text(
+                     'Uman Yuc',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: colortitulo,
+                    ),
+                  ),  
+                  const SizedBox(width: 15),
+                  const Icon(
+                    Icons.location_on,
+                    color: colortitulo,
+                    size: 20,
+                  ),
+                               
+                  ]
+                  )
+                ]
               ),
               const Spacer(),
-              img != null
-                  ?
-              Container(
-                decoration: BoxDecoration(
-                  color: colorfondo,
-                  border: Border.all(
-                    color: colorWhite,
-                    width: 2,
+              Row(
+                children: [
+                  const Icon(
+                    Icons.notifications,
+                    color: colortitulo,
+                    size: 30,
                   ),
-                  borderRadius: BorderRadius.circular(50),
-                ),
-                width: 70,
-                height: 70,
-                child: CircleAvatar(backgroundImage: NetworkImage(img ?? '')),
-              ):
-               Container(
+                  const SizedBox(width: 15),
+                  img != null
+                      ?
+                  Container(
                     decoration: BoxDecoration(
-                    color:  Color.fromARGB(255, 177, 177, 177),
-                    borderRadius: BorderRadius.circular(100)),
+                      color: colorfondo,
+                      border: Border.all(
+                        color: colorWhite,
+                        width: 2,
+                      ),
+                      borderRadius: BorderRadius.circular(50),
+                    ),
                     width: 70,
                     height: 70,
-                   child:  IconButton(
-                    onPressed: () {
-                    },
-                    icon: const Icon(Icons.person ), // Usa un icono de calendario
-                    color: colorfondo,
-                    iconSize: 45,
+                    child: CircleAvatar(backgroundImage: NetworkImage(img ?? '')),
+                  ):
+                  Container(
+                        decoration: BoxDecoration(
+                        color:  Color.fromARGB(255, 177, 177, 177),
+                        borderRadius: BorderRadius.circular(100)),
+                        width: 70,
+                        height: 70,
+                      child:  IconButton(
+                        onPressed: () {
+                        },
+                        icon: const Icon(Icons.person ), // Usa un icono de calendario
+                        color: colorfondo,
+                        iconSize: 45,
+                      ),
                   ),
-               ),
+                ]
+              ),
               const SizedBox(width: 30),
+              
             ],
           ),
         ),
@@ -265,7 +300,6 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCategoriaItem() {
   final isLoading = apicategoria.categorias.isEmpty;
-
   return SizedBox(
     height: 150,
     child: GridView.builder(
@@ -287,7 +321,7 @@ class _HomePageState extends State<HomePage> {
         final categoria = apicategoria.categorias[index];
         return Options(nombre: categoria.nombre);
       },
-    ),
+    ).animate().fade().slideX(begin: -0.2),
   );
 }
 
@@ -388,7 +422,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-    );
+    ).animate().fade().slideX(begin: -0.2);
   }
 
  
