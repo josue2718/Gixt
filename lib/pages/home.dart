@@ -5,11 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gixt/Componets/cardoferta.dart';
 import 'package:gixt/Componets/cardsRestraurantes.dart';
 import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/Componets/opciones.dart';
 import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
 import 'package:gixt/Componets/sketor/opciones.dart';
+import 'package:gixt/services/Anuncios_service.dart';
 import 'package:gixt/services/Auth/categorias_service.dart';
 import 'package:gixt/services/Auth/servicios_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -29,7 +31,9 @@ class _HomePageState extends State<HomePage> {
   bool hasMore = true;
   final ApiServicios api = ApiServicios();
   final ApiCategorias apicategoria = ApiCategorias();
+  final Anuncio_service anuncio = Anuncio_service();
   final ScrollController _scrollController = ScrollController();
+  final ValueNotifier<int> _currentIndexNotifier = ValueNotifier<int>(0);
   int pageNumber = 1;
   String? img;
   String? username;
@@ -41,6 +45,7 @@ class _HomePageState extends State<HomePage> {
     print("Entré a Restaurantes");
     api.fetchEmpresaData(pageNumber);
     apicategoria.fetchEmpresaData(pageNumber);
+    anuncio.fetchData();
     _loadUserId();
   }
 
@@ -55,7 +60,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _onRefresh() async {
     setState(() {
       print('Actualizando datos...');
-
+      anuncio.updatedata();
       api.updatedata(pageNumber);
       hasMore = true;
     });
@@ -188,7 +193,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  
   Widget _buildTitle() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
@@ -259,7 +263,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   Widget _buildCategoriaItem() {
   final isLoading = apicategoria.categorias.isEmpty;
 
@@ -287,57 +290,110 @@ class _HomePageState extends State<HomePage> {
     ),
   );
 }
-Widget _buildRestaurantes() {
-  final isLoading1 = api.servicios.isEmpty;
-  return SizedBox(
-    height: 320,
-    child: GridView.builder(
-      controller: _scrollController,
-      scrollDirection: Axis.horizontal,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 1,
-        mainAxisSpacing: 16,
-        childAspectRatio: 1.25,
-      ),
-     itemCount: isLoading1
-          ? 3 //  skeletons visibles
-          : api.servicios.length,
-          itemBuilder: (context, index) {
-            if (isLoading1) {
-              return const CardsEmpresaSkeleton();
-            }
 
-        final empresa = api.servicios[index];
-
-        return CardsEmpresa(
-          url_img: empresa.img_servicio,
-          nombre: empresa.nombre_servicio,
-          id_servicio: empresa.id_servicio,
-        )
-            .animate()
-            .fade(duration: 400.ms)
-            .slideY(begin: 0.15)
-            .scale(begin: const Offset(0.96, 0.96));
-      },
-    ),
-  );
-}
-
-
-  Widget _buildPromo() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-      child: Container(
-        height: 150,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          color: colorprimario,
-          image: const DecorationImage(
-            image: AssetImage('assets/promo.png'),
-            fit: BoxFit.cover,
-          ),
+  Widget _buildRestaurantes() {
+    final isLoading1 = api.servicios.isEmpty;
+    return SizedBox(
+      height: 320,
+      child: GridView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 1,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.25,
         ),
-      ).animate().fade().slideX(begin: -0.2),
+      itemCount: isLoading1
+            ? 3 //  skeletons visibles
+            : api.servicios.length,
+            itemBuilder: (context, index) {
+              if (isLoading1) {
+                return const CardsEmpresaSkeleton();
+              }
+
+          final empresa = api.servicios[index];
+
+          return CardsEmpresa(
+            url_img: empresa.img_servicio,
+            nombre: empresa.nombre_servicio,
+            id_servicio: empresa.id_servicio,
+          )
+              .animate()
+              .fade(duration: 400.ms)
+              .slideY(begin: 0.15)
+              .scale(begin: const Offset(0.96, 0.96));
+        },
+      ),
     );
   }
+
+  Widget _buildPromo() {
+    return SizedBox(
+      width: 400,
+      child: Column(
+        children: [
+          if (anuncio.anuncio.isNotEmpty)
+            CarouselSlider.builder(
+              itemCount: anuncio.anuncio.length,
+              itemBuilder: (context, index, realIndex) {
+                final descuento = anuncio.anuncio[index];
+                return Container(
+                  width: 360,
+                  child: cardsofertas( link_imagen: descuento.img),
+                );
+              },
+              options: CarouselOptions(
+                height: 150,
+                viewportFraction: 1.0,
+                enlargeCenterPage: true,
+                enableInfiniteScroll: true,
+                autoPlay: true,
+                autoPlayInterval:
+                    const Duration(seconds: 2),
+                autoPlayAnimationDuration:
+                    const Duration(milliseconds: 800),
+                scrollDirection: Axis.horizontal,
+                onPageChanged: (index, reason) {
+                  _currentIndexNotifier.value = index;
+                },
+              ),
+            ),
+          const SizedBox(height: 30),
+          ValueListenableBuilder<int>(
+            valueListenable: _currentIndexNotifier,
+            builder: (context, currentIndex, child) {
+              return Row(
+                mainAxisAlignment:
+                    MainAxisAlignment.center,
+                children: List.generate(
+                  anuncio.anuncio.length,
+                  (index) => AnimatedContainer(
+                    duration:
+                        const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(
+                        horizontal: 2),
+                    width: currentIndex == index ? 16 : 8,
+                    height:
+                        currentIndex == index ? 16 : 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: currentIndex == index
+                          ? colorWhite
+                          : colorprimario
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+ 
+
 }
+
+
+
