@@ -352,6 +352,8 @@ class _HomePageState extends State<HomePage> {
             nombre: servicio.nombre_servicio,
             img_trabajador: servicio.img_trabajador,
             id_servicio: servicio.id_servicio,
+            trabajador: servicio.trabajador,
+            categoria: servicio.categoria,
           )
               .animate()
               .fade(duration: 400.ms)

@@ -4,12 +4,14 @@ import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/colors.dart';
 
 class CardsServicios extends StatelessWidget {
-  const CardsServicios({super.key, required this.url_img, required this.nombre, required this.id_servicio,required this.img_trabajador});
+  const CardsServicios({super.key, required this.url_img, required this.nombre, required this.id_servicio,required this.img_trabajador, required this.trabajador, required this.categoria});
 
   final String nombre;
   final String url_img;
   final String id_servicio;
   final String? img_trabajador;
+  final String categoria;
+  final String trabajador;
 
   @override
   Widget build(BuildContext context) {
@@ -58,6 +60,31 @@ class CardsServicios extends StatelessWidget {
                           ),
                         ),
                       ),
+                       Positioned(
+                        bottom: 120,
+                        left: 10,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: colorWhite,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                categoria,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorfondo,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                       Positioned(
                         bottom: 10,
                         left: 10,
@@ -88,8 +115,8 @@ class CardsServicios extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               alignment: Alignment.center,
-                              child: const Text(
-                                'Josue Ciau',
+                              child: Text(
+                                trabajador,
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
