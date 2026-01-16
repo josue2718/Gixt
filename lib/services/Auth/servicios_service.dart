@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
@@ -6,12 +8,18 @@ import 'dart:convert'; // Para trabajar con JSON
 class Servicios {
   String nombre_servicio;
   String id_servicio;
-  String descripcion;
+  String trabajador;
+  String img_trabajador;
+  String categoria;
+  double precio;
   String img_servicio;
 
   Servicios({
     required this.nombre_servicio,
-    required this.descripcion,
+    required this.categoria,
+    required this.img_trabajador,
+    required this.trabajador,
+    required this.precio,
     required this.img_servicio,
     required this.id_servicio,
   });
@@ -19,15 +27,18 @@ class Servicios {
   factory Servicios.fromJson(Map<String, dynamic> json) {
     return Servicios(
       nombre_servicio: json['nombre_servicio'],
-      descripcion: json['descripcion'],
-      img_servicio: json['img_servicio'],
+      categoria: json['categoria'],
+      trabajador : json['first_name'],
+      precio: json['precio'],
+      img_trabajador : json['imagenuser'],
+      img_servicio: json['imagen'],
       id_servicio: json['id_servicio'],
     );
   }
 
   @override
   String toString() {
-    return 'Empresa(nombre: $nombre_servicio, direccion: $descripcion, url_img: $img_servicio)';
+    return 'Empresa(nombre: $nombre_servicio, direccion: $categoria, url_img: $img_servicio)';
   }
 }
 

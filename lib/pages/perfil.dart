@@ -165,13 +165,8 @@ class _PerfilPageState extends State<PerfilPage> {
                         children: [
                           const SizedBox(height: 10),
                           _buildIMGPerfil(),
-                          Transform.translate(
-                          offset: Offset(
-                            0,
-                            -50,
-                          ),child: 
                           _buidFormularioInfo(),
-                          ),
+                          
                         ],
                       ),
                     ),
@@ -236,46 +231,49 @@ class _PerfilPageState extends State<PerfilPage> {
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Column(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              color: Color.fromARGB(0, 103, 10, 10),
-              borderRadius: BorderRadius.circular(50),
-            ),
-            width: 150,
-            height: 150,
-            child: CircleAvatar(
-             backgroundImage: _image!= null
-              ? FileImage(_image!)
-              : NetworkImage(_imageUrl!)
-            ),  
-          ),
-
-          SizedBox(height: 25),
-          Transform.translate(
-            offset: Offset(
-              60,
-              -70,
-            ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-            child: Container(
-              decoration: BoxDecoration(
-                color: colorprimario,
-                borderRadius: BorderRadius.circular(50),
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(0, 103, 10, 10),
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                width: 150,
+                height: 150,
+                child: CircleAvatar(
+                backgroundImage: _image!= null
+                  ? FileImage(_image!)
+                  : NetworkImage(_imageUrl!)
+                ),  
               ),
-              width: 50,
-              height: 50,
-              child: IconButton(
-                onPressed: () {
-                    _pickImage();
-                    
-                },
-                icon: const Icon(
-                  Icons.add_a_photo_outlined,
-                ), // Usa un icono de calendario
-                color: const Color.fromARGB(255, 255, 255, 255),
-                iconSize: 25,
-              ),
-            ),
-          ),
+              SizedBox(height: 25),
+              Positioned(
+                        bottom: -5 v  n,
+                        left: 110,
+                        child: 
+                Container(
+                  decoration: BoxDecoration(
+                    color: colorprimario,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  width: 50,
+                  height: 50,
+                  child: IconButton(
+                    onPressed: () {
+                        _pickImage();
+                        
+                    },
+                    icon: const Icon(
+                      Icons.add_a_photo_outlined,
+                    ), // Usa un icono de calendario
+                    color: const Color.fromARGB(255, 255, 255, 255),
+                    iconSize: 25,
+                  ),
+                ),
+              )
+              ]
+          )
         ],
       ),
     );

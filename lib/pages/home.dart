@@ -6,7 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/Componets/cardoferta.dart';
-import 'package:gixt/Componets/cardsRestraurantes.dart';
+import 'package:gixt/Componets/cardsServicios.dart';
 import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/Componets/opciones.dart';
 import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(height: 0),
                             _buildTitle(),
                             const SizedBox(height: 20),
-                            _buildRestaurantes(),
+                            _buildServicios(),
                             const SizedBox(height: 100),
                           ]),
                         ),
@@ -325,7 +325,7 @@ class _HomePageState extends State<HomePage> {
   );
 }
 
-  Widget _buildRestaurantes() {
+  Widget _buildServicios() {
     final isLoading1 = api.servicios.isEmpty;
     return SizedBox(
       height: 320,
@@ -335,9 +335,9 @@ class _HomePageState extends State<HomePage> {
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 1,
           mainAxisSpacing: 16,
-          childAspectRatio: 1.25,
+          childAspectRatio: 1.2,
         ),
-      itemCount: isLoading1
+        itemCount: isLoading1
             ? 3 //  skeletons visibles
             : api.servicios.length,
             itemBuilder: (context, index) {
@@ -345,12 +345,13 @@ class _HomePageState extends State<HomePage> {
                 return const CardsEmpresaSkeleton();
               }
 
-          final empresa = api.servicios[index];
+          final servicio = api.servicios[index];
 
-          return CardsEmpresa(
-            url_img: empresa.img_servicio,
-            nombre: empresa.nombre_servicio,
-            id_servicio: empresa.id_servicio,
+          return CardsServicios(
+            url_img: servicio.img_servicio,
+            nombre: servicio.nombre_servicio,
+            img_trabajador: servicio.img_trabajador,
+            id_servicio: servicio.id_servicio,
           )
               .animate()
               .fade(duration: 400.ms)

@@ -1,13 +1,15 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/colors.dart';
 
-class CardsEmpresa extends StatelessWidget {
-  const CardsEmpresa({super.key, required this.url_img, required this.nombre, required this.id_servicio});
+class CardsServicios extends StatelessWidget {
+  const CardsServicios({super.key, required this.url_img, required this.nombre, required this.id_servicio,required this.img_trabajador});
 
   final String nombre;
   final String url_img;
   final String id_servicio;
+  final String? img_trabajador;
 
   @override
   Widget build(BuildContext context) {
@@ -36,36 +38,70 @@ class CardsEmpresa extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.max,
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.only(
-                      bottomLeft: Radius.circular(0.0),
-                      topLeft: Radius.circular(20.0),
-                      topRight: Radius.circular(20.0),
-                      bottomRight: Radius.circular(0.0),
-                    ),
-                    child: SizedBox(
-                      height: 150,
-                      width: double.infinity,
-                      child: Image.network(
-                        url_img,
-                        fit: BoxFit.cover,
-                        loadingBuilder:
-                            (
-                              BuildContext context,
-                              Widget child,
-                              ImageChunkEvent? loadingProgress,
-                            ) {
-                              if (loadingProgress == null) return child;
-                              return Center(
-                                child: Indicador()
-                              );
-                            },
-                        errorBuilder: (context, object, stackTrace) {
-                          return const Icon(Icons.error);
-                        },
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                        child: SizedBox(
+                          height: 150,
+                          width: double.infinity,
+                          child: CachedNetworkImage(
+                            imageUrl: url_img,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Center(child: Indicador()),
+                            errorWidget: (context, url, error) =>
+                                const Icon(Icons.broken_image),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 45,
+                              height: 45,
+                              decoration: BoxDecoration(
+                                color: colorWhite,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: colorWhite, width: 2),
+                              ),
+                              child: img_trabajador != null
+                                  ? CircleAvatar(
+                                      backgroundImage: NetworkImage(img_trabajador!),
+                                    )
+                                  : const CircleAvatar(
+                                      child: Icon(Icons.person),
+                                    ),
+                            ),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              height: 22,
+                              decoration: BoxDecoration(
+                                color: colorWhite,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                'Josue Ciau',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: colorfondo,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),     
                   const SizedBox(height: 5),
                    const Divider(
                           color: colortitulo, 
