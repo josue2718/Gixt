@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/Componets/cardoferta.dart';
 import 'package:gixt/Componets/cardsServicios.dart';
+import 'package:gixt/Componets/circleimage.dart';
 import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/Componets/opciones.dart';
 import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
@@ -43,7 +44,7 @@ class _HomePageState extends State<HomePage> {
 
     // 👇 SE EJECUTA AL ENTRAR A LA PÁGINA
     print("Entré a Restaurantes");
-    api.fetchEmpresaData(pageNumber);
+    api.fetchServicioData(pageNumber);
     apicategoria.fetchEmpresaData(pageNumber);
     anuncio.fetchData();
     _loadUserId();
@@ -73,7 +74,7 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: colorfondo,
         body: FutureBuilder(
           future: Future.wait([
-            api.fetchEmpresaData(pageNumber),
+            api.fetchServicioData(pageNumber),
             apicategoria.fetchEmpresaData(pageNumber),
           ]),
           builder: (context, snapshot) {
@@ -188,35 +189,7 @@ class _HomePageState extends State<HomePage> {
                     size: 30,
                   ),
                   const SizedBox(width: 15),
-                  img != null
-                      ?
-                  Container(
-                    decoration: BoxDecoration(
-                      color: colorfondo,
-                      border: Border.all(
-                        color: colorWhite,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    width: 70,
-                    height: 70,
-                    child: CircleAvatar(backgroundImage: NetworkImage(img ?? '')),
-                  ):
-                  Container(
-                        decoration: BoxDecoration(
-                        color:  Color.fromARGB(255, 177, 177, 177),
-                        borderRadius: BorderRadius.circular(100)),
-                        width: 70,
-                        height: 70,
-                      child:  IconButton(
-                        onPressed: () {
-                        },
-                        icon: const Icon(Icons.person ), // Usa un icono de calendario
-                        color: colorfondo,
-                        iconSize: 45,
-                      ),
-                  ),
+                  Circleimage(w : 65, h :65 ,link_imagen:  img,)
                 ]
               ),
               const SizedBox(width: 30),
@@ -319,7 +292,7 @@ class _HomePageState extends State<HomePage> {
               return const OptionsSkeleton();
             }
         final categoria = apicategoria.categorias[index];
-        return Options(nombre: categoria.nombre);
+        return Options(nombre: categoria.nombre, id: categoria.id_categoria);
       },
     ).animate().fade().slideX(begin: -0.2),
   );
@@ -344,7 +317,7 @@ class _HomePageState extends State<HomePage> {
               if (isLoading1) {
                 return const CardsEmpresaSkeleton();
               }
-
+              try {
           final servicio = api.servicios[index];
 
           return CardsServicios(
@@ -354,12 +327,21 @@ class _HomePageState extends State<HomePage> {
             id_servicio: servicio.id_servicio,
             trabajador: servicio.trabajador,
             categoria: servicio.categoria,
+            estrellas:  servicio.calificacion,
+            precio:  servicio.precio,
+            descripcion:  servicio.descripcion,
           )
               .animate()
               .fade(duration: 400.ms)
               .slideY(begin: 0.15)
               .scale(begin: const Offset(0.96, 0.96));
+
+              } catch (e) {
+                return const SizedBox(); // widget vacío
+              }
         },
+
+
       ),
     );
   }
@@ -427,8 +409,6 @@ class _HomePageState extends State<HomePage> {
       ),
     ).animate().fade().slideX(begin: -0.2);
   }
-
- 
 
 }
 

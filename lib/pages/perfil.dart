@@ -163,23 +163,28 @@ class _PerfilPageState extends State<PerfilPage> {
             }
             return KeyboardDismisser(
               child: Scaffold(
-                appBar: _buildAppBar(),
                 backgroundColor: colorfondo,
                 body: RefreshIndicator(
                   onRefresh: _onRefresh,
-                  child: SingleChildScrollView(
-                    child: AutofillGroup(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Column(
-                          children: [
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      _buildSliverAppBar(),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 5,
+                          vertical: 30,
+                        ),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
                             const SizedBox(height: 10),
                             _buildIMGPerfil(),
                             _buidFormularioInfo(),
-                          ],
+                          ]),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -190,47 +195,29 @@ class _PerfilPageState extends State<PerfilPage> {
     );
   }
 
-  AppBar _buildAppBar() {
-    return AppBar(
-      systemOverlayStyle: SystemUiOverlayStyle.light,
+  SliverAppBar _buildSliverAppBar() {
+    return SliverAppBar(
       backgroundColor: colorprimario,
+      expandedHeight: 90,
+      pinned: true, //  deja solo la barra pequeña visible
+      floating: false, //  NO aparece al subir
+      snap: false, // NO animación automática
       elevation: 0,
-      centerTitle: true,
-      toolbarHeight: 100, // 🔥 MÁS ALTO
+      toolbarHeight: 90,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(0), // 🔥 BORDES ABAJO
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(
+          'Mi Perfil',
+          style: GoogleFonts.poppins(
+            fontSize: 25,
+            fontWeight: FontWeight.w600,
+            color: colorsecundario,
+          ),
         ),
       ),
-      title: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const SizedBox(height: 10),
-          Text(
-            'Mi Perfil',
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 20,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Edita tu información personal',
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.white70),
-          ),
-        ],
-      ),
-      actions: [
-        Padding(
-          padding: const EdgeInsets.only(top: 8, right: 8),
-          child: IconButton(
-            icon: const Icon(Icons.notifications_none, size: 26),
-            color: Colors.white,
-            onPressed: () {},
-          ),
-        ),
-      ],
     );
   }
 
@@ -246,8 +233,8 @@ class _PerfilPageState extends State<PerfilPage> {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: Color.fromARGB(0, 103, 10, 10),
-                  borderRadius: BorderRadius.circular(50),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: colorWhite, width: 2),
                 ),
                 width: 150,
                 height: 150,

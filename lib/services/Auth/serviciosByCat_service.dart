@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 
-class Servicios {
+class ServiciosByCat {
   String nombre_servicio;
   String id_servicio;
   String trabajador;
@@ -16,7 +16,7 @@ class Servicios {
   int calificacion;
   String descripcion;
 
-  Servicios({
+  ServiciosByCat({
     required this.nombre_servicio,
     required this.categoria,
     required this.img_trabajador,
@@ -28,17 +28,17 @@ class Servicios {
     required this.descripcion,
   });
 
-  factory Servicios.fromJson(Map<String, dynamic> json) {
-    return Servicios(
+  factory ServiciosByCat.fromJson(Map<String, dynamic> json) {
+    return ServiciosByCat(
       nombre_servicio: json['nombre_servicio'],
       categoria: json['categoria'],
-      trabajador : json['first_name'],
+      trabajador: json['first_name'],
       precio: json['precio'],
-      img_trabajador : json['imagenuser'],
+      img_trabajador: json['imagenuser'],
       img_servicio: json['imagen'],
-      descripcion:  json['descripcion'],
+      descripcion: json['descripcion'],
       id_servicio: json['id_servicio'],
-      calificacion: json['calificacion']
+      calificacion: json['calificacion'],
     );
   }
 
@@ -48,45 +48,20 @@ class Servicios {
   }
 }
 
-class ApiServicios {
-  List<Servicios> servicios = []; // Lista de empresas
-  int pageNumber = 1;
+class ApiServiciosByCat {
+  List<ServiciosByCat> servicios = []; // Lista de empresas
   bool isLoading = false;
   bool hasMore = true;
-  static const String _cacheKey = 'servicios_cache';
-  static const String _cacheTimeKey = 'servicios_cache_time';
-
   set loading(bool loading) {}
- Future<void> updatedata(int id) async {
-    await fetchServicioData(id, forceRefresh: true);
-  }
-  Future<void> fetchServicioData(int number, {bool forceRefresh = false}) async {
-    print("fetch servicios");
+
+  Future<void> fetchServicioCatData(
+    int id,
+    int pageNumber, {
+    bool forceRefresh = false,
+  }) async {
+    print("fetch servicios categoria ${id}, ${pageNumber}");
 
     final prefs = await SharedPreferences.getInstance();
-
-    // cache config
-    const cacheDuration = Duration(minutes: 10);
-
-    // revisar cache
-    final cachedData = prefs.getString(_cacheKey);
-    final cachedTime = prefs.getInt(_cacheTimeKey);
-
-    final now = DateTime.now();
-
-    if (!forceRefresh &&
-        cachedData != null &&
-        cachedTime != null &&
-        now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) < cacheDuration) {
-          print("Usando cache");
-
-          final List<dynamic> jsonData = json.decode(cachedData);
-          servicios
-            ..clear()
-            ..addAll(jsonData.map((e) => Servicios.fromJson(e)));
-
-          return;
-      }
 
     print("🌐 Llamando API");
 
@@ -97,28 +72,20 @@ class ApiServicios {
       isLoading = true;
 
       final response = await http.get(
-        Uri.parse('${dotenv.env['API_URL']}/api/Servicios'),
+        Uri.parse(
+          '${dotenv.env['API_URL']}/api/Servicios/categoria/${id}?pageNumber=${pageNumber}',
+        ),
         headers: headers,
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonResponse = json.decode(response.body);
-        servicios.clear();
-        servicios.addAll(
-          jsonResponse.map((item) => Servicios.fromJson(item)).toList(),
-        );
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        final List<dynamic> data = jsonResponse['data'];
+        print(data);
         servicios
-          ..clear()
-          ..addAll(jsonResponse.map((e) => Servicios.fromJson(e)));
-
-        //  guardar cache
-        await prefs.setString(_cacheKey, response.body);
-        await prefs.setInt(
-          _cacheTimeKey,
-          DateTime.now().millisecondsSinceEpoch,
-        );
+          ..addAll(data.map((item) => ServiciosByCat.fromJson(item)).toList());
       } else {
-        servicios.clear();
+      
       }
     } finally {
       isLoading = false;

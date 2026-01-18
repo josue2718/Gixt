@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:gixt/Componets/colors.dart'; // Asegúrate que 'colorprimario' esté definido aquí
+import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/pages/categoria.dart'; // Asegúrate que 'colorprimario' esté definido aquí
 
 class Options extends StatelessWidget {
   final String nombre;
+  final int id;
   final VoidCallback? onTap; // Añadido para manejar el clic
 
   const Options({
     super.key,
     required this.nombre,
+    required this.id,
     this.onTap,
   });
 
@@ -21,7 +24,16 @@ class Options extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 1),
         // color: colorWhite,
         width: 15, // Ancho fijo para mantener simetría en listas horizontales
-        child: Column(
+        child:  InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>CategoriaPage(id_categoria: id , nombre : nombre),
+                ),
+              );
+            },
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             // Contenedor Circular (Estilo Rappi)
@@ -59,6 +71,7 @@ class Options extends StatelessWidget {
             ),
           ],
         ),
+        )
       ),
     )
     .animate()

@@ -4,8 +4,8 @@ import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/circleimage.dart';
 import 'package:gixt/Componets/colors.dart';
 
-class CardsServicios extends StatelessWidget {
-  const CardsServicios({
+class CardsServiciosCategoria extends StatelessWidget {
+  const CardsServiciosCategoria({
     super.key, 
     required this.url_img, 
     required this.nombre, 
@@ -33,7 +33,7 @@ class CardsServicios extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       child: SizedBox(
-        width: 250, // 🔥 ANCHO FIJO OBLIGATORIO
+        width: 150, // 🔥 ANCHO FIJO OBLIGATORIO
         child: Card(
           elevation: 5,
           shape: RoundedRectangleBorder(
@@ -52,7 +52,7 @@ class CardsServicios extends StatelessWidget {
             },
             child: Padding(
               padding: const EdgeInsets.all(0),
-              child: Column(
+              child: Row(
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   Stack(
@@ -64,8 +64,8 @@ class CardsServicios extends StatelessWidget {
                           topRight: Radius.circular(20),
                         ),
                         child: SizedBox(
-                          height: 150,
-                          width: double.infinity,
+                          height: double.maxFinite,
+                          width: 150,
                           child: CachedNetworkImage(
                             imageUrl: url_img,
                             fit: BoxFit.cover,
@@ -75,30 +75,8 @@ class CardsServicios extends StatelessWidget {
                           ),
                         ),
                       ),
+
                       Positioned(
-                        bottom: 110,
-                        left: 150,
-                        child:
-                        Row(
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                color: colortitulo,
-                                size: 25,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                '$estrellas',
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  color: colortitulo,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          )
-                        ),
-                       Positioned(
                         bottom: 120,
                         left: 10,
                         child: Row(
@@ -122,44 +100,10 @@ class CardsServicios extends StatelessWidget {
                             ),
                           ],
                         ),
-                      ),
-                      Positioned(
-                        bottom: 10,
-                        left: 10,
-                        child: Row(
-                          children: [
-                            Circleimage(w : 45, h :45 ,link_imagen:  img_trabajador,),
-                            const SizedBox(width: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              height: 22,
-                              decoration: BoxDecoration(
-                                color: colorWhite,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                trabajador,
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorfondo,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      )
                     ],
-                  ),     
-                  const SizedBox(height: 5),
-                   const Divider(
-                          color: colortitulo, 
-                          thickness: 2,
-                          indent: 50, 
-                          endIndent: 50, 
-                        ),
-                          const SizedBox(height: 5),
+                  ),
+                  const SizedBox(height: 200),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -168,6 +112,7 @@ class CardsServicios extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            const SizedBox(height: 20),
                             Text(
                               nombre,
                               style: Theme.of(context).textTheme.titleMedium
@@ -211,6 +156,7 @@ class CardsServicios extends StatelessWidget {
                       ),
                     ],
                   ),
+                  
                 ],
               ),
             ),
