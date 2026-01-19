@@ -11,6 +11,7 @@ import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/cardsImage.dart';
 import 'package:gixt/Componets/circleimage.dart';
 import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/Componets/sketor/cardsImg.dart';
 import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
 import 'package:gixt/cache.dart';
 import 'package:gixt/services/serviciosbyid_service.dart';
@@ -94,16 +95,20 @@ class _ServicioPageState extends State<ServicioPage> {
                         ),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            _buildTitle(),
-                            const SizedBox(height: 30),
-                            _buildProfile(),
-                            const SizedBox(height: 30),
-                            _buildopcions(),
-                            const SizedBox(height: 30),
-                            _buildWork(),
-                            const SizedBox(height: 30),
-                            _buildTitleIMG(),
-                            const SizedBox(height: 30),
+                            _buildTitle().animate().fade().slideX(begin: -0.2),
+                            const SizedBox(height: 40),
+                            _buildProfile().animate()
+    .fade(duration: 400.ms)
+    .scale(begin: const Offset(0.9, 0.9),),
+                            const SizedBox(height: 40),
+                            _buildopcions().animate()
+    .fade(duration: 400.ms)
+    .scale(begin: const Offset(0.9, 0.9),),
+                            const SizedBox(height: 40),
+                            _buildWork().animate().fade().slideX(begin: -0.2),
+                            const SizedBox(height: 40),
+                            _buildTitleIMG().animate().fade().slideX(begin: -0.2),
+                            const SizedBox(height: 10),
                             _buildImgServicios(),
                           ]),
                         ),
@@ -111,6 +116,7 @@ class _ServicioPageState extends State<ServicioPage> {
                     ],
                   ),
                 ),
+                bottomNavigationBar: _bottomBar(context),
               ),
             );
           },
@@ -146,23 +152,25 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   Widget _buildTitle() {
-    return Expanded(
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Text(
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
                 serviciosById.servicios[0].nombreServicio,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.bold,
                   color: colorWhite,
                 ),
               ),
-            ],
-          ),
-        ],
-      ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -375,7 +383,7 @@ class _ServicioPageState extends State<ServicioPage> {
     );
   }
 
-Widget _buildTitleIMG() {
+  Widget _buildTitleIMG() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Container(
@@ -427,7 +435,7 @@ Widget _buildTitleIMG() {
             : serviciosById.servicios[0].imagenes.length,
         itemBuilder: (context, index) {
           if (isLoading1) {
-            return const CardsEmpresaSkeleton();
+            return const CardsImgSkeleton();
           }
           try {
             final servicio = serviciosById.servicios[0].imagenes[index];
@@ -441,6 +449,93 @@ Widget _buildTitleIMG() {
             return const SizedBox(); // widget vacío
           }
         },
+      ),
+    );
+  }
+
+  Widget _bottomBar(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(0, 0, 0, 0), // Margen para que flote
+      height: 90,
+      decoration: BoxDecoration(
+        color: colorprimario,
+        borderRadius: BorderRadius.circular(0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) =>
+                //           MenuSelectPage(id_empresa: widget.id_empresa),
+                //     ));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+              ),
+              child: Icon(
+                Icons.favorite, // Tu icono original
+                size: 40,
+                color: colorWhite,
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) =>
+                //           MenuSelectPage(id_empresa: widget.id_empresa),
+                //     ));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                elevation: 0,
+              ),
+              child: Icon(
+                Icons.share, // Tu icono original
+                size: 40,
+                color: colorWhite,
+              ),
+            ),
+            Spacer(),
+            ElevatedButton(
+              onPressed: () {
+                // Navigator.push(
+                //     context,
+                //     MaterialPageRoute(
+                //       builder: (context) =>
+                //           MenuSelectPage(id_empresa: widget.id_empresa),
+                //     ));
+              },
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(150, 45),
+                backgroundColor: colorWhite,
+                foregroundColor: colorBlack,
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [Text('Reserva')],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

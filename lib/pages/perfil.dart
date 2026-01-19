@@ -179,8 +179,8 @@ class _PerfilPageState extends State<PerfilPage> {
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
                             const SizedBox(height: 10),
-                            _buildIMGPerfil(),
-                            _buidFormularioInfo(),
+                            _buildIMGPerfil().animate().fade().slideX(begin: -0.2),
+                            _buidFormularioInfo().animate().fade().slideX(begin: -0.2),
                           ]),
                         ),
                       ),
