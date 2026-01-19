@@ -12,12 +12,13 @@ import 'package:gixt/Componets/cardsServicios.dart';
 import 'package:gixt/Componets/circleimage.dart';
 import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/Componets/opciones.dart';
+import 'package:gixt/Componets/sketor/cardsCategoria.dart';
 import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
 import 'package:gixt/Componets/sketor/opciones.dart';
 import 'package:gixt/services/Anuncios_service.dart';
 import 'package:gixt/services/Auth/categorias_service.dart';
-import 'package:gixt/services/Auth/serviciosByCat_service.dart';
-import 'package:gixt/services/Auth/servicios_service.dart';
+import 'package:gixt/services/serviciosByCat_service.dart';
+import 'package:gixt/services/servicios_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -90,9 +91,15 @@ class _CategoriaPageState extends State<CategoriaPage> {
   Future<void> _onRefresh() async {
     setState(() {
       print('Actualizando datos...');
-      api.fetchServicioCatData( widget.id_categoria,pageNumber);
       hasMore = true;
+      pageNumber = 1;
+      api.servicios.clear();
+      isLoading = true;
+      
+    
     });
+    await api.fetchServicioCatData( widget.id_categoria,pageNumber);
+    setState(() => isLoading = false);
   }
 
   @override
@@ -200,14 +207,14 @@ class _CategoriaPageState extends State<CategoriaPage> {
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 1,
         mainAxisSpacing: 16,
-        childAspectRatio: 2.1,
+        childAspectRatio: 2.0,
       ),
       itemCount: isLoading
           ? 3 //  skeletons visibles
           : api.servicios.length + (hasMore ? 1 : 0), // 👈 loader extra
       itemBuilder: (context, index) {
         if (isLoading) {
-          return const CardsEmpresaSkeleton();
+          return const CardsCategoriaSkeleton();
         }
         if (index >= api.servicios.length && !isLoading) {
           return Indicador();

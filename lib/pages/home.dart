@@ -14,7 +14,7 @@ import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
 import 'package:gixt/Componets/sketor/opciones.dart';
 import 'package:gixt/services/Anuncios_service.dart';
 import 'package:gixt/services/Auth/categorias_service.dart';
-import 'package:gixt/services/Auth/servicios_service.dart';
+import 'package:gixt/services/servicios_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:shared_preferences/shared_preferences.dart';

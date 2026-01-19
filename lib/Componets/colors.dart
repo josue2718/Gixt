@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 // Definición de la paleta de colores
 const Color colorError = Color(0xFFFF0000);
 // Paleta de colores azul elegante

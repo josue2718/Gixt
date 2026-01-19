@@ -11,7 +11,7 @@ import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/cache.dart';
-import 'package:gixt/services/Auth/update_service%20copy.dart';
+import 'package:gixt/services/update_service.dart';
 import 'package:gixt/services/User_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_cropper/image_cropper.dart';
