@@ -4,6 +4,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/cache.dart';
+import 'package:gixt/pages/home.dart';
+import 'package:gixt/pages/root.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 Future<void> main() async {
@@ -42,6 +46,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
+   final PreferencesService _preferencesService = PreferencesService();
  @override
   void initState() {
     super.initState();
@@ -53,15 +58,25 @@ class _SplashScreenState extends State<SplashScreen> {
     if (mounted) {
       setState(() => _opacity = 1.0);
     }
-    await Future.delayed(const Duration(seconds: 2));
+    await Future.delayed(const Duration(seconds: 4));
     _checkUser();
   }
 
   Future<void> _checkUser() async {
+      final prefs = await SharedPreferences.getInstance();
+
+     String? inicio = prefs.getString('inicio');
+    if (inicio == 'true') {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => Login()),
+      MaterialPageRoute(builder: (context) => RootPage()),
     );
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => Login()),
+      );
+    }
   }
 
   @override

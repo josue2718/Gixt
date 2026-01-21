@@ -6,13 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/cache.dart';
-import 'package:gixt/services/update_service.dart';
-import 'package:gixt/services/User_service.dart';
+import 'package:gixt/services/user/update_service.dart';
+import 'package:gixt/services/user/User_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -69,7 +70,24 @@ class _PerfilPageState extends State<PerfilPage> {
       hasMore = true;
     });
   }
+  void _logout() async {
 
+    bool continuar = await mostrarAlerta(
+        context,
+        titulo: "Logout",
+        mensaje: 'Seguro que deseas cerrar sesión?',
+        tipo: TipoAlerta.advertencia,
+      );
+    if (!continuar) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>Login(),
+      ),
+    );
+  }
   void _Crear() async {
     showDialog(
       context: context,
@@ -179,7 +197,10 @@ class _PerfilPageState extends State<PerfilPage> {
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
                             const SizedBox(height: 10),
-                            _buildIMGPerfil().animate().fade().slideX(begin: -0.2),
+                            _buildIMGPerfil().animate().fade().slideX(begin: -0.2), 
+                             const SizedBox(height: 30),
+                            _buildopcions().animate().fade().slideX(begin: -0.2),
+                             const SizedBox(height: 10),
                             _buidFormularioInfo().animate().fade().slideX(begin: -0.2),
                           ]),
                         ),
@@ -194,6 +215,150 @@ class _PerfilPageState extends State<PerfilPage> {
       ),
     );
   }
+
+    Widget _buildopcions() {
+    return Expanded(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 50,
+                    width: 50,
+                    decoration: BoxDecoration(
+                      color: colorWhite, // Fondo suave del mismo color
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorprimario.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.add_location_alt, // Tu icono original
+                        size: 25,
+                        color: colorprimario,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Mis Ubicaciones',
+                     maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: colorWhite,
+                    ),
+                  ),
+                 
+                ],
+              ),
+            ),
+            Container(
+              width: 90,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 55,
+                    width: 55,
+                    decoration: BoxDecoration(
+                      color: colorWhite, // Fondo suave del mismo color
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorprimario.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.lock_reset, // Tu icono original
+                        size: 25,
+                        color: colorprimario,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Cambiar Contraseña',
+                     maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: colorWhite,
+                    ),
+                  ),
+                  
+                ],
+              ),
+            ),
+            InkWell(
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                _logout();
+              },
+              child:
+            Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 55,
+                    width: 55,
+                    decoration: BoxDecoration(
+                      color: colorWhite, // Fondo suave del mismo color
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: colorprimario.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.logout, // Tu icono original
+                        size: 25,
+                        color: colorprimario,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Logout',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: colorWhite,
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+            ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(

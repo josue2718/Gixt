@@ -47,6 +47,7 @@ class _LoginState extends State<Login> {
   
   void _login() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+       FocusScope.of(context).unfocus(); 
     showDialog(
       context: context,
       barrierDismissible: false,

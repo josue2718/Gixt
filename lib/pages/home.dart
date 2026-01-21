@@ -14,7 +14,8 @@ import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
 import 'package:gixt/Componets/sketor/opciones.dart';
 import 'package:gixt/services/Anuncios_service.dart';
 import 'package:gixt/services/Auth/categorias_service.dart';
-import 'package:gixt/services/servicios_service.dart';
+import 'package:gixt/services/servicios/servicios_service.dart';
+import 'package:gixt/services/servicios/serviciosbyfav.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -31,6 +32,7 @@ class _HomePageState extends State<HomePage> {
 
   bool hasMore = true;
   final ApiServicios api = ApiServicios();
+   final ApiServiciosFav fav = ApiServiciosFav();
   final ApiCategorias apicategoria = ApiCategorias();
   final Anuncio_service anuncio = Anuncio_service();
   final ScrollController _scrollController = ScrollController();
@@ -45,6 +47,7 @@ class _HomePageState extends State<HomePage> {
     // 👇 SE EJECUTA AL ENTRAR A LA PÁGINA
     print("Entré a Restaurantes");
     api.fetchServicioData(pageNumber);
+    fav.fetchServicioData(pageNumber);
     apicategoria.fetchEmpresaData(pageNumber);
     anuncio.fetchData();
     _loadUserId();
@@ -63,6 +66,7 @@ class _HomePageState extends State<HomePage> {
       print('Actualizando datos...');
       anuncio.updatedata();
       api.updatedata(pageNumber);
+      fav.fetchServicioData(pageNumber);
       hasMore = true;
     });
   }
@@ -75,6 +79,7 @@ class _HomePageState extends State<HomePage> {
         body: FutureBuilder(
           future: Future.wait([
             api.fetchServicioData(pageNumber),
+            fav.fetchServicioData(pageNumber),
             apicategoria.fetchEmpresaData(pageNumber),
           ]),
           builder: (context, snapshot) {
@@ -105,6 +110,12 @@ class _HomePageState extends State<HomePage> {
                             _buildTitle(),
                             const SizedBox(height: 20),
                             _buildServicios(),
+                            const SizedBox(height: 20),
+                           if (fav.servicios.isNotEmpty) ...[
+                              _buildTitleFav(),
+                              const SizedBox(height: 20),
+                              _buildServiciosFav(),
+                            ],
                             const SizedBox(height: 100),
                           ]),
                         ),
@@ -408,6 +419,87 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     ).animate().fade().slideX(begin: -0.2);
+  }
+  
+  Widget _buildTitleFav() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      child: Container(
+        alignment: Alignment.topLeft,
+        child: Row(
+          children: [
+            Text(
+              'Servicios Favoritos',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: colortitulo,
+              ),
+            ),
+            Spacer(),
+            InkWell(
+              onTap: () {
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
+                // );
+              },
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 20,
+                color: colortitulo,
+              ),
+            ),
+          ],
+        ),
+      ).animate().fade().slideX(begin: -0.2),
+    );
+  }
+  
+  Widget _buildServiciosFav() {
+    final isLoading1 = fav.servicios.isEmpty;
+    return SizedBox(
+      height: 320,
+      child: GridView.builder(
+        controller: _scrollController,
+        scrollDirection: Axis.horizontal,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 1,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.2,
+        ),
+        itemCount: isLoading1
+            ? 3 //  skeletons visibles
+            : fav.servicios.length,
+            itemBuilder: (context, index) {
+              if (isLoading1) {
+                return const CardsEmpresaSkeleton();
+              }
+              try {
+          final servicio = fav.servicios[index];
+
+          return CardsServicios(
+            url_img: servicio.img_servicio,
+            nombre: servicio.nombre_servicio,
+            img_trabajador: servicio.img_trabajador,
+            id_servicio: servicio.id_servicio,
+            trabajador: servicio.trabajador,
+            categoria: servicio.categoria,
+            estrellas:  servicio.calificacion,
+            precio:  servicio.precio,
+            descripcion:  servicio.descripcion,
+          )
+              .animate()
+              .fade(duration: 400.ms)
+              .slideY(begin: 0.15)
+              .scale(begin: const Offset(0.96, 0.96));
+
+              } catch (e) {
+                return const SizedBox(); // widget vacío
+              }
+        },
+      ),
+    );
   }
 
 }

@@ -47,5 +47,7 @@ class PreferencesService {
     await prefs.remove(_tokenKey);
     await prefs.remove(_inicioKey);
     await prefs.remove(_idKey);
+    await prefs.remove(_imgKey);
+    await prefs.remove(_userKey);
   }
 }

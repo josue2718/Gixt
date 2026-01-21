@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gixt/pages/express.dart';
 import 'package:gixt/pages/home.dart';
 import 'package:gixt/pages/perfil.dart';
 import 'colors.dart'; // Asegúrate de tener colorfondo1, colorWhite y colorfondo
@@ -11,12 +12,12 @@ class AppBottomNavigation extends StatefulWidget {
 }
 
 class _AppBottomNavigationState extends State<AppBottomNavigation> {
-  int _currentIndex = 1; // Iniciamos en el medio (Home)
+  int _currentIndex = 0; // Iniciamos en el medio (Home)
 
   final List<Widget> _pages = const [
     HomePage(),
     Center(child: Text('Buscar', style: TextStyle(fontSize: 24, color: Colors.white))),
-    Center(child: Text('Express', style: TextStyle(fontSize: 24, color: Colors.white))),
+    ExpressPage(),
     Center(child: Text('Agenda', style: TextStyle(fontSize: 24, color: Colors.white))),
     PerfilPage(),
   ];

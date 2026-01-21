@@ -31,6 +31,7 @@ Future mostrarAlerta(BuildContext context, {
   }
 
   return showDialog(
+    barrierDismissible: false, 
     context: context,
     builder: (BuildContext context) {
       return Dialog(
@@ -94,9 +95,20 @@ Future mostrarAlerta(BuildContext context, {
                     "CONTINUAR",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
+                  
+                  onPressed: () =>  Navigator.pop(context, true),
                 ),
+                
               ),
+              if (tipo == TipoAlerta.advertencia)...[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false); 
+                },
+                child: const Text('Cancelar',
+                style: TextStyle(fontWeight: FontWeight.bold, color: colorWhite),),
+              ),
+              ]
             ],
           ),
         ),

@@ -18,7 +18,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter/services.dart';
 
-
 class Crearcuenta extends StatefulWidget {
   const Crearcuenta({super.key});
 
@@ -26,18 +25,17 @@ class Crearcuenta extends StatefulWidget {
   State<Crearcuenta> createState() => _CrearcuentaState();
 }
 
-
 class _CrearcuentaState extends State<Crearcuenta> {
   final _formKey = GlobalKey<FormState>();
   final _formKeyinfo = GlobalKey<FormState>();
   final _formKeyImg = GlobalKey<FormState>();
-  final _emailController = TextEditingController(); 
-  final _passwordController = TextEditingController(); 
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _passwordconfirmarController = TextEditingController();
-  final _first_nameController= TextEditingController();
-  final _last_nameController= TextEditingController();
-  final _phoneController= TextEditingController();
-  final _fecha_nacimientoController= TextEditingController();
+  final _first_nameController = TextEditingController();
+  final _last_nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _fecha_nacimientoController = TextEditingController();
   bool _isObscured = true;
   bool _isObscured1 = true;
   final PageController _controller = PageController();
@@ -45,24 +43,28 @@ class _CrearcuentaState extends State<Crearcuenta> {
   int _paginaActual = 0;
   File? _image;
   String? _genero;
-    String? _token;
+  String? _token;
   String? _inicio;
   String? _id;
   String? _img;
   String? _user;
 
-  Future<void> _saveToken(String token, String inicio, String id, String user,String img) async {
-    await _preferencesService.savePreferences(token, inicio, id, img ,user );
+  Future<void> _saveToken(
+    String token,
+    String inicio,
+    String id,
+    String user,
+    String img,
+  ) async {
+    await _preferencesService.savePreferences(token, inicio, id, img, user);
     setState(() {
       _token = token;
       _inicio = inicio;
       _id = id;
       _img = img;
       _user = user;
-      
     });
   }
-  
 
   void _Crear() async {
     if (_image == null) {
@@ -77,7 +79,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) =>  Indicador()
+      builder: (_) => Indicador(),
     );
 
     final result = await CuentaService.Crear(
@@ -88,36 +90,53 @@ class _CrearcuentaState extends State<Crearcuenta> {
       imagen: _image ?? File(''),
       phone: _phoneController.text,
       ciudad: "_ciudadController.text",
-      longitud:11,
+      longitud: 11,
       latitud: 11,
       genero: _genero ?? "",
       fechaNacimiento: _fecha_nacimientoController.text,
       tokenFcm: "cfddds",
     );
 
-    Navigator.pop(context); 
+    Navigator.pop(context);
 
     if (result['success'] == true) {
-       final data = result['data'];
+      final data = result['data'];
       String message = "Bienvenido ${data['username']}";
       Future.microtask(() async {
-        await _saveToken(data['token'], "true", data['id'].toString(), data['username'], data['img']);
-        await mostrarAlerta(context,titulo:  "Bienvenido", mensaje:  message, tipo: TipoAlerta.exito);
+        await _saveToken(
+          data['token'],
+          "true",
+          data['id'].toString(),
+          data['username'],
+          data['img'],
+        );
+        await mostrarAlerta(
+          context,
+          titulo: "Bienvenido",
+          mensaje: message,
+          tipo: TipoAlerta.exito,
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => RootPage()),
         );
       });
-
     } else {
-      mostrarAlerta(context,titulo:  "Error", mensaje:  result['message'], tipo: TipoAlerta.error);
+      mostrarAlerta(
+        context,
+        titulo: "Error",
+        mensaje: result['message'],
+        tipo: TipoAlerta.error,
+      );
     }
   }
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
 
-    final XFile? pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+    );
 
     if (pickedFile == null) return;
 
@@ -150,27 +169,27 @@ class _CrearcuentaState extends State<Crearcuenta> {
     });
   }
 
-
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-
-
   @override
   Widget build(BuildContext context) {
-    final paginas = [_buidFormulario(),_buidFormularioInfo(),_buidFormularioImg()];
+    final paginas = [
+      _buidFormulario(),
+      _buidFormularioInfo(),
+      _buidFormularioImg(),
+    ];
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: colorfondo,
-        body: 
-         AutofillGroup(
-            child: Padding(
-              padding: const EdgeInsets.all(0.0),
-              child: Column(
-                children: [
+        body: AutofillGroup(
+          child: Padding(
+            padding: const EdgeInsets.all(0.0),
+            child: Column(
+              children: [
                 _buidTitle(),
                 Expanded(
                   child: PageView(
@@ -183,21 +202,18 @@ class _CrearcuentaState extends State<Crearcuenta> {
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                    paginas.length,
-                    (i) => _dot(i),
-                  ),
+                  children: List.generate(paginas.length, (i) => _dot(i)),
                 ),
-                SizedBox(height: 50,)
-
-                ]),
-            )
-          )
-        
+                SizedBox(height: 50),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
-Widget _dot(int index) {
+
+  Widget _dot(int index) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -264,7 +280,6 @@ Widget _dot(int index) {
                   color: colorWhite,
                 ),
               ),
-              
             ],
           ),
         ),
@@ -274,11 +289,10 @@ Widget _dot(int index) {
 
   Widget _buidFormulario() {
     final screenHeight = MediaQuery.of(context).size.height;
-    return  SingleChildScrollView(
+    return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: 
-        Form(
+        child: Form(
           key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -303,7 +317,7 @@ Widget _dot(int index) {
                     indent: 50,
                     endIndent: 50,
                   ),
-                ]
+                ],
               ),
               const SizedBox(height: 40),
               TextFormField(
@@ -370,7 +384,7 @@ Widget _dot(int index) {
                 },
               ),
               const SizedBox(height: 20),
-               TextFormField(
+              TextFormField(
                 controller: _passwordconfirmarController,
                 obscureText: _isObscured1,
                 style: const TextStyle(color: colorWhite),
@@ -409,7 +423,8 @@ Widget _dot(int index) {
               const SizedBox(height: 70),
               ElevatedButton(
                 onPressed: () {
-                  if (_passwordController.text != _passwordconfirmarController.text) {
+                  if (_passwordController.text !=
+                      _passwordconfirmarController.text) {
                     mostrarAlerta(
                       context,
                       titulo: 'Las contraseñas no coinciden',
@@ -418,12 +433,11 @@ Widget _dot(int index) {
                     );
                     return;
                   }
-                if (!(_formKey.currentState?.validate() ?? false)) return;
-                 _controller.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-  
+                  if (!(_formKey.currentState?.validate() ?? false)) return;
+                  _controller.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   fixedSize: const Size(300, 50),
@@ -433,10 +447,7 @@ Widget _dot(int index) {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
-                  'Siguiente',
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
               ),
             ],
           ),
@@ -444,6 +455,7 @@ Widget _dot(int index) {
       ),
     );
   }
+
   Widget _buidFormularioInfo() {
     final screenHeight = MediaQuery.of(context).size.height;
     return SingleChildScrollView(
@@ -474,7 +486,7 @@ Widget _dot(int index) {
                     indent: 50,
                     endIndent: 50,
                   ),
-                ]
+                ],
               ),
               const SizedBox(height: 40),
               TextFormField(
@@ -555,30 +567,30 @@ Widget _dot(int index) {
               ),
               const SizedBox(height: 10),
               TextFormField(
-              controller: _fecha_nacimientoController,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(8),
-                FechaNacimientoFormatter(),
-              ],
-              
-              decoration: const InputDecoration(
-                labelText: 'Fecha de nacimiento',
-                labelStyle: const TextStyle(color: colorWhite),
-                hintText: 'DD/MM/AAAA',
-                suffixIcon: Icon(Icons.cake ,color: colorWhite,),
-                 focusedBorder: const UnderlineInputBorder(
+                controller: _fecha_nacimientoController,
+                style: const TextStyle(color: colorWhite),
+                cursorColor: colorWhite,
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(8),
+                  FechaNacimientoFormatter(),
+                ],
+
+                decoration: const InputDecoration(
+                  labelText: 'Fecha de nacimiento',
+                  labelStyle: const TextStyle(color: colorWhite),
+                  hintText: 'DD/MM/AAAA',
+                  suffixIcon: Icon(Icons.cake, color: colorWhite),
+                  focusedBorder: const UnderlineInputBorder(
                     borderSide: BorderSide(color: colorWhite),
                   ),
-               
+
                   errorStyle: const TextStyle(
                     color: colorWhite,
                     fontWeight: FontWeight.bold,
                   ),
-              ),
+                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Ingresa tu fecha de nacimiento';
@@ -590,7 +602,7 @@ Widget _dot(int index) {
                 },
               ),
               const SizedBox(height: 20),
-                Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
@@ -643,20 +655,20 @@ Widget _dot(int index) {
               const SizedBox(height: 50),
               ElevatedButton(
                 onPressed: () {
-                if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
-                if (_genero == null) {
-                          mostrarAlerta(
-                            context,
-                            titulo: 'Género requerido',
-                            mensaje: 'Por favor, selecciona tu género',
-                            tipo: TipoAlerta.advertencia,
-                          );
-                          return;
-                        }
-                 _controller.nextPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
+                  if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
+                  if (_genero == null) {
+                    mostrarAlerta(
+                      context,
+                      titulo: 'Género requerido',
+                      mensaje: 'Por favor, selecciona tu género',
+                      tipo: TipoAlerta.advertencia,
+                    );
+                    return;
+                  }
+                  _controller.nextPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   fixedSize: const Size(300, 50),
@@ -666,21 +678,18 @@ Widget _dot(int index) {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
-                  'Siguiente',
-                  style: TextStyle(fontSize: 18),
-                ),
+                child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
               ),
               TextButton(
-                    onPressed: () {
-                     _controller.previousPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                    },
-                    style: TextButton.styleFrom(foregroundColor: colorWhite),
-                    child: const Text('Regresar'),
-                  ),
+                onPressed: () {
+                  _controller.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                style: TextButton.styleFrom(foregroundColor: colorWhite),
+                child: const Text('Regresar'),
+              ),
             ],
           ),
         ),
@@ -718,39 +727,39 @@ Widget _dot(int index) {
                     indent: 50,
                     endIndent: 50,
                   ),
-                ]
+                ],
               ),
               SizedBox(height: 20),
-              Column
-              (
+              Column(
                 children: [
-                _image == null
-                ?  Container(
-                    decoration: BoxDecoration(
-                    color:  Color.fromARGB(255, 177, 177, 177),
-                    borderRadius: BorderRadius.circular(100)),
-                    width: 200,
-                    height: 200,
-                    child:  IconButton(
-                      onPressed: () {
-                      },
-                      icon: const Icon(Icons.person ), // Usa un icono de calendario
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                      iconSize: 65,
-                    ),
-                  ) :
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(0, 103, 10, 10),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    width: 200,
-                    height: 200,
-                    child: CircleAvatar(
-                    backgroundImage:
-                      FileImage(_image!)
-                    ),  
-                  ),
+                  _image == null
+                      ? Container(
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 177, 177, 177),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          width: 200,
+                          height: 200,
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.person,
+                            ), // Usa un icono de calendario
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            iconSize: 65,
+                          ),
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(0, 103, 10, 10),
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          width: 200,
+                          height: 200,
+                          child: CircleAvatar(
+                            backgroundImage: FileImage(_image!),
+                          ),
+                        ),
                   SizedBox(height: 25),
                   Transform.translate(
                     offset: Offset(
@@ -766,8 +775,7 @@ Widget _dot(int index) {
                       height: 50,
                       child: IconButton(
                         onPressed: () {
-                            _pickImage();
-                            
+                          _pickImage();
                         },
                         icon: const Icon(
                           Icons.add_a_photo_outlined,
@@ -796,15 +804,15 @@ Widget _dot(int index) {
                 ),
               ),
               TextButton(
-                    onPressed: () {
-                     _controller.previousPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeInOut,
-                    );
-                    },
-                    style: TextButton.styleFrom(foregroundColor: colorWhite),
-                    child: const Text('Regresar'),
-                  ),
+                onPressed: () {
+                  _controller.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                style: TextButton.styleFrom(foregroundColor: colorWhite),
+                child: const Text('Regresar'),
+              ),
             ],
           ),
         ),
@@ -812,6 +820,3 @@ Widget _dot(int index) {
     );
   }
 }
-
-
-

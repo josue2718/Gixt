@@ -14,9 +14,10 @@ import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/Componets/sketor/cardsImg.dart';
 import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
 import 'package:gixt/cache.dart';
-import 'package:gixt/services/serviciosbyid_service.dart';
-import 'package:gixt/services/update_service.dart';
-import 'package:gixt/services/User_service.dart';
+import 'package:gixt/services/favoritos/favorite_servive.dart';
+import 'package:gixt/services/servicios/serviciosbyid_service.dart';
+import 'package:gixt/services/user/update_service.dart';
+import 'package:gixt/services/user/User_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
@@ -42,6 +43,7 @@ class _ServicioPageState extends State<ServicioPage> {
   File? _image;
   String? _img;
   String? _user;
+  bool fav = false;
 
   Future<void> _updateUser(String user, String img) async {
     await _preferencesService.savePreferencesUser(img, user);
@@ -54,7 +56,12 @@ class _ServicioPageState extends State<ServicioPage> {
   void initState() {
     super.initState();
     print("Entré a Mi Servicio");
-    serviciosById.fetchServicioData(widget.id_servicio);
+    _initial();
+  }
+
+  Future<void> _initial() async {
+    await serviciosById.fetchServicioData(widget.id_servicio);
+    fav = serviciosById.servicios[0].fav;
   }
 
   Future<void> _onRefresh() async {
@@ -63,6 +70,23 @@ class _ServicioPageState extends State<ServicioPage> {
       serviciosById.fetchServicioData(widget.id_servicio);
       hasMore = true;
     });
+  }
+
+  void _fav() async {
+    setState(() {
+      fav = !fav;
+    });
+    final result = await FavoritoService.Crear(id_servicio: widget.id_servicio);
+    print(result);
+    if (result['success'] == true) {
+      setState(() {
+        fav = fav;
+      });
+    } else {
+      setState(() {
+        fav = fav;
+      });
+    }
   }
 
   @override
@@ -97,17 +121,21 @@ class _ServicioPageState extends State<ServicioPage> {
                           delegate: SliverChildListDelegate([
                             _buildTitle().animate().fade().slideX(begin: -0.2),
                             const SizedBox(height: 40),
-                            _buildProfile().animate()
-    .fade(duration: 400.ms)
-    .scale(begin: const Offset(0.9, 0.9),),
+                            _buildProfile()
+                                .animate()
+                                .fade(duration: 400.ms)
+                                .scale(begin: const Offset(0.9, 0.9)),
                             const SizedBox(height: 40),
-                            _buildopcions().animate()
-    .fade(duration: 400.ms)
-    .scale(begin: const Offset(0.9, 0.9),),
+                            _buildopcions()
+                                .animate()
+                                .fade(duration: 400.ms)
+                                .scale(begin: const Offset(0.9, 0.9)),
                             const SizedBox(height: 40),
                             _buildWork().animate().fade().slideX(begin: -0.2),
                             const SizedBox(height: 40),
-                            _buildTitleIMG().animate().fade().slideX(begin: -0.2),
+                            _buildTitleIMG().animate().fade().slideX(
+                              begin: -0.2,
+                            ),
                             const SizedBox(height: 10),
                             _buildImgServicios(),
                           ]),
@@ -248,8 +276,8 @@ class _ServicioPageState extends State<ServicioPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    height: 55,
-                    width: 55,
+                    height: 50,
+                    width: 50,
                     decoration: BoxDecoration(
                       color: colorWhite, // Fondo suave del mismo color
                       shape: BoxShape.circle,
@@ -261,7 +289,7 @@ class _ServicioPageState extends State<ServicioPage> {
                     child: Center(
                       child: Icon(
                         Icons.attach_money, // Tu icono original
-                        size: 30,
+                        size: 25,
                         color: colorprimario,
                       ),
                     ),
@@ -270,8 +298,7 @@ class _ServicioPageState extends State<ServicioPage> {
                   Text(
                     'Precio',
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
                       color: colorWhite,
                     ),
                   ),
@@ -293,8 +320,8 @@ class _ServicioPageState extends State<ServicioPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    height: 55,
-                    width: 55,
+                    height: 50,
+                    width: 50,
                     decoration: BoxDecoration(
                       color: colorWhite, // Fondo suave del mismo color
                       shape: BoxShape.circle,
@@ -306,7 +333,7 @@ class _ServicioPageState extends State<ServicioPage> {
                     child: Center(
                       child: Icon(
                         Icons.schedule, // Tu icono original
-                        size: 30,
+                        size: 25,
                         color: colorprimario,
                       ),
                     ),
@@ -315,8 +342,7 @@ class _ServicioPageState extends State<ServicioPage> {
                   Text(
                     'Duración',
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
                       color: colorWhite,
                     ),
                   ),
@@ -338,8 +364,8 @@ class _ServicioPageState extends State<ServicioPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    height: 55,
-                    width: 55,
+                    height: 50,
+                    width: 50,
                     decoration: BoxDecoration(
                       color: colorWhite, // Fondo suave del mismo color
                       shape: BoxShape.circle,
@@ -351,7 +377,7 @@ class _ServicioPageState extends State<ServicioPage> {
                     child: Center(
                       child: Icon(
                         Icons.star_rounded, // Tu icono original
-                        size: 30,
+                        size: 25,
                         color: colorprimario,
                       ),
                     ),
@@ -360,8 +386,7 @@ class _ServicioPageState extends State<ServicioPage> {
                   Text(
                     'Estrellas',
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
                       color: colorWhite,
                     ),
                   ),
@@ -391,7 +416,7 @@ class _ServicioPageState extends State<ServicioPage> {
         child: Row(
           children: [
             Text(
-              'Mis servicios',
+              'Mis Referencias ',
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -474,14 +499,7 @@ class _ServicioPageState extends State<ServicioPage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             ElevatedButton(
-              onPressed: () {
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) =>
-                //           MenuSelectPage(id_empresa: widget.id_empresa),
-                //     ));
-              },
+              onPressed: _fav,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
@@ -490,7 +508,7 @@ class _ServicioPageState extends State<ServicioPage> {
               child: Icon(
                 Icons.favorite, // Tu icono original
                 size: 40,
-                color: colorWhite,
+                color: !fav ? colorWhite : colorError,
               ),
             ),
             ElevatedButton(
