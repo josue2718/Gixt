@@ -70,7 +70,13 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
   Widget _buildNavItem(IconData icon, IconData activeIcon, int index, String label) {
     bool isSelected = _currentIndex == index;
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () async {
+      if (_currentIndex == 2 && index != 2) {
+        final salir = await _confirmarSalirExpress();
+        if (!salir) return;
+      }
+       setState(() => _currentIndex = index);
+      }, 
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -120,4 +126,29 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
       ),
     );
   }
+
+  Future<bool> _confirmarSalirExpress() async {
+  return await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Alerta'),
+          content: const Text(
+            'Estás a punto de salir de la creación del servicio express. '
+            '¿Deseas continuar?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Salir'),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+}
+
 }

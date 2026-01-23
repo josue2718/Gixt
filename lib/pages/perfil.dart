@@ -50,6 +50,7 @@ class _PerfilPageState extends State<PerfilPage> {
   String? _user;
 
   Future<void> _updateUser(String user, String img) async {
+    await _preferencesService.clearPreferencesUser();
     await _preferencesService.savePreferencesUser(img, user);
     setState(() {
       _img = img;
@@ -118,7 +119,6 @@ class _PerfilPageState extends State<PerfilPage> {
         mensaje: 'tus datos se actualizo correctamente',
         tipo: TipoAlerta.exito,
       );
-
       await user.updatedata();
       _updateUser(user.user[0].username, user.user[0].url_img);
     } else {
@@ -131,42 +131,68 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile == null) return;
-
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: pickedFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Recortar imagen',
-          toolbarColor: Colors.black,
-          toolbarWidgetColor: Colors.white,
-          lockAspectRatio: true,
-          initAspectRatio: CropAspectRatioPreset.square,
+ 
+Future<void> _pickImage() async {
+  final ImageSource? source = await showModalBottomSheet<ImageSource>(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Cámara'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galería'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
         ),
-        IOSUiSettings(
-          title: 'Recortar imagen',
-          aspectRatioLockEnabled: true,
-          aspectRatioPresets: [CropAspectRatioPreset.square],
-          doneButtonTitle: 'Listo',
-          cancelButtonTitle: 'Cancelar',
-          resetAspectRatioEnabled: false,
-          rotateButtonsHidden: true,
-        ),
-      ],
-    );
+      );
+    },
+  );
 
-    if (croppedFile == null) return;
+  if (source == null) return; // Canceló
 
-    setState(() {
+  final picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(
+    source: source,
+    imageQuality: 85,
+  );
+
+  if (pickedFile == null) return;
+
+  final croppedFile = await ImageCropper().cropImage(
+    sourcePath: pickedFile.path,
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Recortar imagen',
+        toolbarColor: Colors.black,
+        toolbarWidgetColor: Colors.white,
+        lockAspectRatio: true,
+        initAspectRatio: CropAspectRatioPreset.square,
+      ),
+      IOSUiSettings(
+        title: 'Recortar imagen',
+        aspectRatioLockEnabled: true,
+        aspectRatioPresets: [CropAspectRatioPreset.square],
+      ),
+    ],
+  );
+
+  if (croppedFile == null) return;
+
+  setState(() {
       _image = File(croppedFile.path);
     });
-  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -387,8 +413,7 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   Widget _buildIMGPerfil() {
-    _imageUrl =
-        "${user.user[0].url_img}?v=${DateTime.now().millisecondsSinceEpoch}";
+    _imageUrl = "${user.user[0].url_img}";
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Column(

@@ -50,4 +50,9 @@ class PreferencesService {
     await prefs.remove(_imgKey);
     await prefs.remove(_userKey);
   }
+    Future<void> clearPreferencesUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_imgKey);
+    await prefs.remove(_userKey);
+  }
 }

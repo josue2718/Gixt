@@ -26,7 +26,7 @@ import 'package:flutter/services.dart';
 
 class ExpressPage extends StatefulWidget {
   const ExpressPage({super.key});
-
+ static bool tieneDatos = false;
   @override
   State<ExpressPage> createState() => _ExpressPageState();
 }
@@ -35,22 +35,19 @@ class _ExpressPageState extends State<ExpressPage> {
   final _formKey = GlobalKey<FormState>();
   final _formKeyinfo = GlobalKey<FormState>();
   final _formKeyImg = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _passwordconfirmarController = TextEditingController();
-  final _first_nameController = TextEditingController();
-  final _last_nameController = TextEditingController();
+  final _problemaController = TextEditingController();
+  final _descripcionController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _fecha_nacimientoController = TextEditingController();
+
   bool _isObscured = true;
   bool _isObscured1 = true;
   final PageController _controller = PageController();
   final PreferencesService _preferencesService = PreferencesService();
   final ApiCategorias apicategoria = ApiCategorias();
   int? _categoriaSeleccionada;
-
+  
   int _paginaActual = 0;
-  File? _image;
+List<File?> _images = List.generate(4, (_) => null);
   String? _genero;
   String? _token;
   String? _inicio;
@@ -58,8 +55,9 @@ class _ExpressPageState extends State<ExpressPage> {
   String? _img;
   String? _user;
 
+
   void _Crear() async {
-    if (_image == null) {
+    if (_images.isEmpty) {
       mostrarAlerta(
         context,
         titulo: 'Imagen requerida',
@@ -74,85 +72,110 @@ class _ExpressPageState extends State<ExpressPage> {
       builder: (_) => Indicador(),
     );
 
-    final result = await CuentaService.Crear(
-      email: _emailController.text,
-      password: _passwordController.text,
-      firstName: _first_nameController.text,
-      lastName: _last_nameController.text,
-      imagen: _image ?? File(''),
-      phone: _phoneController.text,
-      ciudad: "_ciudadController.text",
-      longitud: 11,
-      latitud: 11,
-      genero: _genero ?? "",
-      fechaNacimiento: _fecha_nacimientoController.text,
-      tokenFcm: "cfddds",
-    );
+    // final result = await CuentaService.Crear(
+    //   email: _emailController.text,
+    //   password: _passwordController.text,
+    //   firstName: _first_nameController.text,
+    //   lastName: _last_nameController.text,
+    //   imagen:  File(''),
+    //   phone: _phoneController.text,
+    //   ciudad: "_ciudadController.text",
+    //   longitud: 11,
+    //   latitud: 11,
+    //   genero: _genero ?? "",
+    //   fechaNacimiento: _fecha_nacimientoController.text,
+    //   tokenFcm: "cfddds",
+    // );
 
     Navigator.pop(context);
 
-    if (result['success'] == true) {
-      final data = result['data'];
-      String message = "Bienvenido ${data['username']}";
-      Future.microtask(() async {
-        await mostrarAlerta(
-          context,
-          titulo: "Bienvenido",
-          mensaje: message,
-          tipo: TipoAlerta.exito,
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => RootPage()),
-        );
-      });
-    } else {
-      mostrarAlerta(
-        context,
-        titulo: "Error",
-        mensaje: result['message'],
-        tipo: TipoAlerta.error,
+    // if (result['success'] == true) {
+    //   final data = result['data'];
+    //   String message = "Bienvenido ${data['username']}";
+    //   Future.microtask(() async {
+    //     await mostrarAlerta(
+    //       context,
+    //       titulo: "Bienvenido",
+    //       mensaje: message,
+    //       tipo: TipoAlerta.exito,
+    //     );
+    //     Navigator.pushReplacement(
+    //       context,
+    //       MaterialPageRoute(builder: (context) => RootPage()),
+    //     );
+    //   });
+    // } else {
+    //   mostrarAlerta(
+    //     context,
+    //     titulo: "Error",
+    //     mensaje: result['message'],
+    //     tipo: TipoAlerta.error,
+    //   );
+    // }
+  }
+
+Future<void> _pickImage(int index) async {
+  final ImageSource? source = await showModalBottomSheet<ImageSource>(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Cámara'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galería'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
       );
-    }
-  }
+    },
+  );
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
+  if (source == null) return; // Canceló
 
-    final XFile? pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-    );
+  final picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(
+    source: source,
+    imageQuality: 85,
+  );
 
-    if (pickedFile == null) return;
+  if (pickedFile == null) return;
 
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: pickedFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Recortar imagen',
-          toolbarColor: Colors.black,
-          toolbarWidgetColor: Colors.white,
-          lockAspectRatio: true,
-          initAspectRatio: CropAspectRatioPreset.square,
-        ),
-        IOSUiSettings(
-          title: 'Recortar imagen',
-          aspectRatioLockEnabled: true,
-          aspectRatioPresets: [CropAspectRatioPreset.square],
-          doneButtonTitle: 'Listo',
-          cancelButtonTitle: 'Cancelar',
-          resetAspectRatioEnabled: false,
-          rotateButtonsHidden: true,
-        ),
-      ],
-    );
+  final croppedFile = await ImageCropper().cropImage(
+    sourcePath: pickedFile.path,
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Recortar imagen',
+        toolbarColor: Colors.black,
+        toolbarWidgetColor: Colors.white,
+        lockAspectRatio: true,
+        initAspectRatio: CropAspectRatioPreset.square,
+      ),
+      IOSUiSettings(
+        title: 'Recortar imagen',
+        aspectRatioLockEnabled: true,
+        aspectRatioPresets: [CropAspectRatioPreset.square],
+      ),
+    ],
+  );
 
-    if (croppedFile == null) return;
+  if (croppedFile == null) return;
 
-    setState(() {
-      _image = File(croppedFile.path);
-    });
-  }
+  setState(() {
+    _images[index] = File(croppedFile.path);
+  });
+}
+
 
   @override
   void dispose() {
@@ -175,7 +198,8 @@ class _ExpressPageState extends State<ExpressPage> {
       _buidFormularioCategoria(),
       _buidFormularioUbicacion(),
     ];
-    return Scaffold(
+    return 
+  Scaffold(
       backgroundColor: colorfondo,
       body: CustomScrollView(
         slivers: [
@@ -204,6 +228,7 @@ class _ExpressPageState extends State<ExpressPage> {
           ),
         ],
       ),
+  
     );
   }
 
@@ -275,6 +300,7 @@ class _ExpressPageState extends State<ExpressPage> {
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         child: Form(
+          key: _formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -296,7 +322,7 @@ class _ExpressPageState extends State<ExpressPage> {
               ),
               const SizedBox(height: 20),
               TextFormField(
-                controller: _first_nameController,
+                controller: _problemaController,
                 style: const TextStyle(color: colorWhite),
                 cursorColor: colorWhite,
                 decoration: InputDecoration(
@@ -321,7 +347,7 @@ class _ExpressPageState extends State<ExpressPage> {
               ),
               const SizedBox(height: 20),
               TextFormField(
-                controller: _last_nameController,
+                controller: _descripcionController,
                 style: const TextStyle(color: colorWhite),
                 cursorColor: colorWhite,
                 decoration: InputDecoration(
@@ -388,10 +414,20 @@ class _ExpressPageState extends State<ExpressPage> {
                 ],
               ),
               SizedBox(height: 20),
-              _buidFormularioImg(),
+            _buidFormularioImg(),
+              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  // if (!(_formKey.currentState?.validate() ?? false)) return;
+                  if (!(_formKey.currentState?.validate() ?? false)) return;
+                  if (_images.where((image) => image != null).length < 3) {
+                    mostrarAlerta(
+                      context,
+                      titulo: 'Imagen requerida',
+                      mensaje: 'Por favor llena los 3 campos de imagen',
+                      tipo: TipoAlerta.advertencia,
+                    );
+                    return;
+                  }
                   _controller.nextPage(
                     duration: const Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
@@ -572,257 +608,84 @@ class _ExpressPageState extends State<ExpressPage> {
   }
 
   Widget _buidFormularioImg() {
-    final screenHeight = MediaQuery.of(context).size.height;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 20),
+    child: SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  _image == null
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 177, 177, 177),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.person,
-                            ), // Usa un icono de calendario
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            iconSize: 65,
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(0, 103, 10, 10),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.file(_image!, fit: BoxFit.cover),
-                          ),
-                        ),
-                  SizedBox(height: 25),
-                  Transform.translate(
-                    offset: Offset(
-                      70,
-                      -70,
-                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorprimario,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      width: 50,
-                      height: 50,
-                      child: IconButton(
-                        onPressed: () {
-                          _pickImage();
-                        },
-                        icon: const Icon(
-                          Icons.add_a_photo_outlined,
-                        ), // Usa un icono de calendario
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        iconSize: 25,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  _image == null
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 177, 177, 177),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.person,
-                            ), // Usa un icono de calendario
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            iconSize: 65,
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(0, 103, 10, 10),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.file(_image!, fit: BoxFit.cover),
-                          ),
-                        ),
-                  SizedBox(height: 25),
-                  Transform.translate(
-                    offset: Offset(
-                      70,
-                      -70,
-                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorprimario,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      width: 50,
-                      height: 50,
-                      child: IconButton(
-                        onPressed: () {
-                          _pickImage();
-                        },
-                        icon: const Icon(
-                          Icons.add_a_photo_outlined,
-                        ), // Usa un icono de calendario
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        iconSize: 25,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Column(
-                children: [
-                  _image == null
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 177, 177, 177),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.person,
-                            ), // Usa un icono de calendario
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            iconSize: 65,
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(0, 103, 10, 10),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.file(_image!, fit: BoxFit.cover),
-                          ),
-                        ),
-                  SizedBox(height: 25),
-                  Transform.translate(
-                    offset: Offset(
-                      70,
-                      -70,
-                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorprimario,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      width: 50,
-                      height: 50,
-                      child: IconButton(
-                        onPressed: () {
-                          _pickImage();
-                        },
-                        icon: const Icon(
-                          Icons.add_a_photo_outlined,
-                        ), // Usa un icono de calendario
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        iconSize: 25,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                children: [
-                  _image == null
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 177, 177, 177),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.person,
-                            ), // Usa un icono de calendario
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            iconSize: 65,
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(0, 103, 10, 10),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.file(_image!, fit: BoxFit.cover),
-                          ),
-                        ),
-                  SizedBox(height: 25),
-                  Transform.translate(
-                    offset: Offset(
-                      70,
-                      -70,
-                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorprimario,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      width: 50,
-                      height: 50,
-                      child: IconButton(
-                        onPressed: () {
-                          _pickImage();
-                        },
-                        icon: const Icon(
-                          Icons.add_a_photo_outlined,
-                        ), // Usa un icono de calendario
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        iconSize: 25,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+          imageBox(0),
+          const SizedBox(width: 50),
+          imageBox(1),
+          const SizedBox(width: 50),
+          imageBox(2),
+          const SizedBox(width: 30),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+  Widget imageBox(int index) {
+  return  Column(
+                children: [
+                 _images[index] == null
+                      ? Container(
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(255, 177, 177, 177),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          width: 150,
+                          height: 150,
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: const Icon(
+                              Icons.person,
+                            ), // Usa un icono de calendario
+                            color: const Color.fromARGB(255, 255, 255, 255),
+                            iconSize: 65,
+                          ),
+                        )
+                      : Container(
+                          decoration: BoxDecoration(
+                            color: Color.fromARGB(0, 103, 10, 10),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          width: 150,
+                          height: 150,
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: Image.file(_images[index]!, fit: BoxFit.cover),
+                          ),
+                        ),
+                  SizedBox(height: 25),
+                  Transform.translate(
+                    offset: Offset(
+                      70,
+                      -70,
+                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: colorprimario,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      width: 50,
+                      height: 50,
+                      child: IconButton(
+                        onPressed: () {
+                          _pickImage(index);
+                        },
+                        icon: const Icon(
+                          Icons.add_a_photo_outlined,
+                        ), // Usa un icono de calendario
+                        color: const Color.fromARGB(255, 255, 255, 255),
+                        iconSize: 25,
+                      ),
+                    ),
+                  ),
+                ],
+              
+  );
+}
+
 }

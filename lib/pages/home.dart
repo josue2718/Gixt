@@ -55,6 +55,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
+
     setState(() {
       img = prefs.getString('img');
       username = prefs.getString('user');
