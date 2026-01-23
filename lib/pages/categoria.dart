@@ -146,6 +146,9 @@ class _CategoriaPageState extends State<CategoriaPage> {
       snap: false, // NO animación automática
       elevation: 0,
       toolbarHeight: 80,
+      iconTheme: const IconThemeData(
+        color: Colors.white, // 👈 color del ícono
+      ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),

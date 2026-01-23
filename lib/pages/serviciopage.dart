@@ -154,30 +154,32 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   SliverAppBar _buildSliverAppBar() {
-    return SliverAppBar(
-      backgroundColor: colorprimario,
-      expandedHeight: 90,
-      pinned: true, //  deja solo la barra pequeña visible
-      floating: false, //  NO aparece al subir
-      snap: false, // NO animación automática
-      elevation: 0,
-      toolbarHeight: 90,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+  return SliverAppBar(
+    backgroundColor: colorprimario,
+    expandedHeight: 90,
+    pinned: true,
+    floating: false,
+    snap: false,
+    elevation: 0,
+    toolbarHeight: 90,
+
+   iconTheme: const IconThemeData(
+        color: Colors.white, // 👈 color del ícono
       ),
-      flexibleSpace: FlexibleSpaceBar(
-        centerTitle: true,
-        title: Text(
-          'Mi Servicio',
-          style: GoogleFonts.poppins(
-            fontSize: 25,
-            fontWeight: FontWeight.w600,
-            color: colorsecundario,
-          ),
+
+    flexibleSpace: FlexibleSpaceBar(
+      centerTitle: true,
+      title: Text(
+        'Mi Servicio',
+        style: GoogleFonts.poppins(
+          fontSize: 25,
+          fontWeight: FontWeight.w600,
+          color: colorsecundario,
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildTitle() {
     return Column(
@@ -297,10 +299,7 @@ class _ServicioPageState extends State<ServicioPage> {
                   SizedBox(height: 5),
                   Text(
                     'Precio',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorWhite,
-                    ),
+                    style: TextStyle(fontSize: 13, color: colorWhite),
                   ),
                   SizedBox(height: 5),
                   Text(
@@ -341,10 +340,7 @@ class _ServicioPageState extends State<ServicioPage> {
                   SizedBox(height: 5),
                   Text(
                     'Duración',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorWhite,
-                    ),
+                    style: TextStyle(fontSize: 13, color: colorWhite),
                   ),
                   SizedBox(height: 5),
                   Text(
@@ -385,10 +381,7 @@ class _ServicioPageState extends State<ServicioPage> {
                   SizedBox(height: 5),
                   Text(
                     'Estrellas',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorWhite,
-                    ),
+                    style: TextStyle(fontSize: 13, color: colorWhite),
                   ),
                   SizedBox(height: 5),
                   Text(
@@ -545,6 +538,9 @@ class _ServicioPageState extends State<ServicioPage> {
                 fixedSize: const Size(150, 45),
                 backgroundColor: colorWhite,
                 foregroundColor: colorBlack,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15), 
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

@@ -29,10 +29,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-
   bool hasMore = true;
   final ApiServicios api = ApiServicios();
-   final ApiServiciosFav fav = ApiServiciosFav();
+  final ApiServiciosFav fav = ApiServiciosFav();
   final ApiCategorias apicategoria = ApiCategorias();
   final Anuncio_service anuncio = Anuncio_service();
   final ScrollController _scrollController = ScrollController();
@@ -103,18 +102,14 @@ class _HomePageState extends State<HomePage> {
                           delegate: SliverChildListDelegate([
                             const SizedBox(height: 10),
                             _buildPromo(),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 10),
                             _buildCategorias(),
                             const SizedBox(height: 20),
                             _buildCategoriaItem(),
-                            const SizedBox(height: 0),
                             _buildTitle(),
-                            const SizedBox(height: 20),
                             _buildServicios(),
-                            const SizedBox(height: 20),
-                           if (fav.servicios.isNotEmpty) ...[
+                            if (fav.servicios.isNotEmpty) ...[
                               _buildTitleFav(),
-                              const SizedBox(height: 20),
                               _buildServiciosFav(),
                             ],
                             const SizedBox(height: 100),
@@ -136,13 +131,14 @@ class _HomePageState extends State<HomePage> {
     return SliverAppBar(
       backgroundColor: colorprimario,
       expandedHeight: 180,
-      pinned: true, //  deja solo la barra pequeña visible
-      floating: false, //  NO aparece al subir
-      snap: false, // NO animación automática
-      elevation: 0,
-      toolbarHeight: 50, // 🔵 altura de la barrita azul
+      pinned: true,
+      floating: false,
+      snap: false,
+      elevation: 6,
+      shadowColor: Colors.black26,
+      toolbarHeight: 50,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
       ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
@@ -154,62 +150,124 @@ class _HomePageState extends State<HomePage> {
             color: colorsecundario,
           ),
         ),
-        background: Container(
-          alignment: Alignment.center,
-          padding: const EdgeInsets.only(top: 0),
-          child: Flex(
-            direction: Axis.horizontal,
+        background: ClipRRect(
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(25),
+          ),
+          child: Stack(
             children: [
-              const SizedBox(width: 40),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    username ?? '',
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      color: colortitulo,
-                    ),
-                  ),
-                  Row(
-                 children: [
-                  Text(
-                     'Uman Yuc',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: colortitulo,
-                    ),
-                  ),  
-                  const SizedBox(width: 15),
-                  const Icon(
-                    Icons.location_on,
-                    color: colortitulo,
-                    size: 20,
-                  ),
-                               
-                  ]
-                  )
-                ]
+              Container(color: colorprimario),
+              Positioned(
+                top: -40,
+                left: -30,
+                child: _circle(120, colorsecundario.withOpacity(0.05)),
               ),
-              const Spacer(),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.notifications,
-                    color: colortitulo,
-                    size: 30,
-                  ),
-                  const SizedBox(width: 15),
-                  Circleimage(w : 65, h :65 ,link_imagen:  img,)
-                ]
+
+              Positioned(
+                top: 150,
+                left: -30,
+                child: _circle(90, colorsecundario.withOpacity(0.05)),
               ),
-              const SizedBox(width: 30),
-              
+
+              Positioned(
+                top: 80,
+                left: 100,
+                child: _circle(120, colorsecundario.withOpacity(0.05)),
+              ),
+
+              Positioned(
+                top: -140,
+                right: -160,
+                child: _circle(220, colorsecundario.withOpacity(0.05)),
+              ),
+              Positioned(
+                top: 40,
+                right: 120,
+                child: _circle(70, colorsecundario.withOpacity(0.05)),
+              ),
+
+              Positioned(
+                top: 90,
+                left: 20,
+                child: _circle(50, colorsecundario.withOpacity(0.05)),
+              ),
+
+              Positioned(
+                bottom: 150,
+                right: 200,
+                child: _circle(65, colorsecundario.withOpacity(0.05)),
+              ),
+
+              Positioned(
+                bottom: -50,
+                right: -20,
+                child: _circle(160, colorsecundario.withOpacity(0.05)),
+              ),
+              Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.only(top: 0),
+                child: Flex(
+                  direction: Axis.horizontal,
+                  children: [
+                    const SizedBox(width: 40),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          username ?? '',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            color: colortitulo,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              'Uman Yuc',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: colortitulo,
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            const Icon(
+                              Icons.location_on,
+                              color: colortitulo,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const Spacer(),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.notifications,
+                          color: colortitulo,
+                          size: 30,
+                        ),
+                        const SizedBox(width: 15),
+                        Circleimage(w: 65, h: 65, link_imagen: img),
+                      ],
+                    ),
+                    const SizedBox(width: 30),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _circle(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 
@@ -284,31 +342,31 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCategoriaItem() {
-  final isLoading = apicategoria.categorias.isEmpty;
-  return SizedBox(
-    height: 150,
-    child: GridView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 10),
-      scrollDirection: Axis.horizontal,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 1,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 1.5,
-      ),
-      itemCount: isLoading
-          ? 3 //  skeletons visibles
-          : apicategoria.categorias.length,
-          itemBuilder: (context, index) {
-            if (isLoading) {
-              return const OptionsSkeleton();
-            }
-        final categoria = apicategoria.categorias[index];
-        return Options(nombre: categoria.nombre, id: categoria.id_categoria);
-      },
-    ).animate().fade().slideX(begin: -0.2),
-  );
-}
+    final isLoading = apicategoria.categorias.isEmpty;
+    return SizedBox(
+      height: 150,
+      child: GridView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        scrollDirection: Axis.horizontal,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 1,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 1.5,
+        ),
+        itemCount: isLoading
+            ? 3 //  skeletons visibles
+            : apicategoria.categorias.length,
+        itemBuilder: (context, index) {
+          if (isLoading) {
+            return const OptionsSkeleton();
+          }
+          final categoria = apicategoria.categorias[index];
+          return Options(nombre: categoria.nombre, id: categoria.id_categoria);
+        },
+      ).animate().fade().slideX(begin: -0.2),
+    );
+  }
 
   Widget _buildServicios() {
     final isLoading1 = api.servicios.isEmpty;
@@ -325,35 +383,33 @@ class _HomePageState extends State<HomePage> {
         itemCount: isLoading1
             ? 3 //  skeletons visibles
             : api.servicios.length,
-            itemBuilder: (context, index) {
-              if (isLoading1) {
-                return const CardsEmpresaSkeleton();
-              }
-              try {
-          final servicio = api.servicios[index];
+        itemBuilder: (context, index) {
+          if (isLoading1) {
+            return const CardsEmpresaSkeleton();
+          }
+          try {
+            final servicio = api.servicios[index];
 
-          return CardsServicios(
-            url_img: servicio.img_servicio,
-            nombre: servicio.nombre_servicio,
-            img_trabajador: servicio.img_trabajador,
-            id_servicio: servicio.id_servicio,
-            trabajador: servicio.trabajador,
-            categoria: servicio.categoria,
-            estrellas:  servicio.calificacion,
-            precio:  servicio.precio,
-            descripcion:  servicio.descripcion,
-          )
-              .animate()
-              .fade(duration: 400.ms)
-              .slideY(begin: 0.15)
-              .scale(begin: const Offset(0.96, 0.96));
-
-              } catch (e) {
-                return const SizedBox(); // widget vacío
-              }
+            return CardsServicios(
+                  url_img: servicio.img_servicio,
+                  nombre: servicio.nombre_servicio,
+                  img_trabajador: servicio.img_trabajador,
+                  id_servicio: servicio.id_servicio,
+                  trabajador: servicio.trabajador,
+                  categoria: servicio.categoria,
+                  estrellas: servicio.calificacion,
+                  precio: servicio.precio,
+                  descripcion: servicio.descripcion,
+                  favorito: false,
+                )
+                .animate()
+                .fade(duration: 400.ms)
+                .slideY(begin: 0.15)
+                .scale(begin: const Offset(0.96, 0.96));
+          } catch (e) {
+            return const SizedBox(); // widget vacío
+          }
         },
-
-
       ),
     );
   }
@@ -370,7 +426,7 @@ class _HomePageState extends State<HomePage> {
                 final descuento = anuncio.anuncio[index];
                 return Container(
                   width: 360,
-                  child: cardsofertas( link_imagen: descuento.img),
+                  child: cardsofertas(link_imagen: descuento.img),
                 );
               },
               options: CarouselOptions(
@@ -379,10 +435,8 @@ class _HomePageState extends State<HomePage> {
                 enlargeCenterPage: true,
                 enableInfiniteScroll: true,
                 autoPlay: true,
-                autoPlayInterval:
-                    const Duration(seconds: 2),
-                autoPlayAnimationDuration:
-                    const Duration(milliseconds: 800),
+                autoPlayInterval: const Duration(seconds: 2),
+                autoPlayAnimationDuration: const Duration(milliseconds: 800),
                 scrollDirection: Axis.horizontal,
                 onPageChanged: (index, reason) {
                   _currentIndexNotifier.value = index;
@@ -394,23 +448,17 @@ class _HomePageState extends State<HomePage> {
             valueListenable: _currentIndexNotifier,
             builder: (context, currentIndex, child) {
               return Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(
                   anuncio.anuncio.length,
                   (index) => AnimatedContainer(
-                    duration:
-                        const Duration(milliseconds: 300),
-                    margin: const EdgeInsets.symmetric(
-                        horizontal: 2),
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
                     width: currentIndex == index ? 16 : 8,
-                    height:
-                        currentIndex == index ? 16 : 8,
+                    height: currentIndex == index ? 16 : 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: currentIndex == index
-                          ? colorWhite
-                          : colorprimario
+                      color: currentIndex == index ? colorWhite : colorprimario,
                     ),
                   ),
                 ),
@@ -421,7 +469,7 @@ class _HomePageState extends State<HomePage> {
       ),
     ).animate().fade().slideX(begin: -0.2);
   }
-  
+
   Widget _buildTitleFav() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
@@ -456,7 +504,7 @@ class _HomePageState extends State<HomePage> {
       ).animate().fade().slideX(begin: -0.2),
     );
   }
-  
+
   Widget _buildServiciosFav() {
     final isLoading1 = fav.servicios.isEmpty;
     return SizedBox(
@@ -472,38 +520,34 @@ class _HomePageState extends State<HomePage> {
         itemCount: isLoading1
             ? 3 //  skeletons visibles
             : fav.servicios.length,
-            itemBuilder: (context, index) {
-              if (isLoading1) {
-                return const CardsEmpresaSkeleton();
-              }
-              try {
-          final servicio = fav.servicios[index];
+        itemBuilder: (context, index) {
+          if (isLoading1) {
+            return const CardsEmpresaSkeleton();
+          }
+          try {
+            final servicio = fav.servicios[index];
 
-          return CardsServicios(
-            url_img: servicio.img_servicio,
-            nombre: servicio.nombre_servicio,
-            img_trabajador: servicio.img_trabajador,
-            id_servicio: servicio.id_servicio,
-            trabajador: servicio.trabajador,
-            categoria: servicio.categoria,
-            estrellas:  servicio.calificacion,
-            precio:  servicio.precio,
-            descripcion:  servicio.descripcion,
-          )
-              .animate()
-              .fade(duration: 400.ms)
-              .slideY(begin: 0.15)
-              .scale(begin: const Offset(0.96, 0.96));
-
-              } catch (e) {
-                return const SizedBox(); // widget vacío
-              }
+            return CardsServicios(
+                  url_img: servicio.img_servicio,
+                  nombre: servicio.nombre_servicio,
+                  img_trabajador: servicio.img_trabajador,
+                  id_servicio: servicio.id_servicio,
+                  trabajador: servicio.trabajador,
+                  categoria: servicio.categoria,
+                  estrellas: servicio.calificacion,
+                  precio: servicio.precio,
+                  descripcion: servicio.descripcion,
+                  favorito: true,
+                )
+                .animate()
+                .fade(duration: 400.ms)
+                .slideY(begin: 0.15)
+                .scale(begin: const Offset(0.96, 0.96));
+          } catch (e) {
+            return const SizedBox(); // widget vacío
+          }
         },
       ),
     );
   }
-
 }
-
-
-

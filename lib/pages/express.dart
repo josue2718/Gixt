@@ -26,7 +26,7 @@ import 'package:flutter/services.dart';
 
 class ExpressPage extends StatefulWidget {
   const ExpressPage({super.key});
- static bool tieneDatos = false;
+  static bool tieneDatos = false;
   @override
   State<ExpressPage> createState() => _ExpressPageState();
 }
@@ -45,16 +45,15 @@ class _ExpressPageState extends State<ExpressPage> {
   final PreferencesService _preferencesService = PreferencesService();
   final ApiCategorias apicategoria = ApiCategorias();
   int? _categoriaSeleccionada;
-  
+
   int _paginaActual = 0;
-List<File?> _images = List.generate(4, (_) => null);
+  List<File?> _images = List.generate(4, (_) => null);
   String? _genero;
   String? _token;
   String? _inicio;
   String? _id;
   String? _img;
   String? _user;
-
 
   void _Crear() async {
     if (_images.isEmpty) {
@@ -114,68 +113,67 @@ List<File?> _images = List.generate(4, (_) => null);
     // }
   }
 
-Future<void> _pickImage(int index) async {
-  final ImageSource? source = await showModalBottomSheet<ImageSource>(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Cámara'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galería'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
+  Future<void> _pickImage(int index) async {
+    final ImageSource? source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Cámara'),
+                onTap: () => Navigator.pop(context, ImageSource.camera),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galería'),
+                onTap: () => Navigator.pop(context, ImageSource.gallery),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (source == null) return; // Canceló
+
+    final picker = ImagePicker();
+    final XFile? pickedFile = await picker.pickImage(
+      source: source,
+      imageQuality: 85,
+    );
+
+    if (pickedFile == null) return;
+
+    final croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      uiSettings: [
+        AndroidUiSettings(
+          toolbarTitle: 'Recortar imagen',
+          toolbarColor: Colors.black,
+          toolbarWidgetColor: Colors.white,
+          lockAspectRatio: true,
+          initAspectRatio: CropAspectRatioPreset.square,
         ),
-      );
-    },
-  );
+        IOSUiSettings(
+          title: 'Recortar imagen',
+          aspectRatioLockEnabled: true,
+          aspectRatioPresets: [CropAspectRatioPreset.square],
+        ),
+      ],
+    );
 
-  if (source == null) return; // Canceló
+    if (croppedFile == null) return;
 
-  final picker = ImagePicker();
-  final XFile? pickedFile = await picker.pickImage(
-    source: source,
-    imageQuality: 85,
-  );
-
-  if (pickedFile == null) return;
-
-  final croppedFile = await ImageCropper().cropImage(
-    sourcePath: pickedFile.path,
-    uiSettings: [
-      AndroidUiSettings(
-        toolbarTitle: 'Recortar imagen',
-        toolbarColor: Colors.black,
-        toolbarWidgetColor: Colors.white,
-        lockAspectRatio: true,
-        initAspectRatio: CropAspectRatioPreset.square,
-      ),
-      IOSUiSettings(
-        title: 'Recortar imagen',
-        aspectRatioLockEnabled: true,
-        aspectRatioPresets: [CropAspectRatioPreset.square],
-      ),
-    ],
-  );
-
-  if (croppedFile == null) return;
-
-  setState(() {
-    _images[index] = File(croppedFile.path);
-  });
-}
-
+    setState(() {
+      _images[index] = File(croppedFile.path);
+    });
+  }
 
   @override
   void dispose() {
@@ -190,45 +188,32 @@ Future<void> _pickImage(int index) async {
     print("Entré a Restaurantes");
     apicategoria.fetchEmpresaData(1);
   }
-
+  
   @override
   Widget build(BuildContext context) {
-    final paginas = [
-      _buidFormularioInfo(),
-      _buidFormularioCategoria(),
-      _buidFormularioUbicacion(),
-    ];
-    return 
-  Scaffold(
+    return Scaffold(
       backgroundColor: colorfondo,
       body: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
         slivers: [
           _buildSliverAppBar(),
-          SliverFillRemaining(
-            hasScrollBody: true,
+          SliverToBoxAdapter(
             child: Column(
               children: [
-                Expanded(
-                  child: PageView(
-                    controller: _controller,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (i) => setState(() => _paginaActual = i),
-                    children: paginas,
-                  ),
-                ),
-
+                if (_paginaActual == 0) _buidFormularioInfo(),
+                if (_paginaActual == 1) _buidFormularioCategoria(),
+                if (_paginaActual == 2) _buidFormularioUbicacion(),
+                const SizedBox(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(paginas.length, (i) => _dot(i)),
+                  children: List.generate(3, (i) => _dot(i)),
                 ),
-
                 const SizedBox(height: 150),
               ],
             ),
           ),
         ],
       ),
-  
     );
   }
 
@@ -297,156 +282,157 @@ Future<void> _pickImage(int index) async {
     final screenHeight = MediaQuery.of(context).size.height;
     return Padding(
       padding: const EdgeInsets.all(15),
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Informacion del servicio Express',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: colorWhite,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                ],
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _problemaController,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                decoration: InputDecoration(
-                  labelText: '¿Qué problema tienes?',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  border: const UnderlineInputBorder(),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  suffixIcon: const Icon(Icons.person, color: colorWhite),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Informacion del servicio Express',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 25,
                     fontWeight: FontWeight.bold,
-                  ),
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese el problema';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _descripcionController,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                decoration: InputDecoration(
-                  labelText: 'Descripción del problema',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  border: const UnderlineInputBorder(),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  suffixIcon: const Icon(Icons.person, color: colorWhite),
-                  errorStyle: const TextStyle(
                     color: colorWhite,
-                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese la descripcion del problema';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _phoneController,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                keyboardType: TextInputType.phone,
-                maxLength: 10,
-                decoration: InputDecoration(
-                  labelText: 'Telefono de contacto',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  border: const UnderlineInputBorder(),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  suffixIcon: const Icon(Icons.phone, color: colorWhite),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
-                    fontWeight: FontWeight.bold,
-                  ),
+                SizedBox(height: 10),
+              ],
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _problemaController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              decoration: InputDecoration(
+                labelText: '¿Qué problema tienes?',
+                labelStyle: const TextStyle(color: colorWhite),
+                border: const UnderlineInputBorder(),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un telefono';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Evidencia del problema',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: colorWhite,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                ],
-              ),
-              SizedBox(height: 20),
-            _buidFormularioImg(),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (!(_formKey.currentState?.validate() ?? false)) return;
-                  if (_images.where((image) => image != null).length < 3) {
-                    mostrarAlerta(
-                      context,
-                      titulo: 'Imagen requerida',
-                      mensaje: 'Por favor llena los 3 campos de imagen',
-                      tipo: TipoAlerta.advertencia,
-                    );
-                    return;
-                  }
-                  _controller.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(300, 50),
-                  backgroundColor: colorWhite,
-                  foregroundColor: colorprimario,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                suffixIcon: const Icon(Icons.person, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
                 ),
-                child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese el problema';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _descripcionController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              keyboardType: TextInputType.multiline,
+              minLines: 4, // 👈 altura mínima
+              maxLines: 6, // 👈 crece hasta aquí
+              decoration: InputDecoration(
+                labelText: 'Descripción del problema',
+                labelStyle: const TextStyle(color: colorWhite),
+                alignLabelWithHint: true, // 👈 alinea bien el label
+                border: const UnderlineInputBorder(),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
+                ),
+                suffixIcon: const Icon(Icons.description, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese la descripción del problema';
+                }
+                return null;
+              },
+            ),
 
-              SizedBox(height: 50),
-            ],
-          ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _phoneController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              keyboardType: TextInputType.phone,
+              maxLength: 10,
+              decoration: InputDecoration(
+                labelText: 'Telefono de contacto',
+                labelStyle: const TextStyle(color: colorWhite),
+                border: const UnderlineInputBorder(),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
+                ),
+                suffixIcon: const Icon(Icons.phone, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un telefono';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 20),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Evidencia del problema',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: colorWhite,
+                  ),
+                ),
+                SizedBox(height: 10),
+              ],
+            ),
+            SizedBox(height: 20),
+            _buidFormularioImg(),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // if (!(_formKey.currentState?.validate() ?? false)) return;
+                // if (_images.where((image) => image != null).length < 3) {
+                //   mostrarAlerta(
+                //     context,
+                //     titulo: 'Imagen requerida',
+                //     mensaje: 'Por favor llena los 3 campos de imagen',
+                //     tipo: TipoAlerta.advertencia,
+                //   );
+                //   return;
+                // }
+
+                setState(() {
+                  _paginaActual++;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(300, 50),
+                backgroundColor: colorWhite,
+                foregroundColor: colorprimario,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+            ),
+          ],
         ),
       ),
     );
@@ -561,10 +547,9 @@ Future<void> _pickImage(int index) async {
               const SizedBox(height: 20),
               TextButton(
                 onPressed: () {
-                  _controller.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
+                  setState(() {
+                    _paginaActual--;
+                  });
                 },
                 style: TextButton.styleFrom(foregroundColor: colorWhite),
                 child: const Text('Regresar'),
@@ -608,84 +593,80 @@ Future<void> _pickImage(int index) async {
   }
 
   Widget _buidFormularioImg() {
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 20),
-    child: SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          imageBox(0),
-          const SizedBox(width: 50),
-          imageBox(1),
-          const SizedBox(width: 50),
-          imageBox(2),
-          const SizedBox(width: 30),
-        ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            imageBox(0),
+            const SizedBox(width: 50),
+            imageBox(1),
+            const SizedBox(width: 50),
+            imageBox(2),
+            const SizedBox(width: 30),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget imageBox(int index) {
-  return  Column(
-                children: [
-                 _images[index] == null
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 177, 177, 177),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.person,
-                            ), // Usa un icono de calendario
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            iconSize: 65,
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(0, 103, 10, 10),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          width: 150,
-                          height: 150,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.file(_images[index]!, fit: BoxFit.cover),
-                          ),
-                        ),
-                  SizedBox(height: 25),
-                  Transform.translate(
-                    offset: Offset(
-                      70,
-                      -70,
-                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorprimario,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      width: 50,
-                      height: 50,
-                      child: IconButton(
-                        onPressed: () {
-                          _pickImage(index);
-                        },
-                        icon: const Icon(
-                          Icons.add_a_photo_outlined,
-                        ), // Usa un icono de calendario
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        iconSize: 25,
-                      ),
-                    ),
-                  ),
-                ],
-              
-  );
-}
-
+    return Column(
+      children: [
+        _images[index] == null
+            ? Container(
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 177, 177, 177),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                width: 150,
+                height: 150,
+                child: IconButton(
+                  onPressed: () {},
+                  icon: const Icon(Icons.person), // Usa un icono de calendario
+                  color: const Color.fromARGB(255, 255, 255, 255),
+                  iconSize: 65,
+                ),
+              )
+            : Container(
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(0, 103, 10, 10),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                width: 150,
+                height: 150,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.file(_images[index]!, fit: BoxFit.cover),
+                ),
+              ),
+        SizedBox(height: 25),
+        Transform.translate(
+          offset: Offset(
+            70,
+            -70,
+          ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
+          child: Container(
+            decoration: BoxDecoration(
+              color: colorprimario,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            width: 50,
+            height: 50,
+            child: IconButton(
+              onPressed: () {
+                _pickImage(index);
+              },
+              icon: const Icon(
+                Icons.add_a_photo_outlined,
+              ), // Usa un icono de calendario
+              color: const Color.fromARGB(255, 255, 255, 255),
+              iconSize: 25,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }

@@ -17,6 +17,7 @@ class CardsServicios extends StatelessWidget {
     required this.precio,
     required this.descripcion,
     required this.estrellas,
+    required this.favorito,
   });
 
   final String nombre;
@@ -28,6 +29,7 @@ class CardsServicios extends StatelessWidget {
   final int estrellas;
   final String descripcion;
   final double precio;
+  final bool favorito;
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +101,17 @@ class CardsServicios extends StatelessWidget {
                           ],
                         ),
                       ),
+                      if (favorito) ...[
+                      Positioned(
+                        bottom: 10,
+                        left: 180,
+                        child:  Icon(
+                              Icons.favorite_rounded,
+                              color: colorError,
+                              size: 30,
+                            ),
+                      ),
+                      ],
                       Positioned(
                         bottom: 120,
                         left: 10,

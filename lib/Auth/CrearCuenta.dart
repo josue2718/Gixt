@@ -8,6 +8,7 @@ import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/cache.dart';
 import 'package:gixt/pages/root.dart';
 import 'package:gixt/services/Auth/cuenta_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -131,44 +132,67 @@ class _CrearcuentaState extends State<Crearcuenta> {
     }
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-
-    final XFile? pickedFile = await picker.pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile == null) return;
-
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: pickedFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Recortar imagen',
-          toolbarColor: Colors.black,
-          toolbarWidgetColor: Colors.white,
-          lockAspectRatio: true,
-          initAspectRatio: CropAspectRatioPreset.square,
+Future<void> _pickImage() async {
+  final ImageSource? source = await showModalBottomSheet<ImageSource>(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Cámara'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Galería'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
         ),
-        IOSUiSettings(
-          title: 'Recortar imagen',
-          aspectRatioLockEnabled: true,
-          aspectRatioPresets: [CropAspectRatioPreset.square],
-          doneButtonTitle: 'Listo',
-          cancelButtonTitle: 'Cancelar',
-          resetAspectRatioEnabled: false,
-          rotateButtonsHidden: true,
-        ),
-      ],
-    );
+      );
+    },
+  );
 
-    if (croppedFile == null) return;
+  if (source == null) return; // Canceló
 
-    setState(() {
+  final picker = ImagePicker();
+  final XFile? pickedFile = await picker.pickImage(
+    source: source,
+    imageQuality: 85,
+  );
+
+  if (pickedFile == null) return;
+
+  final croppedFile = await ImageCropper().cropImage(
+    sourcePath: pickedFile.path,
+    uiSettings: [
+      AndroidUiSettings(
+        toolbarTitle: 'Recortar imagen',
+        toolbarColor: Colors.black,
+        toolbarWidgetColor: Colors.white,
+        lockAspectRatio: true,
+        initAspectRatio: CropAspectRatioPreset.square,
+      ),
+      IOSUiSettings(
+        title: 'Recortar imagen',
+        aspectRatioLockEnabled: true,
+        aspectRatioPresets: [CropAspectRatioPreset.square],
+      ),
+    ],
+  );
+
+  if (croppedFile == null) return;
+
+  setState(() {
       _image = File(croppedFile.path);
     });
-  }
-
+}
   @override
   void dispose() {
     _controller.dispose();
@@ -177,37 +201,28 @@ class _CrearcuentaState extends State<Crearcuenta> {
 
   @override
   Widget build(BuildContext context) {
-    final paginas = [
-      _buidFormulario(),
-      _buidFormularioInfo(),
-      _buidFormularioImg(),
-    ];
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: colorfondo,
-        body: AutofillGroup(
-          child: Padding(
-            padding: const EdgeInsets.all(0.0),
-            child: Column(
-              children: [
-                _buidTitle(),
-                Expanded(
-                  child: PageView(
-                    controller: _controller,
-                    physics: const NeverScrollableScrollPhysics(),
-                    onPageChanged: (i) => setState(() => _paginaActual = i),
-                    children: paginas,
+        body: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            _buildSliverAppBar(),
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  if (_paginaActual == 0) _buidFormulario(),
+                  if (_paginaActual == 1) _buidFormularioInfo(),
+                  if (_paginaActual == 2) _buidFormularioImg(),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(3, (i) => _dot(i)),
                   ),
-                ),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(paginas.length, (i) => _dot(i)),
-                ),
-                SizedBox(height: 50),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -228,7 +243,6 @@ class _CrearcuentaState extends State<Crearcuenta> {
     );
   }
 
-  // ================= INPUT DECORATION =================
   InputDecoration _inputDecoration({
     required String label,
     required IconData icon,
@@ -249,38 +263,32 @@ class _CrearcuentaState extends State<Crearcuenta> {
     );
   }
 
-  Widget _buidTitle() {
-    final screenHeight = MediaQuery.of(context).size.height;
-    return Align(
-      alignment: Alignment.topCenter,
-      child: Container(
-        width: double.infinity,
-        constraints: BoxConstraints(maxHeight: screenHeight * 0.2),
-        padding: const EdgeInsets.all(3),
-        decoration: const BoxDecoration(
-          color: colorprimario,
-          borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(60),
-            bottomRight: Radius.circular(0),
-          ),
+  SliverAppBar _buildSliverAppBar() {
+    return SliverAppBar(
+      backgroundColor: colorprimario,
+      expandedHeight: 120,
+      pinned: true, //  deja solo la barra pequeña visible
+      floating: false, //  NO aparece al subir
+      snap: false, // NO animación automática
+      elevation: 0,
+      toolbarHeight: 120,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(60),
+          bottomRight: Radius.circular(0),
         ),
-
-        child: Container(
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: 20),
-              Text(
-                'Crear Cuenta',
-                style: TextStyle(
-                  fontSize: 34,
-                  fontWeight: FontWeight.bold,
-                  color: colorWhite,
-                ),
-              ),
-            ],
+      ),
+      iconTheme: const IconThemeData(
+        color: Colors.white, // 👈 color del ícono
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(
+          'Crear Cuenta',
+          style: GoogleFonts.poppins(
+            fontSize: 25,
+            fontWeight: FontWeight.w600,
+            color: colorsecundario,
           ),
         ),
       ),
@@ -289,168 +297,165 @@ class _CrearcuentaState extends State<Crearcuenta> {
 
   Widget _buidFormulario() {
     final screenHeight = MediaQuery.of(context).size.height;
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Credenciales de la cuenta',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: colorWhite,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  const Divider(
-                    color: colorWhite,
-                    thickness: 2,
-                    indent: 50,
-                    endIndent: 50,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 40),
-              TextFormField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                decoration: InputDecoration(
-                  labelText: 'Correo',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  border: const UnderlineInputBorder(),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  suffixIcon: const Icon(Icons.email, color: colorWhite),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Credenciales de la cuenta',
+                  style: TextStyle(
+                    fontSize: 25,
                     fontWeight: FontWeight.bold,
+                    color: colorWhite,
                   ),
                 ),
-                autofillHints: const [AutofillHints.email],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un correo';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: _isObscured,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                decoration: InputDecoration(
-                  labelText: 'Contraseña',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: const UnderlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isObscured ? Icons.visibility : Icons.visibility_off,
-                      color: colorWhite,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isObscured = !_isObscured;
-                      });
-                    },
-                  ),
+                SizedBox(height: 10),
+                const Divider(
+                  color: colorWhite,
+                  thickness: 2,
+                  indent: 50,
+                  endIndent: 50,
                 ),
-                autofillHints: const [AutofillHints.password],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese una contraseña';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _passwordconfirmarController,
-                obscureText: _isObscured1,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                decoration: InputDecoration(
-                  labelText: 'Confirmar Contraseña',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  border: const UnderlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _isObscured1 ? Icons.visibility : Icons.visibility_off,
-                      color: colorWhite,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isObscured1 = !_isObscured1;
-                      });
-                    },
-                  ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              decoration: InputDecoration(
+                labelText: 'Correo',
+                labelStyle: const TextStyle(color: colorWhite),
+                border: const UnderlineInputBorder(),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
                 ),
-                autofillHints: const [AutofillHints.password],
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese una contraseña';
-                  }
-                  return null;
-                },
+                suffixIcon: const Icon(Icons.email, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: 70),
-              ElevatedButton(
-                onPressed: () {
-                  if (_passwordController.text !=
-                      _passwordconfirmarController.text) {
-                    mostrarAlerta(
-                      context,
-                      titulo: 'Las contraseñas no coinciden',
-                      mensaje: 'Por favor, revisa la contraseña',
-                      tipo: TipoAlerta.advertencia,
-                    );
-                    return;
-                  }
-                  if (!(_formKey.currentState?.validate() ?? false)) return;
-                  _controller.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
+              autofillHints: const [AutofillHints.email],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un correo';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: _isObscured,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              decoration: InputDecoration(
+                labelText: 'Contraseña',
+                labelStyle: const TextStyle(color: colorWhite),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
+                ),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+                border: const UnderlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isObscured ? Icons.visibility : Icons.visibility_off,
+                    color: colorWhite,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isObscured = !_isObscured;
+                    });
+                  },
+                ),
+              ),
+              autofillHints: const [AutofillHints.password],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese una contraseña';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _passwordconfirmarController,
+              obscureText: _isObscured1,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              decoration: InputDecoration(
+                labelText: 'Confirmar Contraseña',
+                labelStyle: const TextStyle(color: colorWhite),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
+                ),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+                border: const UnderlineInputBorder(),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isObscured1 ? Icons.visibility : Icons.visibility_off,
+                    color: colorWhite,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isObscured1 = !_isObscured1;
+                    });
+                  },
+                ),
+              ),
+              autofillHints: const [AutofillHints.password],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese una contraseña';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 70),
+            ElevatedButton(
+              onPressed: () {
+                if (_passwordController.text !=
+                    _passwordconfirmarController.text) {
+                  mostrarAlerta(
+                    context,
+                    titulo: 'Las contraseñas no coinciden',
+                    mensaje: 'Por favor, revisa la contraseña',
+                    tipo: TipoAlerta.advertencia,
                   );
-                },
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(300, 50),
-                  backgroundColor: colorWhite,
-                  foregroundColor: colorprimario,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                  return;
+                }
+                if (!(_formKey.currentState?.validate() ?? false)) return;
+                      setState(() {
+                _paginaActual++;
+               });
+              },
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(300, 50),
+                backgroundColor: colorWhite,
+                foregroundColor: colorprimario,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
               ),
-            ],
-          ),
+              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+            ),
+          ],
         ),
       ),
     );
@@ -458,240 +463,236 @@ class _CrearcuentaState extends State<Crearcuenta> {
 
   Widget _buidFormularioInfo() {
     final screenHeight = MediaQuery.of(context).size.height;
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(15),
-        child: Form(
-          key: _formKeyinfo,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Informacion de la cuenta',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: colorWhite,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  const Divider(
-                    color: colorWhite,
-                    thickness: 2,
-                    indent: 50,
-                    endIndent: 50,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 40),
-              TextFormField(
-                controller: _first_nameController,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                decoration: InputDecoration(
-                  labelText: 'Nombre',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  border: const UnderlineInputBorder(),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  suffixIcon: const Icon(Icons.person, color: colorWhite),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
+    return Padding(
+      padding: const EdgeInsets.all(15),
+      child: Form(
+        key: _formKeyinfo,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Informacion de la cuenta',
+                  style: TextStyle(
+                    fontSize: 25,
                     fontWeight: FontWeight.bold,
+                    color: colorWhite,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un nombre';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _last_nameController,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                decoration: InputDecoration(
-                  labelText: 'Apellido',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  border: const UnderlineInputBorder(),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  suffixIcon: const Icon(Icons.person, color: colorWhite),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
-                    fontWeight: FontWeight.bold,
-                  ),
+                SizedBox(height: 10),
+                const Divider(
+                  color: colorWhite,
+                  thickness: 2,
+                  indent: 50,
+                  endIndent: 50,
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un apellido';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextFormField(
-                controller: _phoneController,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                keyboardType: TextInputType.phone,
-                maxLength: 10,
-                decoration: InputDecoration(
-                  labelText: 'Telefono',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  border: const UnderlineInputBorder(),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
-                  suffixIcon: const Icon(Icons.phone, color: colorWhite),
-                  errorStyle: const TextStyle(
-                    color: colorWhite,
-                    fontWeight: FontWeight.bold,
-                  ),
+              ],
+            ),
+            const SizedBox(height: 40),
+            TextFormField(
+              controller: _first_nameController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              decoration: InputDecoration(
+                labelText: 'Nombre',
+                labelStyle: const TextStyle(color: colorWhite),
+                border: const UnderlineInputBorder(),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor ingrese un telefono';
-                  }
-                  return null;
-                },
+                suffixIcon: const Icon(Icons.person, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: _fecha_nacimientoController,
-                style: const TextStyle(color: colorWhite),
-                cursorColor: colorWhite,
-                keyboardType: TextInputType.number,
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(8),
-                  FechaNacimientoFormatter(),
-                ],
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un nombre';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _last_nameController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              decoration: InputDecoration(
+                labelText: 'Apellido',
+                labelStyle: const TextStyle(color: colorWhite),
+                border: const UnderlineInputBorder(),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
+                ),
+                suffixIcon: const Icon(Icons.person, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un apellido';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _phoneController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              keyboardType: TextInputType.phone,
+              maxLength: 10,
+              decoration: InputDecoration(
+                labelText: 'Telefono',
+                labelStyle: const TextStyle(color: colorWhite),
+                border: const UnderlineInputBorder(),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
+                ),
+                suffixIcon: const Icon(Icons.phone, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un telefono';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _fecha_nacimientoController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(8),
+                FechaNacimientoFormatter(),
+              ],
 
-                decoration: const InputDecoration(
-                  labelText: 'Fecha de nacimiento',
-                  labelStyle: const TextStyle(color: colorWhite),
-                  hintText: 'DD/MM/AAAA',
-                  suffixIcon: Icon(Icons.cake, color: colorWhite),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: colorWhite),
-                  ),
+              decoration: const InputDecoration(
+                labelText: 'Fecha de nacimiento',
+                labelStyle: const TextStyle(color: colorWhite),
+                hintText: 'DD/MM/AAAA',
+                suffixIcon: Icon(Icons.cake, color: colorWhite),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: colorWhite),
+                ),
 
-                  errorStyle: const TextStyle(
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Ingresa tu fecha de nacimiento';
+                }
+                if (value.length != 10) {
+                  return 'Formato inválido (DD/MM/AAAA)';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Género',
+                  style: TextStyle(
                     color: colorWhite,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    // fontWeight: FontWeight.bold,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Ingresa tu fecha de nacimiento';
-                  }
-                  if (value.length != 10) {
-                    return 'Formato inválido (DD/MM/AAAA)';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Género',
-                    style: TextStyle(
-                      color: colorWhite,
-                      fontSize: 15,
-                      // fontWeight: FontWeight.bold,
+                const SizedBox(height: 5),
+                Row(
+                  children: [
+                    Expanded(
+                      child: RadioListTile<String>(
+                        value: 'H',
+                        groupValue: _genero,
+                        activeColor: colorWhite,
+                        title: const Text(
+                          'Hombre',
+                          style: TextStyle(color: colorWhite),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            _genero = value;
+                          });
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 5),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: RadioListTile<String>(
-                          value: 'H',
-                          groupValue: _genero,
-                          activeColor: colorWhite,
-                          title: const Text(
-                            'Hombre',
-                            style: TextStyle(color: colorWhite),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _genero = value;
-                            });
-                          },
+                    Expanded(
+                      child: RadioListTile<String>(
+                        value: 'M',
+                        groupValue: _genero,
+                        activeColor: colorWhite,
+                        title: const Text(
+                          'Mujer',
+                          style: TextStyle(color: colorWhite),
                         ),
+                        onChanged: (value) {
+                          setState(() {
+                            _genero = value;
+                          });
+                        },
                       ),
-                      Expanded(
-                        child: RadioListTile<String>(
-                          value: 'M',
-                          groupValue: _genero,
-                          activeColor: colorWhite,
-                          title: const Text(
-                            'Mujer',
-                            style: TextStyle(color: colorWhite),
-                          ),
-                          onChanged: (value) {
-                            setState(() {
-                              _genero = value;
-                            });
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: () {
-                  if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
-                  if (_genero == null) {
-                    mostrarAlerta(
-                      context,
-                      titulo: 'Género requerido',
-                      mensaje: 'Por favor, selecciona tu género',
-                      tipo: TipoAlerta.advertencia,
-                    );
-                    return;
-                  }
-                  _controller.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(300, 50),
-                  backgroundColor: colorWhite,
-                  foregroundColor: colorprimario,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
+                    ),
+                  ],
                 ),
-                child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
-              ),
-              TextButton(
-                onPressed: () {
-                  _controller.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
+              ],
+            ),
+            const SizedBox(height: 50),
+            ElevatedButton(
+              onPressed: () {
+                if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
+                if (_genero == null) {
+                  mostrarAlerta(
+                    context,
+                    titulo: 'Género requerido',
+                    mensaje: 'Por favor, selecciona tu género',
+                    tipo: TipoAlerta.advertencia,
                   );
-                },
-                style: TextButton.styleFrom(foregroundColor: colorWhite),
-                child: const Text('Regresar'),
+                  return;
+                }
+                setState(() {
+                  _paginaActual++;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(300, 50),
+                backgroundColor: colorWhite,
+                foregroundColor: colorprimario,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
               ),
-            ],
-          ),
+              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+            ),
+            TextButton(
+              onPressed: () {
+               setState(() {
+                _paginaActual--;
+               });
+              },
+              style: TextButton.styleFrom(foregroundColor: colorWhite),
+              child: const Text('Regresar'),
+            ),
+          ],
         ),
       ),
     );
@@ -699,122 +700,116 @@ class _CrearcuentaState extends State<Crearcuenta> {
 
   Widget _buidFormularioImg() {
     final screenHeight = MediaQuery.of(context).size.height;
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKeyImg,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Foto de perfile',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: colorWhite,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  const Divider(
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKeyImg,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'Foto de perfil',
+                  style: TextStyle(
+                    fontSize: 25,
+                    fontWeight: FontWeight.bold,
                     color: colorWhite,
-                    thickness: 2,
-                    indent: 50,
-                    endIndent: 50,
                   ),
-                ],
-              ),
-              SizedBox(height: 20),
-              Column(
-                children: [
-                  _image == null
-                      ? Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(255, 177, 177, 177),
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          width: 200,
-                          height: 200,
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(
-                              Icons.person,
-                            ), // Usa un icono de calendario
-                            color: const Color.fromARGB(255, 255, 255, 255),
-                            iconSize: 65,
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            color: Color.fromARGB(0, 103, 10, 10),
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                          width: 200,
-                          height: 200,
-                          child: CircleAvatar(
-                            backgroundImage: FileImage(_image!),
-                          ),
+                ),
+                SizedBox(height: 10),
+                const Divider(
+                  color: colorWhite,
+                  thickness: 2,
+                  indent: 50,
+                  endIndent: 50,
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            Column(
+              children: [
+                _image == null
+                    ? Container(
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 177, 177, 177),
+                          borderRadius: BorderRadius.circular(100),
                         ),
-                  SizedBox(height: 25),
-                  Transform.translate(
-                    offset: Offset(
-                      60,
-                      -70,
-                    ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: colorprimario,
-                        borderRadius: BorderRadius.circular(50),
+                        width: 200,
+                        height: 200,
+                        child: IconButton(
+                          onPressed: () {},
+                          icon: const Icon(
+                            Icons.person,
+                          ), // Usa un icono de calendario
+                          color: const Color.fromARGB(255, 255, 255, 255),
+                          iconSize: 65,
+                        ),
+                      )
+                    : Container(
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(0, 103, 10, 10),
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        width: 200,
+                        height: 200,
+                        child: CircleAvatar(
+                          backgroundImage: FileImage(_image!),
+                        ),
                       ),
-                      width: 50,
-                      height: 50,
-                      child: IconButton(
-                        onPressed: () {
-                          _pickImage();
-                        },
-                        icon: const Icon(
-                          Icons.add_a_photo_outlined,
-                        ), // Usa un icono de calendario
-                        color: const Color.fromARGB(255, 255, 255, 255),
-                        iconSize: 25,
-                      ),
+                SizedBox(height: 25),
+                Transform.translate(
+                  offset: Offset(
+                    60,
+                    -70,
+                  ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: colorprimario,
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    width: 50,
+                    height: 50,
+                    child: IconButton(
+                      onPressed: () {
+                        _pickImage();
+                      },
+                      icon: const Icon(
+                        Icons.add_a_photo_outlined,
+                      ), // Usa un icono de calendario
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      iconSize: 25,
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 70),
-              ElevatedButton(
-                onPressed: _Crear,
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(300, 50),
-                  backgroundColor: colorWhite,
-                  foregroundColor: colorprimario,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
                 ),
-                child: const Text(
-                  'Crear Cuenta',
-                  style: TextStyle(fontSize: 18),
+              ],
+            ),
+            const SizedBox(height: 70),
+            ElevatedButton(
+              onPressed: _Crear,
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(300, 50),
+                backgroundColor: colorWhite,
+                foregroundColor: colorprimario,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              TextButton(
-                onPressed: () {
-                  _controller.previousPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                },
-                style: TextButton.styleFrom(foregroundColor: colorWhite),
-                child: const Text('Regresar'),
-              ),
-            ],
-          ),
+              child: const Text('Crear Cuenta', style: TextStyle(fontSize: 18)),
+            ),
+            TextButton(
+              onPressed: () {
+                     setState(() {
+                _paginaActual--;
+               });
+              },
+              style: TextButton.styleFrom(foregroundColor: colorWhite),
+              child: const Text('Regresar'),
+            ),
+          ],
         ),
       ),
     );
