@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:gixt/pages/express.dart';
-import 'package:gixt/pages/home.dart';
-import 'package:gixt/pages/perfil.dart';
+import 'package:gixt/pages/ExpressPage.dart';
+import 'package:gixt/pages/HomePage.dart';
+import 'package:gixt/pages/PerfilPage.dart';
 import 'colors.dart'; // Asegúrate de tener colorfondo1, colorWhite y colorfondo
 
 class AppBottomNavigation extends StatefulWidget {
@@ -16,24 +16,34 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
 
   final List<Widget> _pages = const [
     HomePage(),
-    Center(child: Text('Buscar', style: TextStyle(fontSize: 24, color: Colors.white))),
+    Center(
+      child: Text(
+        'Buscar',
+        style: TextStyle(fontSize: 24, color: Colors.white),
+      ),
+    ),
     ExpressPage(),
-    Center(child: Text('Agenda', style: TextStyle(fontSize: 24, color: Colors.white))),
+    Center(
+      child: Text(
+        'Agenda',
+        style: TextStyle(fontSize: 24, color: Colors.white),
+      ),
+    ),
     PerfilPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final bool isKeyboardOpen =
-    MediaQuery.of(context).viewInsets.bottom > 0;
+    final bool isKeyboardOpen = MediaQuery.of(context).viewInsets.bottom > 0;
 
     return Scaffold(
       backgroundColor: colorfondo,
       body: _pages[_currentIndex],
       // Usamos extendBody para que el contenido se vea detrás de la barra si es translúcida
-      extendBody: true, 
-      bottomNavigationBar:
-      isKeyboardOpen ? const SizedBox.shrink() : _buildBottomBar(),
+      extendBody: true,
+      bottomNavigationBar: isKeyboardOpen
+          ? const SizedBox.shrink()
+          : _buildBottomBar(),
     );
   }
 
@@ -55,28 +65,37 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-            _buildNavItem(Icons.home_rounded, Icons.home_rounded ,0, "Home"),
-            _buildNavItem(Icons.search_rounded, Icons.search, 1, "Buscar"),
-            // BOTÓN CENTRAL ESTILO "CHIC"
-            _buildMiddleItem(Icons.flash_on, 2),
-            _buildNavItem(Icons.calendar_today_rounded, Icons.calendar_today, 3, "Agenda"),
-            _buildNavItem(Icons.person_rounded, Icons.person, 4, "Perfil"),
+          _buildNavItem(Icons.home_rounded, Icons.home_rounded, 0, "Home"),
+          _buildNavItem(Icons.search_rounded, Icons.search, 1, "Buscar"),
+          // BOTÓN CENTRAL ESTILO "CHIC"
+          _buildMiddleItem(Icons.flash_on, 2),
+          _buildNavItem(
+            Icons.calendar_today_rounded,
+            Icons.calendar_today,
+            3,
+            "Agenda",
+          ),
+          _buildNavItem(Icons.person_rounded, Icons.person, 4, "Perfil"),
         ],
       ),
     );
   }
 
-  // Item normal para los lados
-  Widget _buildNavItem(IconData icon, IconData activeIcon, int index, String label) {
+  Widget _buildNavItem(
+    IconData icon,
+    IconData activeIcon,
+    int index,
+    String label,
+  ) {
     bool isSelected = _currentIndex == index;
     return GestureDetector(
       onTap: () async {
-      if (_currentIndex == 2 && index != 2) {
-        final salir = await _confirmarSalirExpress();
-        if (!salir) return;
-      }
-       setState(() => _currentIndex = index);
-      }, 
+        if (_currentIndex == 2 && index != 2) {
+          final salir = await _confirmarSalirExpress();
+          if (!salir) return;
+        }
+        setState(() => _currentIndex = index);
+      },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -88,7 +107,9 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
           Text(
             label,
             style: TextStyle(
-              color: isSelected ? colorsecundario : Colors.grey.withOpacity(0.6),
+              color: isSelected
+                  ? colorsecundario
+                  : Colors.grey.withOpacity(0.6),
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
@@ -108,19 +129,21 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         height: 55,
         decoration: BoxDecoration(
           // Si está seleccionado brilla, si no, mantiene un color sólido
-          color: isSelected ?  colorsecundario : colorWhite,
+          color: isSelected ? colorWhite : Colors.grey.withOpacity(0.6),
           shape: BoxShape.circle,
-          boxShadow: isSelected ? [
-            BoxShadow(
-              color: colorfondo..withOpacity(0.4),
-              blurRadius: 15,
-              spreadRadius: 2,
-            )
-          ] : [],
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: colorfondo..withOpacity(0.4),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  ),
+                ]
+              : [],
         ),
         child: Icon(
           isSelected ? Icons.flash_on : Icons.flash_on,
-          color: isSelected ? Colors.white : colorWhite,
+          color: isSelected ?  colorfondo: Colors.white,
           size: 30,
         ),
       ),
@@ -128,27 +151,41 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
   }
 
   Future<bool> _confirmarSalirExpress() async {
-  return await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Alerta'),
-          content: const Text(
-            'Estás a punto de salir de la creación del servicio express. '
-            '¿Deseas continuar?',
+    return await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            backgroundColor: colorprimario,
+            title: const Text(
+              'Alerta',
+              style: TextStyle(
+                color: colorWhite,
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            content: const Text(
+              'Estás a punto de salir de la creación del servicio express. '
+              '¿Deseas continuar?',
+              style: TextStyle(color: colorWhite, fontSize: 14),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text(
+                  'Cancelar',
+                  style: TextStyle(color: colorWhite, fontSize: 14),
+                ),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Salir',
+                  style: TextStyle(color: colorError, fontSize: 14),
+                ),
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Salir'),
-            ),
-          ],
-        ),
-      ) ??
-      false;
-}
-
+        ) ??
+        false;
+  }
 }

@@ -14,7 +14,8 @@ import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/Componets/sketor/cardsImg.dart';
 import 'package:gixt/Componets/sketor/cardsRestraurantes.dart';
 import 'package:gixt/cache.dart';
-import 'package:gixt/services/favoritos/favorite_servive.dart';
+import 'package:gixt/pages/reservapage.dart';
+import 'package:gixt/services/servicios/favorite_service.dart';
 import 'package:gixt/services/servicios/serviciosbyid_service.dart';
 import 'package:gixt/services/user/update_service.dart';
 import 'package:gixt/services/user/User_service.dart';
@@ -53,6 +54,7 @@ class _ServicioPageState extends State<ServicioPage> {
     });
   }
 
+  @override
   void initState() {
     super.initState();
     print("Entré a Mi Servicio");
@@ -60,16 +62,44 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   Future<void> _initial() async {
-    await serviciosById.fetchServicioData(widget.id_servicio);
+    bool ok = await serviciosById.fetchServicioData(widget.id_servicio);
+    if (!ok) {
+      if (!mounted) return;
+      Future.microtask(() async {
+        await mostrarAlerta(
+          context,
+          titulo: "Error",
+          mensaje: "No se pudo obtener la información",
+          tipo: TipoAlerta.error,
+        );
+
+        Navigator.pop(context);
+      });
+    }
     fav = serviciosById.servicios[0].fav;
+    setState(() {});
   }
 
   Future<void> _onRefresh() async {
     setState(() {
       print('Actualizando datos...');
-      serviciosById.fetchServicioData(widget.id_servicio);
       hasMore = true;
     });
+    bool ok = await serviciosById.fetchServicioData(widget.id_servicio);
+    if (!ok) {
+      if (!mounted) return;
+      Future.microtask(() async {
+        await mostrarAlerta(
+          context,
+          titulo: "Error",
+          mensaje: "No se pudo obtener la información",
+          tipo: TipoAlerta.error,
+        );
+
+        Navigator.pop(context);
+      });
+    }
+    setState(() {});
   }
 
   void _fav() async {
@@ -95,9 +125,7 @@ class _ServicioPageState extends State<ServicioPage> {
       child: Scaffold(
         backgroundColor: colorfondo,
         body: FutureBuilder(
-          future: Future.wait([
-            serviciosById.fetchServicioData(widget.id_servicio),
-          ]),
+          future: Future.wait([]),
           builder: (context, snapshot) {
             if (serviciosById.servicios.isEmpty) {
               return Indicador();
@@ -154,32 +182,34 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   SliverAppBar _buildSliverAppBar() {
-  return SliverAppBar(
-    backgroundColor: colorprimario,
-    expandedHeight: 90,
-    pinned: true,
-    floating: false,
-    snap: false,
-    elevation: 0,
-    toolbarHeight: 90,
+    return SliverAppBar(
+      backgroundColor: colorprimario,
+      expandedHeight: 90,
+      pinned: true,
+      floating: false,
+      snap: false,
+      elevation: 0,
+      toolbarHeight: 90,
 
-   iconTheme: const IconThemeData(
+      iconTheme: const IconThemeData(
         color: Colors.white, // 👈 color del ícono
       ),
-
-    flexibleSpace: FlexibleSpaceBar(
-      centerTitle: true,
-      title: Text(
-        'Mi Servicio',
-        style: GoogleFonts.poppins(
-          fontSize: 25,
-          fontWeight: FontWeight.w600,
-          color: colorsecundario,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(
+          'Mi Servicio',
+          style: GoogleFonts.poppins(
+            fontSize: 25,
+            fontWeight: FontWeight.w600,
+            color: colorsecundario,
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildTitle() {
     return Column(
@@ -527,19 +557,21 @@ class _ServicioPageState extends State<ServicioPage> {
             Spacer(),
             ElevatedButton(
               onPressed: () {
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) =>
-                //           MenuSelectPage(id_empresa: widget.id_empresa),
-                //     ));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ReservaPage(
+                      id_reserva: serviciosById.servicios[0].idServicio,
+                    ),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(150, 45),
                 backgroundColor: colorWhite,
                 foregroundColor: colorBlack,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15), 
+                  borderRadius: BorderRadius.circular(15),
                 ),
               ),
               child: Row(

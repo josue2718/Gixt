@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 
 class User {
-  
   String id_user;
   String username;
   String first_name;
@@ -14,7 +13,7 @@ class User {
   String email;
   String fecnac;
   String genero;
-  
+
   User({
     required this.id_user,
     required this.username,
@@ -24,8 +23,7 @@ class User {
     required this.phone,
     required this.email,
     required this.fecnac,
-    required this.genero
-
+    required this.genero,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -37,9 +35,8 @@ class User {
       last_name: json['last_name'],
       phone: json['phone'],
       email: json['email'],
-      fecnac : json['fecha_nacimiento'],
-      genero : json['genero']
-     
+      fecnac: json['fecha_nacimiento'],
+      genero: json['genero'],
     );
   }
 
@@ -57,76 +54,67 @@ class ApiUser {
   static const String _cacheTimeKey = 'user_cache_time';
 
   set loading(bool loading) {}
- 
+
   Future<void> updatedata() async {
     await fetchData(forceRefresh: true);
   }
 
+  Future<bool> fetchData({bool forceRefresh = false}) async {
+  
+    final prefs = await SharedPreferences.getInstance();
+    String? id_user = prefs.getString('id'); // ⏱ cache config
+    const cacheDuration = Duration(minutes: 10);
 
- Future<void> fetchData( {bool forceRefresh = false}) async {
-  print("fetch user");
+    // 🔍 revisar cache
+    final cachedData = prefs.getString(_cacheKey);
+    final cachedTime = prefs.getInt(_cacheTimeKey);
 
-  final prefs = await SharedPreferences.getInstance();
-  String? id_user = prefs.getString('id');
-  // ⏱ cache config
-  const cacheDuration = Duration(minutes: 10);
+    final now = DateTime.now();
 
-  // 🔍 revisar cache
-  final cachedData = prefs.getString(_cacheKey);
-  final cachedTime = prefs.getInt(_cacheTimeKey);
+    if (!forceRefresh &&
+        cachedData != null &&
+        cachedTime != null &&
+        now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) <
+            cacheDuration) {
 
-  final now = DateTime.now();
+        final Map<String, dynamic> jsonData = json.decode(cachedData);
+        user
+          ..clear()
+          ..add(User.fromJson(jsonData));
 
-  if (!forceRefresh &&
-      cachedData != null &&
-      cachedTime != null &&
-      now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) <
-          cacheDuration) {
-
-    print("✔ Usando cache");
-    print("datos cache: " + cachedData);
-    
-    final Map<String, dynamic> jsonData =
-    json.decode(cachedData);
-    user
-      ..clear()
-        ..add(User.fromJson(jsonData));
-
-    return;
-  }
-
-  print("🌐 Llamando API");
-
-  final token = prefs.getString('token');
-  final headers = {'Authorization': 'Bearer $token'};
-
-  try {
-    isLoading = true;
-
-    final response = await http.get(
-      Uri.parse('${dotenv.env['API_URL']}/api/Users/id/${id_user}'),
-      headers: headers,
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> jsonResponse = json.decode(response.body);
-      print( jsonResponse); 
-      user
-        ..clear()
-        ..add(User.fromJson(jsonResponse));
-
-      // 💾 guardar cache
-      await prefs.setString(_cacheKey, response.body);
-      await prefs.setInt(
-        _cacheTimeKey,
-        DateTime.now().millisecondsSinceEpoch,
-      );
-    } else {
-      print('Error en la solicitud: ${response.statusCode}');
+      return true;
     }
-  } finally {
-    isLoading = false;
-  }
-}
 
+    final token = prefs.getString('token');
+    final headers = {'Authorization': 'Bearer $token'};
+
+    try {
+      isLoading = true;
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_URL']}/api/Users/id/${id_user}'),
+        headers: headers,
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        print(jsonResponse);
+        user
+          ..clear()
+          ..add(User.fromJson(jsonResponse));
+
+        await prefs.setString(_cacheKey, response.body);
+        await prefs.setInt(
+          _cacheTimeKey,
+          DateTime.now().millisecondsSinceEpoch,
+        );
+        return true;
+      } else {
+        print('Error en la solicitud: ${response.statusCode}');
+        return false;
+      }
+    } finally {
+      isLoading = false;
+    }
+  }
 }

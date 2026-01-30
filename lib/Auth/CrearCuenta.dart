@@ -1,22 +1,23 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/Componets/inputs/pick_image.dart';
 import 'package:gixt/cache.dart';
 import 'package:gixt/pages/root.dart';
 import 'package:gixt/services/Auth/cuenta_service.dart';
+import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
+import 'package:gixt/services/ubicaciones/location_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:http/http.dart' as http; // Importar el paquete http
-import 'dart:convert'; // Para trabajar con JSON
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'dart:async';
 import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter/services.dart';
 
 class Crearcuenta extends StatefulWidget {
@@ -49,6 +50,13 @@ class _CrearcuentaState extends State<Crearcuenta> {
   String? _id;
   String? _img;
   String? _user;
+  double longitud = 0;
+  double latitud = 0;
+  String? calle;
+  String? ciudad;
+  String? estado;
+  GoogleMapController? mapController;
+  LatLng? posicionActual = LatLng(20.9674, -89.5926);
 
   Future<void> _saveToken(
     String token,
@@ -90,9 +98,9 @@ class _CrearcuentaState extends State<Crearcuenta> {
       lastName: _last_nameController.text,
       imagen: _image ?? File(''),
       phone: _phoneController.text,
-      ciudad: "_ciudadController.text",
-      longitud: 11,
-      latitud: 11,
+      ciudad: ciudad!,
+      longitud: longitud,
+      latitud: latitud,
       genero: _genero ?? "",
       fechaNacimiento: _fecha_nacimientoController.text,
       tokenFcm: "cfddds",
@@ -123,76 +131,85 @@ class _CrearcuentaState extends State<Crearcuenta> {
         );
       });
     } else {
-      mostrarAlerta(
+       Future.microtask(() async {
+      await mostrarAlerta(
         context,
         titulo: "Error",
         mensaje: result['message'],
         tipo: TipoAlerta.error,
       );
+
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Login()),
+        );
+       });
     }
   }
 
-Future<void> _pickImage() async {
-  final ImageSource? source = await showModalBottomSheet<ImageSource>(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Cámara'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galería'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
-        ),
-      );
-    },
-  );
+  Future<void> _pickImage() async {
+    final File? image = await pickAndCropImage(context);
 
-  if (source == null) return; // Canceló
+    if (image != null) {
+      setState(() {
+        _image = image;
+      });
+    }
+  }
 
-  final picker = ImagePicker();
-  final XFile? pickedFile = await picker.pickImage(
-    source: source,
-    imageQuality: 85,
-  );
+  bool salir()
+  {
+    if (_paginaActual != 0) {
+      setState(() {
+        _paginaActual--; // vuelve al formulario
+      });
+      return false;
+    } else {
+      Navigator.pop(context);
+      return true;
+    }
+  }
 
-  if (pickedFile == null) return;
+  void getcalle() {
+    GeocodingHelper.obtenerCiudadDesdeCoordenadas(
+      latitud: latitud,
+      longitud: longitud,
+      onResult: (ciudadResult, calleResult, estadoResult) {
+        setState(() {
+          ciudad = ciudadResult;
+          calle = calleResult;
+          estado = estadoResult;
+          print(calle);
+        });
+      },
+    );
+  }
 
-  final croppedFile = await ImageCropper().cropImage(
-    sourcePath: pickedFile.path,
-    uiSettings: [
-      AndroidUiSettings(
-        toolbarTitle: 'Recortar imagen',
-        toolbarColor: Colors.black,
-        toolbarWidgetColor: Colors.white,
-        lockAspectRatio: true,
-        initAspectRatio: CropAspectRatioPreset.square,
-      ),
-      IOSUiSettings(
-        title: 'Recortar imagen',
-        aspectRatioLockEnabled: true,
-        aspectRatioPresets: [CropAspectRatioPreset.square],
-      ),
-    ],
-  );
+  void obtenerCoordenadas() async {
+    try {
+      Position pos = await LocationService.obtenerUbicacion();
+      latitud = pos.latitude;
+      longitud = pos.longitude;
+      setState(() {
+        posicionActual = LatLng(pos.latitude, pos.longitude);
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
 
-  if (croppedFile == null) return;
+  Future<void> _irAMiUbicacion() async {
+    final position = await Geolocator.getCurrentPosition();
+    final nuevaPos = LatLng(position.latitude, position.longitude);
 
-  setState(() {
-      _image = File(croppedFile.path);
+    setState(() {
+      posicionActual = nuevaPos;
+      latitud = position.latitude;
+      longitud = position.longitude;
     });
-}
+    getcalle();
+  }
+
   @override
   void dispose() {
     _controller.dispose();
@@ -201,7 +218,11 @@ Future<void> _pickImage() async {
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardDismisser(
+    return  WillPopScope(
+      onWillPop: () async {
+        return salir();
+      },
+      child:KeyboardDismisser(
       child: Scaffold(
         backgroundColor: colorfondo,
         body: CustomScrollView(
@@ -213,18 +234,28 @@ Future<void> _pickImage() async {
                 children: [
                   if (_paginaActual == 0) _buidFormulario(),
                   if (_paginaActual == 1) _buidFormularioInfo(),
-                  if (_paginaActual == 2) _buidFormularioImg(),
+                  if (_paginaActual == 2)
+                  SizedBox(
+                    height:
+                        MediaQuery.of(context).size.height -
+                        kToolbarHeight, // espacio bajo appbar
+                    child: _buidFormularioUbicacion()
+                  ),
+                  if (_paginaActual == 3) _buidFormularioImg(),
+                  if (_paginaActual != 2) ...[
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(3, (i) => _dot(i)),
+                    children: List.generate(4, (i) => _dot(i)),
                   ),
+                  ]
                 ],
               ),
             ),
           ],
         ),
       ),
+      )
     );
   }
 
@@ -278,8 +309,12 @@ Future<void> _pickImage() async {
           bottomRight: Radius.circular(0),
         ),
       ),
-      iconTheme: const IconThemeData(
-        color: Colors.white, // 👈 color del ícono
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        color: Colors.white,
+        onPressed: () {
+         salir();
+        },
       ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
@@ -441,9 +476,9 @@ Future<void> _pickImage() async {
                   return;
                 }
                 if (!(_formKey.currentState?.validate() ?? false)) return;
-                      setState(() {
-                _paginaActual++;
-               });
+                setState(() {
+                  _paginaActual++;
+                });
               },
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(300, 50),
@@ -685,9 +720,9 @@ Future<void> _pickImage() async {
             ),
             TextButton(
               onPressed: () {
-               setState(() {
-                _paginaActual--;
-               });
+                setState(() {
+                  _paginaActual--;
+                });
               },
               style: TextButton.styleFrom(foregroundColor: colorWhite),
               child: const Text('Regresar'),
@@ -802,9 +837,9 @@ Future<void> _pickImage() async {
             ),
             TextButton(
               onPressed: () {
-                     setState(() {
-                _paginaActual--;
-               });
+                setState(() {
+                  _paginaActual--;
+                });
               },
               style: TextButton.styleFrom(foregroundColor: colorWhite),
               child: const Text('Regresar'),
@@ -814,4 +849,115 @@ Future<void> _pickImage() async {
       ),
     );
   }
+
+  Widget _buidFormularioUbicacion() {
+    final h = MediaQuery.of(context).size.height;
+
+    return SizedBox(
+      height: h,
+      child: Stack(
+        children: [
+          GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: posicionActual!,
+              zoom: 16,
+            ),
+
+            myLocationEnabled: true,
+            myLocationButtonEnabled: true,
+
+            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+              Factory<OneSequenceGestureRecognizer>(
+                () => EagerGestureRecognizer(),
+              ),
+            },
+            onTap: (pos) {
+              setState(() {
+                posicionActual = pos;
+                latitud = pos.latitude;
+                longitud = pos.longitude;
+              });
+              getcalle();
+            },
+
+            markers: {
+              Marker(
+                markerId: MarkerId("ubicacion"),
+                position: posicionActual!,
+              ),
+            },
+          ),
+          Positioned(
+            bottom: 150,
+            right: 15,
+            child: FloatingActionButton(
+              heroTag: "ubicacion",
+              backgroundColor: Colors.white,
+              onPressed: _irAMiUbicacion,
+              child: Icon(Icons.my_location, color: Colors.black),
+            ),
+          ),
+
+          // PANEL SUPERIOR
+          Positioned(
+            top: 60,
+            left: 15,
+            right: 15,
+            child: Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    "Selecciona ubicación",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  Text("$calle", style: TextStyle(color: Colors.white)),
+                  Text("$ciudad", style: TextStyle(color: Colors.white)),
+                ],
+              ),
+            ),
+          ),
+
+          // BOTÓN GUARDAR
+          Positioned(
+            bottom: 90,
+            left: 20,
+            right: 20,
+            child: ElevatedButton(
+              onPressed: ()
+              {
+                if (calle == null) {
+                  mostrarAlerta(
+                    context,
+                    titulo: 'Ubicacion requerida',
+                    mensaje: 'Por favor selecciona ubicacion',
+                    tipo: TipoAlerta.advertencia,
+                  );
+                  return;
+                }
+                setState(() {
+                  _paginaActual++;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(300, 50),
+                backgroundColor: colorWhite,
+                foregroundColor: colorprimario,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+            ),
+          ),
+
+        ],
+      ),
+    );
+  }
+
 }

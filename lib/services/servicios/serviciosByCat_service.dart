@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
@@ -54,16 +52,13 @@ class ApiServiciosByCat {
   bool hasMore = true;
   set loading(bool loading) {}
 
-  Future<void> fetchServicioCatData(
+  Future<bool> fetchServicioCatData(
     int id,
     int pageNumber, {
     bool forceRefresh = false,
   }) async {
-    print("fetch servicios categoria ${id}, ${pageNumber}");
 
     final prefs = await SharedPreferences.getInstance();
-
-    print("🌐 Llamando API");
 
     final token = prefs.getString('token');
     final headers = {'Authorization': 'Bearer $token'};
@@ -76,7 +71,7 @@ class ApiServiciosByCat {
           '${dotenv.env['API_URL']}/api/Servicios/categoria/${id}?pageNumber=${pageNumber}',
         ),
         headers: headers,
-      );
+      ).timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -84,7 +79,9 @@ class ApiServiciosByCat {
         print(data);
         servicios
           ..addAll(data.map((item) => ServiciosByCat.fromJson(item)).toList());
+          return true;
       } else {
+        return false;
       
       }
     } finally {
@@ -92,33 +89,5 @@ class ApiServiciosByCat {
     }
   }
 
-  // Future<void> fetchEmpresatipo(int tipo, int Number) async {
-  //   if (isLoading || !hasMore) return;
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final token = prefs.getString('token');
-  //   final headers = {'Authorization': 'Bearer $token'};
-
-  //   try {
-  //     isLoading = true;
-
-  //     final response = await http.get(
-  //       Uri.parse(
-  //         'https://cateringmid.azurewebsites.net/api/Empresa/tipo/$tipo?pageNumber=$Number&pageSize=200&timestamp=${DateTime.now().millisecondsSinceEpoch}',
-  //       ),
-  //       headers: headers,
-  //     );
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic> jsonResponse = json.decode(response.body);
-  //       final List<dynamic> data = jsonResponse['data'];
-  //       empresas.clear();
-  //       empresas.addAll(data.map((item) => Empresas.fromJson(item)).toList());
-  //     } else if (response.statusCode == 401) {
-  //     } else {
-  //       throw Exception('Error al cargar datos: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //   } finally {
-  //     isLoading = false;
-  //   }
-  // }
+ 
 }

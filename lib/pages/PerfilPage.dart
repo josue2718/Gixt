@@ -6,15 +6,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/Componets/inputs/pick_image.dart';
 import 'package:gixt/cache.dart';
+import 'package:gixt/pages/UbicacionesPage.dart';
+import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
+import 'package:gixt/services/ubicaciones/location_service.dart';
 import 'package:gixt/services/user/update_service.dart';
 import 'package:gixt/services/user/User_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -48,6 +54,13 @@ class _PerfilPageState extends State<PerfilPage> {
   File? _image;
   String? _img;
   String? _user;
+    double longitud = 0;
+  double latitud = 0;
+  String? calle;
+  String? ciudad;
+  String? estado;
+  GoogleMapController? mapController;
+  LatLng? posicionActual = LatLng(20.9674, -89.5926);
 
   Future<void> _updateUser(String user, String img) async {
     await _preferencesService.clearPreferencesUser();
@@ -62,6 +75,7 @@ class _PerfilPageState extends State<PerfilPage> {
     super.initState();
     print("Entré a Mi perfil");
     user.fetchData();
+     obtenerCoordenadas();
   }
 
   Future<void> _onRefresh() async {
@@ -71,8 +85,27 @@ class _PerfilPageState extends State<PerfilPage> {
       hasMore = true;
     });
   }
-  void _logout() async {
+  
+  Future<void> _Initial() async {
+    obtenerCoordenadas();
+    bool ok = await user.fetchData();
+    if (!ok) {
+      if (!mounted) return;
+      mostrarAlerta(
+        context,
+        titulo: "Error",
+        mensaje: "No se pudo obtener la información",
+        tipo: TipoAlerta.error,
+      );
+    }
 
+    setState(() {
+      print('Iniciando home');
+      hasMore = true;
+    });
+  }
+
+  void _logout() async {
     bool continuar = await mostrarAlerta(
         context,
         titulo: "Logout",
@@ -89,6 +122,7 @@ class _PerfilPageState extends State<PerfilPage> {
       ),
     );
   }
+  
   void _Crear() async {
     showDialog(
       context: context,
@@ -101,9 +135,9 @@ class _PerfilPageState extends State<PerfilPage> {
       lastName: _last_nameController.text,
       imagen: _image,
       phone: _phoneController.text,
-      ciudad: "_ciudadController.text",
-      longitud: 11,
-      latitud: 11,
+      ciudad: ciudad!,
+      longitud: longitud,
+      latitud: latitud, 
       genero: _genero ?? "",
       fechaNacimiento: _fecha_nacimientoController.text,
       tokenFcm: "cfddds",
@@ -131,68 +165,44 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
- 
-Future<void> _pickImage() async {
-  final ImageSource? source = await showModalBottomSheet<ImageSource>(
-    context: context,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) {
-      return SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Cámara'),
-              onTap: () => Navigator.pop(context, ImageSource.camera),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galería'),
-              onTap: () => Navigator.pop(context, ImageSource.gallery),
-            ),
-          ],
-        ),
-      );
-    },
-  );
+  Future<void> _pickImage() async {
+  final File? image = await pickAndCropImage(context);
 
-  if (source == null) return; // Canceló
-
-  final picker = ImagePicker();
-  final XFile? pickedFile = await picker.pickImage(
-    source: source,
-    imageQuality: 85,
-  );
-
-  if (pickedFile == null) return;
-
-  final croppedFile = await ImageCropper().cropImage(
-    sourcePath: pickedFile.path,
-    uiSettings: [
-      AndroidUiSettings(
-        toolbarTitle: 'Recortar imagen',
-        toolbarColor: Colors.black,
-        toolbarWidgetColor: Colors.white,
-        lockAspectRatio: true,
-        initAspectRatio: CropAspectRatioPreset.square,
-      ),
-      IOSUiSettings(
-        title: 'Recortar imagen',
-        aspectRatioLockEnabled: true,
-        aspectRatioPresets: [CropAspectRatioPreset.square],
-      ),
-    ],
-  );
-
-  if (croppedFile == null) return;
-
-  setState(() {
-      _image = File(croppedFile.path);
+  if (image != null) {
+    setState(() {
+      _image = image;
     });
+  }
 }
+
+  void getcalle() {
+    GeocodingHelper.obtenerCiudadDesdeCoordenadas(
+      latitud: latitud,
+      longitud: longitud,
+      onResult: (ciudadResult, calleResult, estadoResult) {
+        setState(() {
+          ciudad = ciudadResult;
+          calle = calleResult;
+          estado = estadoResult;
+          print(calle);
+        });
+      },
+    );
+  }
+
+  void obtenerCoordenadas() async {
+    try {
+      Position pos = await LocationService.obtenerUbicacion();
+      latitud = pos.latitude;
+      longitud = pos.longitude;
+      setState(() {
+        posicionActual = LatLng(pos.latitude, pos.longitude);
+      });
+      getcalle();
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -242,7 +252,7 @@ Future<void> _pickImage() async {
     );
   }
 
-    Widget _buildopcions() {
+  Widget _buildopcions() {
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -250,6 +260,20 @@ Future<void> _pickImage() async {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            InkWell(
+              splashColor: Colors.transparent,
+              highlightColor: Colors.transparent,
+              hoverColor: Colors.transparent,
+              borderRadius: BorderRadius.circular(12),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UbicacionesPage(),
+                  ),
+                );
+              },
+              child:
             Container(
               width: 80,
               child: Column(
@@ -290,6 +314,7 @@ Future<void> _pickImage() async {
                  
                 ],
               ),
+            ),
             ),
             Container(
               width: 90,
@@ -385,16 +410,15 @@ Future<void> _pickImage() async {
     );
   }
 
-
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: colorprimario,
-      expandedHeight: 90,
+      expandedHeight: 80,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
-      toolbarHeight: 90,
+      toolbarHeight: 80,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
@@ -551,7 +575,7 @@ Future<void> _pickImage() async {
               keyboardType: TextInputType.emailAddress,
               style: const TextStyle(color: colorWhite),
               cursorColor: colorWhite,
-              enabled: false,
+              readOnly: true,
               decoration: InputDecoration(
                 labelText: 'Correo',
                 labelStyle: const TextStyle(color: colorWhite),

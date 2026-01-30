@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/cardoferta.dart';
 import 'package:gixt/Componets/cardsServicios.dart';
 import 'package:gixt/Componets/circleimage.dart';
@@ -16,7 +18,10 @@ import 'package:gixt/services/Anuncios_service.dart';
 import 'package:gixt/services/Auth/categorias_service.dart';
 import 'package:gixt/services/servicios/servicios_service.dart';
 import 'package:gixt/services/servicios/serviciosbyfav.dart';
+import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
+import 'package:gixt/services/ubicaciones/location_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -39,22 +44,26 @@ class _HomePageState extends State<HomePage> {
   int pageNumber = 1;
   String? img;
   String? username;
+  String? calle;
+  String ciudad = "";
+  String estado = "";
+  double longitud = 0;
+  double latitud = 0;
+  GoogleMapController? mapController;
+  LatLng posicionActual = LatLng(20.9674, -89.5926);
 
   void initState() {
     super.initState();
-
     // 👇 SE EJECUTA AL ENTRAR A LA PÁGINA
     print("Entré a Restaurantes");
-    api.fetchServicioData(pageNumber);
-    fav.fetchServicioData(pageNumber);
-    apicategoria.fetchEmpresaData(pageNumber);
-    anuncio.fetchData();
+    obtenerCoordenadas();
+    getcalle();
     _loadUserId();
+    _Initial();
   }
 
   Future<void> _loadUserId() async {
     final prefs = await SharedPreferences.getInstance();
-
     setState(() {
       img = prefs.getString('img');
       username = prefs.getString('user');
@@ -65,12 +74,64 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       print('Actualizando datos...');
       anuncio.updatedata();
-      api.updatedata(pageNumber);
-      fav.fetchServicioData(pageNumber);
+      api.updatedata();
+      fav.fetchServicioData();
       hasMore = true;
     });
   }
 
+  Future<void> _Initial() async {
+    bool ok = await api.fetchServicioData();
+    bool okfav = await fav.fetchServicioData();
+    bool okData = await apicategoria.fetchEmpresaData();
+    bool okAnc = await anuncio.fetchData();
+    if (!okData || !okfav || !ok|| !okAnc) {
+      if (!mounted) return;
+      mostrarAlerta(
+        context,
+        titulo: "Error",
+        mensaje: "No se pudo obtener la información",
+        tipo: TipoAlerta.error,
+      );
+    }
+
+    setState(() {
+      print('Iniciando home');
+      hasMore = true;
+    });
+  }
+  
+  void obtenerCoordenadas() async {
+    try {
+      Position pos = await LocationService.obtenerUbicacion();
+      latitud = pos.latitude;
+      longitud = pos.longitude;
+      setState(() {
+        posicionActual = LatLng(pos.latitude, pos.longitude);
+      });
+      getcalle();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void getcalle()
+  {
+     GeocodingHelper.obtenerCiudadDesdeCoordenadas(
+        latitud: latitud,
+        longitud: longitud,
+        onResult: (ciudadResult, calleResult,estadoResult) {
+          setState(() {
+            ciudad = ciudadResult;
+            calle = calleResult;
+            estado =estadoResult;
+            print(calle);
+          });
+        },
+      );
+  }
+  
+  
   @override
   Widget build(BuildContext context) {
     return KeyboardDismisser(
@@ -78,9 +139,6 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: colorfondo,
         body: FutureBuilder(
           future: Future.wait([
-            api.fetchServicioData(pageNumber),
-            fav.fetchServicioData(pageNumber),
-            apicategoria.fetchEmpresaData(pageNumber),
           ]),
           builder: (context, snapshot) {
             return KeyboardDismisser(
@@ -130,7 +188,7 @@ class _HomePageState extends State<HomePage> {
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: colorprimario,
-      expandedHeight: 180,
+      expandedHeight: 130,
       pinned: true,
       floating: false,
       snap: false,
@@ -138,7 +196,7 @@ class _HomePageState extends State<HomePage> {
       shadowColor: Colors.black26,
       toolbarHeight: 50,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(25)),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
@@ -152,7 +210,7 @@ class _HomePageState extends State<HomePage> {
         ),
         background: ClipRRect(
           borderRadius: const BorderRadius.vertical(
-            bottom: Radius.circular(25),
+            bottom: Radius.circular(20),
           ),
           child: Stack(
             children: [
@@ -209,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                 child: Flex(
                   direction: Axis.horizontal,
                   children: [
-                    const SizedBox(width: 40),
+                    const SizedBox(width: 30),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -224,13 +282,13 @@ class _HomePageState extends State<HomePage> {
                         Row(
                           children: [
                             Text(
-                              'Uman Yuc',
+                              '${ciudad} ${estado}',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 color: colortitulo,
                               ),
                             ),
-                            const SizedBox(width: 15),
+                            const SizedBox(width: 5),
                             const Icon(
                               Icons.location_on,
                               color: colortitulo,
@@ -454,8 +512,8 @@ class _HomePageState extends State<HomePage> {
                   (index) => AnimatedContainer(
                     duration: const Duration(milliseconds: 300),
                     margin: const EdgeInsets.symmetric(horizontal: 2),
-                    width: currentIndex == index ? 16 : 8,
-                    height: currentIndex == index ? 16 : 8,
+                    width: currentIndex == index ? 10 : 8,
+                    height: currentIndex == index ? 10 : 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       color: currentIndex == index ? colorWhite : colorprimario,

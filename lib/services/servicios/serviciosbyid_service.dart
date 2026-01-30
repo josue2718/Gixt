@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
@@ -57,8 +55,9 @@ class Servicios {
 
   @override
   String toString() {
-    return 'Servicios(nombre: $nombreServicio, categoria: $categoria, trabajador: $trabajador)';
+    return 'Serviciosss(fav ${fav})';
   }
+  
 }
 
 
@@ -70,66 +69,53 @@ class ApiServiciosById {
 
   set loading(bool loading) {}
 
-  Future<void> fetchServicioData(String id, {bool forceRefresh = false}) async {
-    print("fetch servicios");
+  Future<bool> fetchServicioData(String id, {bool forceRefresh = false}) async {
 
-    final prefs = await SharedPreferences.getInstance();
-    print("🌐 Llamando API");
-    String? id_user = prefs.getString('id');
-    final token = prefs.getString('token');
-    final headers = {'Authorization': 'Bearer $token'};
+  print("fetch servicios by id");
 
-    try {
-      isLoading = true;
+  final prefs = await SharedPreferences.getInstance();
+  String? id_user = prefs.getString('id');
+  final token = prefs.getString('token');
 
-      final response = await http.get(
-        Uri.parse('${dotenv.env['API_URL']}/api/Servicios/id/${id}?iduser=${id_user}'),
-        headers: headers,
-      );
+  final headers = {
+    'Authorization': 'Bearer $token',
+  };
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = json.decode(response.body);
-      print( jsonResponse); 
+  try {
+
+    isLoading = true;
+
+    final response = await http
+        .get(
+          Uri.parse(
+            '${dotenv.env['API_URL']}/api/Servicios/id/$id?iduser=$id_user',
+          ),
+          headers: headers,
+        )
+        .timeout(const Duration(seconds: 15));
+
+    if (response.statusCode == 200) {
+
+      final Map<String, dynamic> jsonResponse =
+          json.decode(response.body);
+     
       servicios
         ..clear()
         ..add(Servicios.fromJson(jsonResponse));
-
-       
-      } else {
-        servicios.clear();
-      }
-    } finally {
-      isLoading = false;
+      return true;
     }
+
+    return false; 
   }
 
-  // Future<void> fetchEmpresatipo(int tipo, int Number) async {
-  //   if (isLoading || !hasMore) return;
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final token = prefs.getString('token');
-  //   final headers = {'Authorization': 'Bearer $token'};
+  catch (e) {
+    return false; 
+  }
 
-  //   try {
-  //     isLoading = true;
+  finally {
+    isLoading = false;
+  }
+}
 
-  //     final response = await http.get(
-  //       Uri.parse(
-  //         'https://cateringmid.azurewebsites.net/api/Empresa/tipo/$tipo?pageNumber=$Number&pageSize=200&timestamp=${DateTime.now().millisecondsSinceEpoch}',
-  //       ),
-  //       headers: headers,
-  //     );
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic> jsonResponse = json.decode(response.body);
-  //       final List<dynamic> data = jsonResponse['data'];
-  //       empresas.clear();
-  //       empresas.addAll(data.map((item) => Empresas.fromJson(item)).toList());
-  //     } else if (response.statusCode == 401) {
-  //     } else {
-  //       throw Exception('Error al cargar datos: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //   } finally {
-  //     isLoading = false;
-  //   }
-  // }
+  
 }

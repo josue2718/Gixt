@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/Componets/Indicador.dart';
+import 'package:gixt/Componets/alert.dart';
 import 'package:gixt/Componets/cardoferta.dart';
 import 'package:gixt/Componets/cardsCategoria.dart';
 import 'package:gixt/Componets/cardsServicios.dart';
@@ -67,10 +68,25 @@ class _CategoriaPageState extends State<CategoriaPage> {
       api.servicios.clear();
     });
 
-    final data = await api.fetchServicioCatData(
+    bool ok = await api.fetchServicioCatData(
       widget.id_categoria,
       pageNumber,
     );
+
+    if (!ok) {
+      if (!mounted) return;
+      Future.microtask(() async {
+      await mostrarAlerta(
+        context,
+        titulo: "Error",
+        mensaje: "No se pudo obtener la información",
+        tipo: TipoAlerta.error,
+      );
+      
+      Navigator.pop(context);
+      });
+
+    }
 
     setState(() => isLoading = false);
   }
@@ -81,24 +97,55 @@ class _CategoriaPageState extends State<CategoriaPage> {
        setState(() => isLoading = false);
     pageNumber++;
 
-    final data = await api.fetchServicioCatData(
+   bool ok = await api.fetchServicioCatData(
       widget.id_categoria,
       pageNumber,
     );
+
+    if (!ok) {
+      if (!mounted) return;
+     Future.microtask(() async {
+      await mostrarAlerta(
+        context,
+        titulo: "Error",
+        mensaje: "No se pudo obtener la información",
+        tipo: TipoAlerta.error,
+      );
+      
+      Navigator.pop(context);
+      });
+    }
     setState(() => isLoading = false);
   }
 
   Future<void> _onRefresh() async {
     setState(() {
-      print('Actualizando datos...');
+    
       hasMore = true;
       pageNumber = 1;
       api.servicios.clear();
       isLoading = true;
-      
-    
     });
-    await api.fetchServicioCatData( widget.id_categoria,pageNumber);
+
+    print('Actualizando datos...');
+    bool ok = await api.fetchServicioCatData(
+      widget.id_categoria,
+      pageNumber,
+    );
+
+    if (!ok) {
+      if (!mounted) return;
+      Future.microtask(() async {
+      await mostrarAlerta(
+        context,
+        titulo: "Error",
+        mensaje: "No se pudo obtener la información",
+        tipo: TipoAlerta.error,
+      );
+      
+      Navigator.pop(context);
+      });
+    }
     setState(() => isLoading = false);
   }
 

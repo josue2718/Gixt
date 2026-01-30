@@ -1,9 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- PERMISOS -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+
     <application
         android:label="gixt"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+        <!-- GOOGLE MAPS API KEY -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAjcb5WA1kNYLE5Gchmx1sNnpZM31vzXF8"/>
 
         <!-- MAIN ACTIVITY -->
         <activity
@@ -26,7 +36,7 @@
             </intent-filter>
         </activity>
 
-        <!-- UCROP ACTIVITY (FIX) -->
+        <!-- UCROP ACTIVITY -->
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
             android:screenOrientation="portrait"
@@ -39,7 +49,7 @@
 
     </application>
 
-    <!-- PROCESS TEXT (Flutter text plugin) -->
+    <!-- PROCESS TEXT -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />

@@ -35,9 +35,9 @@ class ApiCategorias {
 
   set loading(bool loading) {}
 
-  Future<void> fetchEmpresaData(int Number, {bool forceRefresh = false}) async {
+  Future<bool> fetchEmpresaData( {bool forceRefresh = false}) async {
     print("llamando empresas");
-    if (isLoading || !hasMore) return;
+    if (isLoading || !hasMore) return false;
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
@@ -59,10 +59,12 @@ class ApiCategorias {
         ..clear()
         ..addAll(jsonData.map((e) => Categorias.fromJson(e)));
 
-      return;
+      return true;
     }
 
     if (token == null || token.isEmpty) {}
+
+    try {
 
       final headers = {'Authorization': 'Bearer $token'};
       final response = await http.get(
@@ -70,7 +72,7 @@ class ApiCategorias {
           '${dotenv.env['API_URL']}/api/Categorias',
         ),
         headers: headers,
-      );
+     ).timeout(const Duration(seconds: 15));
         if (response.statusCode == 200) {
           
           final List<dynamic> jsonResponse = json.decode(response.body); // Decodifica como una lista
@@ -87,16 +89,25 @@ class ApiCategorias {
             DateTime.now().millisecondsSinceEpoch,
           );
 
+          return true;
+
         } 
         else if (response.statusCode == 401) 
         {
           print("No autorizado");
+          return false;
         } 
 
       else 
       {
         print("Error en la solicitud: ${response.statusCode}");
+        return false;
       }
-    } 
+      
+     } 
+     finally {
+      isLoading = false;
+    }
+  }
 
   }

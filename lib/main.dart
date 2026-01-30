@@ -5,7 +5,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/cache.dart';
-import 'package:gixt/pages/home.dart';
+import 'package:gixt/pages/HomePage.dart';
 import 'package:gixt/pages/root.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

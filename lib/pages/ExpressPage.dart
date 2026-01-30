@@ -5,8 +5,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/Nacimientoformatter.dart';
 import 'package:gixt/Componets/alert.dart';
-import 'package:gixt/Componets/categoriasoption.dart';
+import 'package:gixt/Componets/inputs/categoriasoption.dart';
 import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/Componets/inputs/pick_image.dart';
 import 'package:gixt/Componets/opciones.dart';
 import 'package:gixt/Componets/sketor/opciones.dart';
 import 'package:gixt/cache.dart';
@@ -113,80 +114,29 @@ class _ExpressPageState extends State<ExpressPage> {
     // }
   }
 
+
   Future<void> _pickImage(int index) async {
-    final ImageSource? source = await showModalBottomSheet<ImageSource>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Cámara'),
-                onTap: () => Navigator.pop(context, ImageSource.camera),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Galería'),
-                onTap: () => Navigator.pop(context, ImageSource.gallery),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    final File? image = await pickAndCropImage(context);
 
-    if (source == null) return; // Canceló
-
-    final picker = ImagePicker();
-    final XFile? pickedFile = await picker.pickImage(
-      source: source,
-      imageQuality: 85,
-    );
-
-    if (pickedFile == null) return;
-
-    final croppedFile = await ImageCropper().cropImage(
-      sourcePath: pickedFile.path,
-      uiSettings: [
-        AndroidUiSettings(
-          toolbarTitle: 'Recortar imagen',
-          toolbarColor: Colors.black,
-          toolbarWidgetColor: Colors.white,
-          lockAspectRatio: true,
-          initAspectRatio: CropAspectRatioPreset.square,
-        ),
-        IOSUiSettings(
-          title: 'Recortar imagen',
-          aspectRatioLockEnabled: true,
-          aspectRatioPresets: [CropAspectRatioPreset.square],
-        ),
-      ],
-    );
-
-    if (croppedFile == null) return;
-
-    setState(() {
-      _images[index] = File(croppedFile.path);
-    });
+    if (image != null) {
+      setState(() {
+        _images[index] = image;
+      });
+    }
   }
-
+  
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
-    apicategoria.fetchEmpresaData(1);
+    apicategoria.fetchEmpresaData();
   }
 
   void initState() {
     super.initState();
     // 👇 SE EJECUTA AL ENTRR A LA PÁGINA
     print("Entré a Restaurantes");
-    apicategoria.fetchEmpresaData(1);
+    apicategoria.fetchEmpresaData();
   }
   
   @override
@@ -330,37 +280,7 @@ class _ExpressPageState extends State<ExpressPage> {
               },
             ),
             const SizedBox(height: 20),
-            TextFormField(
-              controller: _descripcionController,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              keyboardType: TextInputType.multiline,
-              minLines: 4, // 👈 altura mínima
-              maxLines: 6, // 👈 crece hasta aquí
-              decoration: InputDecoration(
-                labelText: 'Descripción del problema',
-                labelStyle: const TextStyle(color: colorWhite),
-                alignLabelWithHint: true, // 👈 alinea bien el label
-                border: const UnderlineInputBorder(),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
-                suffixIcon: const Icon(Icons.description, color: colorWhite),
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese la descripción del problema';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-            TextFormField(
+             TextFormField(
               controller: _phoneController,
               style: const TextStyle(color: colorWhite),
               cursorColor: colorWhite,
@@ -382,6 +302,50 @@ class _ExpressPageState extends State<ExpressPage> {
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingrese un telefono';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 20),
+            TextFormField(
+              controller: _descripcionController,
+              style: const TextStyle(color: colorWhite),
+              cursorColor: colorWhite,
+              keyboardType: TextInputType.multiline,
+              minLines: 4,
+              maxLines: 6,
+              decoration: InputDecoration(
+                labelText: 'Descripción del problema',
+                labelStyle: const TextStyle(color: colorWhite),
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8), // cuadrado suave
+                  borderSide: const BorderSide(color: colorWhite),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(
+                    color: colorWhite,
+                    width: 2,
+                  ),
+                ),
+                errorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.red),
+                ),
+                focusedErrorBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: const BorderSide(color: Colors.red, width: 2),
+                ),
+                suffixIcon: const Icon(Icons.description, color: colorWhite),
+                errorStyle: const TextStyle(
+                  color: colorWhite,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese la descripción del problema';
                 }
                 return null;
               },

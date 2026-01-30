@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gixt/Componets/Indicador.dart';
 import 'package:gixt/Componets/circleimage.dart';
 import 'package:gixt/Componets/colors.dart';
-import 'package:gixt/pages/serviciopage.dart';
+import 'package:gixt/pages/ServicioPage.dart';
 
 class CardsServicios extends StatelessWidget {
   const CardsServicios({
