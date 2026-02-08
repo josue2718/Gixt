@@ -13,6 +13,7 @@ import 'package:gixt/components/inputs/inputfecha.dart';
 import 'package:gixt/components/inputs/inputpassword.dart';
 import 'package:gixt/components/inputs/inputphone.dart';
 import 'package:gixt/components/inputs/pick_image.dart';
+import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/cuenta_service.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
 import 'package:gixt/services/ubicaciones/location_service.dart';
@@ -139,10 +140,10 @@ class _CrearcuentaState extends State<Crearcuenta> {
           mensaje: message,
           tipo: TipoAlerta.exito,
         );
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => RootPage()),
-        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => RootPage()),
+        );
       });
     } else {
       Future.microtask(() async {

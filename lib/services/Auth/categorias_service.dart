@@ -25,7 +25,7 @@ class Categorias {
   }
 }
 
-class ApiCategorias {
+class Categorias_service {
   List<Categorias> categorias = []; // Lista de empresas
   int pageNumber = 1;
   bool isLoading = false;

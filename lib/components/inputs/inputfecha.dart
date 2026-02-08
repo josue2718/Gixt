@@ -29,7 +29,6 @@ class CustomTextFormFieldfecha extends StatelessWidget {
       readOnly: readOnly,
       keyboardType: TextInputType.number,
       style: TextStyle(color: colorBase),
-      maxLength: 10,
       cursorColor: colorBase,
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,

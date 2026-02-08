@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/cache.dart';
+import 'package:gixt/roots/root.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
@@ -78,14 +79,11 @@ class _SplashScreenState extends State<SplashScreen> {
 
     String? inicio = prefs.getString('inicio');
     if (inicio == 'true') {
-      // Navigator.pushReplacement(
-      //   context,
-      //   MaterialPageRoute(builder: (context) => RootPage()),
-      // );
-       Navigator.pushReplacement(
+      Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => RootPage()),
       );
+
     } else {
       Navigator.pushReplacement(
         context,

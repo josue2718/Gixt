@@ -28,7 +28,7 @@ ThemeData lightTheme = ThemeData(
 
 
 ThemeData darkTheme = ThemeData(
-  scaffoldBackgroundColor: const Color(0xFF0D0D0F),
+  scaffoldBackgroundColor: const Color.fromARGB(255, 35, 35, 41),
   colorScheme: const ColorScheme.light(
     primary: Color(0xFF1A1A1F), //negro y blanco
     secondary: Color(0xFFE9ECEF), //gris y negro

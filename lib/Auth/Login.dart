@@ -8,6 +8,7 @@ import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/inputs/input.dart';
 import 'package:gixt/components/inputs/inputpassword.dart';
+import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/auth_service.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
@@ -86,10 +87,10 @@ class _LoginState extends State<LoginPage> {
           mensaje: message,
           tipo: TipoAlerta.exito,
         );
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (context) => RootPage()),
-        // );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => RootPage()),
+        );
       });
     } else {
       mostrarAlerta(
