@@ -3,13 +3,16 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:gixt/Auth/Login.dart';
-import 'package:gixt/Componets/Indicador.dart';
-import 'package:gixt/Componets/Nacimientoformatter.dart';
-import 'package:gixt/Componets/alert.dart';
-import 'package:gixt/Componets/colors.dart';
-import 'package:gixt/Componets/inputs/pick_image.dart';
 import 'package:gixt/cache.dart';
-import 'package:gixt/pages/root.dart';
+import 'package:gixt/components/Indicador.dart';
+import 'package:gixt/components/alert.dart';
+import 'package:gixt/components/colors.dart';
+import 'package:gixt/components/inputs/Nacimientoformatter.dart';
+import 'package:gixt/components/inputs/input.dart';
+import 'package:gixt/components/inputs/inputfecha.dart';
+import 'package:gixt/components/inputs/inputpassword.dart';
+import 'package:gixt/components/inputs/inputphone.dart';
+import 'package:gixt/components/inputs/pick_image.dart';
 import 'package:gixt/services/Auth/cuenta_service.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
 import 'package:gixt/services/ubicaciones/location_service.dart';
@@ -55,6 +58,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
   String? calle;
   String? ciudad;
   String? estado;
+  bool? tyc;
   GoogleMapController? mapController;
   LatLng? posicionActual = LatLng(20.9674, -89.5926);
 
@@ -85,6 +89,16 @@ class _CrearcuentaState extends State<Crearcuenta> {
       );
       return;
     }
+    if (!tyc!) {
+      mostrarAlerta(
+        context,
+        titulo: 'Términos y condiciones',
+        mensaje: 'Debes aceptar los términos y condiciones para continuar.',
+        tipo: TipoAlerta.advertencia,
+      );
+      return;
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -125,25 +139,25 @@ class _CrearcuentaState extends State<Crearcuenta> {
           mensaje: message,
           tipo: TipoAlerta.exito,
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => RootPage()),
-        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => RootPage()),
+        // );
       });
     } else {
-       Future.microtask(() async {
-      await mostrarAlerta(
-        context,
-        titulo: "Error",
-        mensaje: result['message'],
-        tipo: TipoAlerta.error,
-      );
-
-      Navigator.pushReplacement(
+      Future.microtask(() async {
+        await mostrarAlerta(
           context,
-          MaterialPageRoute(builder: (context) => Login()),
+          titulo: "Error",
+          mensaje: result['message'],
+          tipo: TipoAlerta.error,
         );
-       });
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
+      });
     }
   }
 
@@ -157,8 +171,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
     }
   }
 
-  bool salir()
-  {
+  bool salir() {
     if (_paginaActual != 0) {
       setState(() {
         _paginaActual--; // vuelve al formulario
@@ -218,44 +231,38 @@ class _CrearcuentaState extends State<Crearcuenta> {
 
   @override
   Widget build(BuildContext context) {
-    return  WillPopScope(
+    return WillPopScope(
       onWillPop: () async {
         return salir();
       },
-      child:KeyboardDismisser(
-      child: Scaffold(
-        backgroundColor: colorfondo,
-        body: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            _buildSliverAppBar(),
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  if (_paginaActual == 0) _buidFormulario(),
-                  if (_paginaActual == 1) _buidFormularioInfo(),
-                  if (_paginaActual == 2)
-                  SizedBox(
-                    height:
-                        MediaQuery.of(context).size.height -
-                        kToolbarHeight, // espacio bajo appbar
-                    child: _buidFormularioUbicacion()
-                  ),
-                  if (_paginaActual == 3) _buidFormularioImg(),
-                  if (_paginaActual != 2) ...[
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(4, (i) => _dot(i)),
-                  ),
-                  ]
-                ],
+      child: KeyboardDismisser(
+        child: Scaffold(
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    if (_paginaActual == 0) _buidFormulario(),
+                    if (_paginaActual == 1) _buidFormularioInfo(),
+                    
+                    if (_paginaActual == 2) _buidFormularioImg(),
+                    
+                      const SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(4, (i) => _dot(i)),
+                      ),
+                    
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-      )
     );
   }
 
@@ -267,36 +274,16 @@ class _CrearcuentaState extends State<Crearcuenta> {
       height: _paginaActual == index ? 12 : 8,
       decoration: BoxDecoration(
         color: _paginaActual == index
-            ? colorWhite
-            : colorWhite.withOpacity(0.4),
+            ? colorsecundario
+            : Theme.of(context).colorScheme.surface.withOpacity(0.4),
         shape: BoxShape.circle,
       ),
     );
   }
 
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    VoidCallback? onIconTap,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: colorWhite),
-      focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: colorWhite),
-      ),
-      suffixIcon: onIconTap == null
-          ? Icon(icon, color: colorWhite)
-          : IconButton(
-              icon: Icon(icon, color: colorWhite),
-              onPressed: onIconTap,
-            ),
-    );
-  }
-
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
-      backgroundColor: colorprimario,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       expandedHeight: 120,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
@@ -305,15 +292,15 @@ class _CrearcuentaState extends State<Crearcuenta> {
       toolbarHeight: 120,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(60),
+          bottomLeft: Radius.circular(0),
           bottomRight: Radius.circular(0),
         ),
       ),
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         onPressed: () {
-         salir();
+          salir();
         },
       ),
       flexibleSpace: FlexibleSpaceBar(
@@ -321,9 +308,9 @@ class _CrearcuentaState extends State<Crearcuenta> {
         title: Text(
           'Crear Cuenta',
           style: GoogleFonts.poppins(
-            fontSize: 25,
+            fontSize: 30,
             fontWeight: FontWeight.w600,
-            color: colorsecundario,
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
@@ -349,38 +336,19 @@ class _CrearcuentaState extends State<Crearcuenta> {
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
-                    color: colorWhite,
+                    color: colorsecundario,
                   ),
-                ),
-                SizedBox(height: 10),
-                const Divider(
-                  color: colorWhite,
-                  thickness: 2,
-                  indent: 50,
-                  endIndent: 50,
                 ),
               ],
             ),
             const SizedBox(height: 40),
-            TextFormField(
+
+            CustomTextFormField(
               controller: _emailController,
+              label: 'Correo',
+              readOnly: false,
               keyboardType: TextInputType.emailAddress,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              decoration: InputDecoration(
-                labelText: 'Correo',
-                labelStyle: const TextStyle(color: colorWhite),
-                border: const UnderlineInputBorder(),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
-                suffixIcon: const Icon(Icons.email, color: colorWhite),
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              autofillHints: const [AutofillHints.email],
+              icon: Icons.person,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingrese un correo';
@@ -389,79 +357,13 @@ class _CrearcuentaState extends State<Crearcuenta> {
               },
             ),
             const SizedBox(height: 20),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _isObscured,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                labelStyle: const TextStyle(color: colorWhite),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-                border: const UnderlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isObscured ? Icons.visibility : Icons.visibility_off,
-                    color: colorWhite,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isObscured = !_isObscured;
-                    });
-                  },
-                ),
-              ),
-              autofillHints: const [AutofillHints.password],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese una contraseña';
-                }
-                return null;
-              },
-            ),
+            CustomPasswordFormField(controller: _passwordController),
             const SizedBox(height: 20),
-            TextFormField(
+            CustomPasswordFormField(
+              label: 'Confirmar Contraseña',
               controller: _passwordconfirmarController,
-              obscureText: _isObscured1,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              decoration: InputDecoration(
-                labelText: 'Confirmar Contraseña',
-                labelStyle: const TextStyle(color: colorWhite),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-                border: const UnderlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isObscured1 ? Icons.visibility : Icons.visibility_off,
-                    color: colorWhite,
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _isObscured1 = !_isObscured1;
-                    });
-                  },
-                ),
-              ),
-              autofillHints: const [AutofillHints.password],
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese una contraseña';
-                }
-                return null;
-              },
             ),
+
             const SizedBox(height: 70),
             ElevatedButton(
               onPressed: () {
@@ -482,13 +384,15 @@ class _CrearcuentaState extends State<Crearcuenta> {
               },
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(300, 50),
-                backgroundColor: colorWhite,
-                foregroundColor: colorprimario,
+                backgroundColor: colorsecundario,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+              child: const Text(
+                'Siguiente',
+                style: TextStyle(fontSize: 18, color: colorWhite),
+              ),
             ),
           ],
         ),
@@ -515,88 +419,45 @@ class _CrearcuentaState extends State<Crearcuenta> {
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
-                    color: colorWhite,
+                    color: colorsecundario,
                   ),
-                ),
-                SizedBox(height: 10),
-                const Divider(
-                  color: colorWhite,
-                  thickness: 2,
-                  indent: 50,
-                  endIndent: 50,
                 ),
               ],
             ),
             const SizedBox(height: 40),
-            TextFormField(
+            CustomTextFormField(
               controller: _first_nameController,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              decoration: InputDecoration(
-                labelText: 'Nombre',
-                labelStyle: const TextStyle(color: colorWhite),
-                border: const UnderlineInputBorder(),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
-                suffixIcon: const Icon(Icons.person, color: colorWhite),
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              label: 'Nombre',
+              readOnly: false,
+              icon: Icons.person,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un nombre';
+                  return 'Por favor ingrese un Nombre';
                 }
                 return null;
               },
             ),
+
             const SizedBox(height: 20),
-            TextFormField(
+            CustomTextFormField(
               controller: _last_nameController,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              decoration: InputDecoration(
-                labelText: 'Apellido',
-                labelStyle: const TextStyle(color: colorWhite),
-                border: const UnderlineInputBorder(),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
-                suffixIcon: const Icon(Icons.person, color: colorWhite),
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              label: 'Apellido',
+              readOnly: false,
+              icon: Icons.person,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un apellido';
+                  return 'Por favor ingrese un Apelldo';
                 }
                 return null;
               },
             ),
+
             const SizedBox(height: 20),
-            TextFormField(
+            CustomTextFormFieldPhone(
               controller: _phoneController,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
+              label: 'Telefono',
+              readOnly: false,
               keyboardType: TextInputType.phone,
-              maxLength: 10,
-              decoration: InputDecoration(
-                labelText: 'Telefono',
-                labelStyle: const TextStyle(color: colorWhite),
-                border: const UnderlineInputBorder(),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
-                suffixIcon: const Icon(Icons.phone, color: colorWhite),
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Por favor ingrese un telefono';
@@ -604,50 +465,18 @@ class _CrearcuentaState extends State<Crearcuenta> {
                 return null;
               },
             ),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: _fecha_nacimientoController,
-              style: const TextStyle(color: colorWhite),
-              cursorColor: colorWhite,
-              keyboardType: TextInputType.number,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(8),
-                FechaNacimientoFormatter(),
-              ],
 
-              decoration: const InputDecoration(
-                labelText: 'Fecha de nacimiento',
-                labelStyle: const TextStyle(color: colorWhite),
-                hintText: 'DD/MM/AAAA',
-                suffixIcon: Icon(Icons.cake, color: colorWhite),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: colorWhite),
-                ),
+            const SizedBox(height: 20),
+            CustomTextFormFieldfecha(controller: _fecha_nacimientoController),
 
-                errorStyle: const TextStyle(
-                  color: colorWhite,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Ingresa tu fecha de nacimiento';
-                }
-                if (value.length != 10) {
-                  return 'Formato inválido (DD/MM/AAAA)';
-                }
-                return null;
-              },
-            ),
             const SizedBox(height: 20),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Género',
                   style: TextStyle(
-                    color: colorWhite,
+                    color: Theme.of(context).colorScheme.surface,
                     fontSize: 15,
                     // fontWeight: FontWeight.bold,
                   ),
@@ -658,11 +487,21 @@ class _CrearcuentaState extends State<Crearcuenta> {
                     Expanded(
                       child: RadioListTile<String>(
                         value: 'H',
+                        fillColor: MaterialStateProperty.resolveWith<Color>((
+                          states,
+                        ) {
+                          if (states.contains(MaterialState.selected)) {
+                            return Theme.of(context).colorScheme.surface;
+                          }
+                          return Theme.of(context).colorScheme.surface;
+                        }),
                         groupValue: _genero,
-                        activeColor: colorWhite,
-                        title: const Text(
+                        activeColor: Theme.of(context).colorScheme.surface,
+                        title: Text(
                           'Hombre',
-                          style: TextStyle(color: colorWhite),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -675,10 +514,20 @@ class _CrearcuentaState extends State<Crearcuenta> {
                       child: RadioListTile<String>(
                         value: 'M',
                         groupValue: _genero,
-                        activeColor: colorWhite,
-                        title: const Text(
+                        fillColor: MaterialStateProperty.resolveWith<Color>((
+                          states,
+                        ) {
+                          if (states.contains(MaterialState.selected)) {
+                            return Theme.of(context).colorScheme.surface;
+                          }
+                          return Theme.of(context).colorScheme.surface;
+                        }),
+                        activeColor: Theme.of(context).colorScheme.surface,
+                        title: Text(
                           'Mujer',
-                          style: TextStyle(color: colorWhite),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
                         ),
                         onChanged: (value) {
                           setState(() {
@@ -710,21 +559,23 @@ class _CrearcuentaState extends State<Crearcuenta> {
               },
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(300, 50),
-                backgroundColor: colorWhite,
-                foregroundColor: colorprimario,
+                backgroundColor: colorsecundario,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+              child: const Text(
+                'Siguiente',
+                style: TextStyle(fontSize: 18, color: colorWhite),
+              ),
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  _paginaActual--;
-                });
+                salir();
               },
-              style: TextButton.styleFrom(foregroundColor: colorWhite),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.surface,
+              ),
               child: const Text('Regresar'),
             ),
           ],
@@ -752,16 +603,10 @@ class _CrearcuentaState extends State<Crearcuenta> {
                   style: TextStyle(
                     fontSize: 25,
                     fontWeight: FontWeight.bold,
-                    color: colorWhite,
+                    color: colorsecundario,
                   ),
                 ),
                 SizedBox(height: 10),
-                const Divider(
-                  color: colorWhite,
-                  thickness: 2,
-                  indent: 50,
-                  endIndent: 50,
-                ),
               ],
             ),
             SizedBox(height: 20),
@@ -803,7 +648,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                   ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
                   child: Container(
                     decoration: BoxDecoration(
-                      color: colorprimario,
+                      color: colorsecundario,
                       borderRadius: BorderRadius.circular(50),
                     ),
                     width: 50,
@@ -822,140 +667,71 @@ class _CrearcuentaState extends State<Crearcuenta> {
                 ),
               ],
             ),
-            const SizedBox(height: 70),
+            const SizedBox(height: 30),
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<bool>(
+                    value: tyc!,
+                    fillColor: MaterialStateProperty.resolveWith<Color>((
+                      states,
+                    ) {
+                      if (states.contains(MaterialState.selected)) {
+                        return Theme.of(context).colorScheme.surface;
+                      }
+                      return Theme.of(context).colorScheme.surface;
+                    }),
+                    groupValue: tyc,
+                    activeColor: Theme.of(context).colorScheme.surface,
+                    title: Text(
+                      'Acepto los terminos y condiciones',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() {
+                        tyc = value;
+                      });
+                    },
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {},
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).colorScheme.surface,
+                  ),
+                  child: const Text('Leer'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: _Crear,
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(300, 50),
-                backgroundColor: colorWhite,
+                backgroundColor: colorsecundario,
                 foregroundColor: colorprimario,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text('Crear Cuenta', style: TextStyle(fontSize: 18)),
+              child: const Text(
+                'Crear Cuenta',
+                style: TextStyle(fontSize: 18, color: colorWhite),
+              ),
             ),
             TextButton(
               onPressed: () {
-                setState(() {
-                  _paginaActual--;
-                });
+                salir();
               },
-              style: TextButton.styleFrom(foregroundColor: colorWhite),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.surface,
+              ),
               child: const Text('Regresar'),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buidFormularioUbicacion() {
-    final h = MediaQuery.of(context).size.height;
-
-    return SizedBox(
-      height: h,
-      child: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(
-              target: posicionActual!,
-              zoom: 16,
-            ),
-
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-
-            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-              Factory<OneSequenceGestureRecognizer>(
-                () => EagerGestureRecognizer(),
-              ),
-            },
-            onTap: (pos) {
-              setState(() {
-                posicionActual = pos;
-                latitud = pos.latitude;
-                longitud = pos.longitude;
-              });
-              getcalle();
-            },
-
-            markers: {
-              Marker(
-                markerId: MarkerId("ubicacion"),
-                position: posicionActual!,
-              ),
-            },
-          ),
-          Positioned(
-            bottom: 150,
-            right: 15,
-            child: FloatingActionButton(
-              heroTag: "ubicacion",
-              backgroundColor: Colors.white,
-              onPressed: _irAMiUbicacion,
-              child: Icon(Icons.my_location, color: Colors.black),
-            ),
-          ),
-
-          // PANEL SUPERIOR
-          Positioned(
-            top: 60,
-            left: 15,
-            right: 15,
-            child: Container(
-              padding: EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    "Selecciona ubicación",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  Text("$calle", style: TextStyle(color: Colors.white)),
-                  Text("$ciudad", style: TextStyle(color: Colors.white)),
-                ],
-              ),
-            ),
-          ),
-
-          // BOTÓN GUARDAR
-          Positioned(
-            bottom: 90,
-            left: 20,
-            right: 20,
-            child: ElevatedButton(
-              onPressed: ()
-              {
-                if (calle == null) {
-                  mostrarAlerta(
-                    context,
-                    titulo: 'Ubicacion requerida',
-                    mensaje: 'Por favor selecciona ubicacion',
-                    tipo: TipoAlerta.advertencia,
-                  );
-                  return;
-                }
-                setState(() {
-                  _paginaActual++;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorWhite,
-                foregroundColor: colorprimario,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
-            ),
-          ),
-
-        ],
       ),
     );
   }

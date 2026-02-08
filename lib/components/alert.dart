@@ -36,7 +36,7 @@ Future mostrarAlerta(BuildContext context, {
     builder: (BuildContext context) {
       return Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-        backgroundColor: colorprimario,
+        backgroundColor: Theme.of(context).colorScheme.primary,
         child: Container(
           padding: EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -65,7 +65,7 @@ Future mostrarAlerta(BuildContext context, {
               Text(
                 titulo.toUpperCase(),
                 style: TextStyle(
-                  color: colorWhite,
+                  color: Theme.of(context).colorScheme.surface,
                   fontSize: 20,
                   letterSpacing: 1.2,
                 ),
@@ -75,7 +75,7 @@ Future mostrarAlerta(BuildContext context, {
                 mensaje,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: colorWhite.withOpacity(0.8),
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
                   fontSize: 15,
                 ),
               ),
@@ -84,8 +84,7 @@ Future mostrarAlerta(BuildContext context, {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorWhite,
-                    foregroundColor: colorprimario,
+                    backgroundColor: colorsecundario,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -93,7 +92,7 @@ Future mostrarAlerta(BuildContext context, {
                   ),
                   child: Text(
                     "CONTINUAR",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: TextStyle(fontWeight: FontWeight.bold,color: colorWhite),
                   ),
                   
                   onPressed: () =>  Navigator.pop(context, true),
@@ -105,8 +104,8 @@ Future mostrarAlerta(BuildContext context, {
                 onPressed: () {
                   Navigator.pop(context, false); 
                 },
-                child: const Text('Cancelar',
-                style: TextStyle(fontWeight: FontWeight.bold, color: colorWhite),),
+                child:  Text('Cancelar',
+                style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.surface),),
               ),
               ]
             ],

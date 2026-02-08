@@ -3,34 +3,44 @@ import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
-import 'package:gixt/Componets/colors.dart';
 import 'package:gixt/cache.dart';
-import 'package:gixt/pages/HomePage.dart';
-import 'package:gixt/pages/root.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'config/theme.dart';
+import 'providers/theme_provider.dart'; // 👈 Nuevo import
 
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-    // Establece la orientación del dispositivo a solo vertical
+  // Establece la orientación del dispositivo a solo vertical
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  runApp(const MyApp());
+  
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => ThemeProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Gixt',
-      debugShowCheckedModeBanner: false,
-      locale: const Locale('es', ''),
-      theme: ThemeData(useMaterial3: true),
-      home: const SplashScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Gixt',
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeProvider.themeMode, // 👈 Dinámico
+          debugShowCheckedModeBanner: false,
+          locale: const Locale('es', ''),
+          home: const SplashScreen(),
+        );
+      },
     );
   }
 }
@@ -46,8 +56,9 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
-   final PreferencesService _preferencesService = PreferencesService();
- @override
+  final PreferencesService _preferencesService = PreferencesService();
+  
+  @override
   void initState() {
     super.initState();
     _startAnimation();
@@ -63,18 +74,22 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkUser() async {
-      final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
-     String? inicio = prefs.getString('inicio');
+    String? inicio = prefs.getString('inicio');
     if (inicio == 'true') {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => RootPage()),
-    );
+      // Navigator.pushReplacement(
+      //   context,
+      //   MaterialPageRoute(builder: (context) => RootPage()),
+      // );
+       Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => LoginPage()),
+      );
     } else {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => Login()),
+        MaterialPageRoute(builder: (context) => LoginPage()),
       );
     }
   }
@@ -82,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: colorfondo,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Center(
         child: AnimatedOpacity(
           duration: const Duration(seconds: 3),
@@ -91,7 +106,9 @@ class _SplashScreenState extends State<SplashScreen> {
             'assets/logo.svg',
             width: 1200,
             height: 1200,
-            color:  const Color.fromARGB(255, 255, 255, 255),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : const Color.fromARGB(255, 255, 255, 255),
           )
         ),
       ),

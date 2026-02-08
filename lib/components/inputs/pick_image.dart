@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:gixt/components/colors.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 
 Future<File?> pickAndCropImage(BuildContext context) async {
   final ImageSource? source = await showModalBottomSheet<ImageSource>(
     context: context,
+    backgroundColor: colorprimario,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
@@ -15,13 +17,13 @@ Future<File?> pickAndCropImage(BuildContext context) async {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Cámara'),
+              leading:  Icon(Icons.camera_alt , color:  colorWhite),
+              title:  Text('Cámara', style: TextStyle(color: colorWhite)),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Galería'),
+              leading:  Icon(Icons.photo_library ,color: colorWhite),
+              title: Text('Galería',style: TextStyle(color: colorWhite)),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
           ],

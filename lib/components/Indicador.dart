@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:gixt/Componets/colors.dart';
+import 'package:gixt/components/colors.dart';
 
 class Indicador extends StatefulWidget {
   const Indicador({super.key});
@@ -54,8 +54,8 @@ class _IndicadorState extends State<Indicador>
                     child: Container(
                       width: dotSize,
                       height: dotSize,
-                      decoration: const BoxDecoration(
-                        color: colorWhite,
+                      decoration:  BoxDecoration(
+                        color: colorsecundario,
                         shape: BoxShape.circle,
                       ),
                     ),
