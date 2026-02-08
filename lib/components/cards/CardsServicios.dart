@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/circleimage.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:gixt/pages/ServicioPage.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CardsServicios extends StatelessWidget {
@@ -45,12 +46,12 @@ class CardsServicios extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
           child: InkWell(
             onTap: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => ServicioPage(id_servicio: id_servicio),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ServicioPage(id_servicio: id_servicio),
+                ),
+              );
             },
          
               child: Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:gixt/pages/CategoriaPage.dart';
 
 class Options extends StatelessWidget {
   final String nombre;
@@ -25,12 +26,12 @@ class Options extends StatelessWidget {
         width: 15, // Ancho fijo para mantener simetría en listas horizontales
         child:  InkWell(
             onTap: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) =>CategoriaPage(id_categoria: id , nombre : nombre),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>CategoriaPage(id_categoria: id , nombre : nombre),
+                ),
+              );
             },
             child: Column(
           mainAxisSize: MainAxisSize.min,
