@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:gixt/pages/AgendaPage.dart';
 import 'package:gixt/pages/HomePage.dart';
 import 'package:gixt/pages/PerfilPage.dart';
 
@@ -21,18 +22,13 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         style: TextStyle(fontSize: 24, color: Colors.white),
       ),
     ),
-Center(
-      child: Text(
-        'Buscar',
-        style: TextStyle(fontSize: 24, color: Colors.white),
-      ),
-    ),
     Center(
       child: Text(
         'Buscar',
         style: TextStyle(fontSize: 24, color: Colors.white),
       ),
     ),
+    AgendaPage(),
     PerfilPage()
   ];
 
