@@ -1,6 +1,7 @@
 import UIKit
 import Flutter
 import GoogleMaps   // 👈 IMPORTANTE
+import Firebase
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -16,4 +17,13 @@ import GoogleMaps   // 👈 IMPORTANTE
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
+
+  override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+  ) -> Bool {
+    FirebaseApp.configure()
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+  
 }

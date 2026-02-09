@@ -1,6 +1,9 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/cache.dart';
@@ -10,12 +13,39 @@ import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'providers/theme_provider.dart'; // 👈 Nuevo import
 
+/// 🔔 NOTIFICACIONES LOCALES
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+/// 🔔 HANDLER BACKGROUND / APP CERRADA
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Establece la orientación del dispositivo a solo vertical
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await dotenv.load(fileName: ".env");
+    // 🔥 FIREBASE INIT
+  await Firebase.initializeApp();
+
+  // 🔔 BACKGROUND
+  FirebaseMessaging.onBackgroundMessage(
+    _firebaseMessagingBackgroundHandler,
+  );
+
+  // 🔔 LOCAL NOTIFICATIONS INIT
+  const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const InitializationSettings initializationSettings =
+      InitializationSettings(android: initializationSettingsAndroid);
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+  );
   
   runApp(
     ChangeNotifierProvider(
@@ -58,12 +88,67 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
   final PreferencesService _preferencesService = PreferencesService();
+  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+
   
   @override
   void initState() {
     super.initState();
     _startAnimation();
+    _requestPermission();
+    _getFCMToken();
+    _listenForeground();
   }
+
+  Future<void> _requestPermission() async {
+    await _firebaseMessaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+  }
+
+  /// 🔥 TOKEN FCM
+  Future<void> _getFCMToken() async {
+    String? token = await _firebaseMessaging.getToken();
+
+    if (token != null) {
+      print("🔥 FCM TOKEN: $token");
+
+      // 👉 ENVÍALO A TU API C#
+      // sendTokenToApi(token);
+    }
+  }
+
+  /// 🔔 FOREGROUND
+  void _listenForeground() {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      final notification = message.notification;
+
+      if (notification != null) {
+        const AndroidNotificationDetails androidDetails =
+            AndroidNotificationDetails(
+          'canal_pedidos',
+          'Pedidos',
+          channelDescription: 'Notificaciones de pedidos',
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        );
+
+        const NotificationDetails notificationDetails =
+            NotificationDetails(android: androidDetails);
+
+        await flutterLocalNotificationsPlugin.show(
+          notification.hashCode,
+          notification.title,
+          notification.body,
+          notificationDetails,
+        );
+      }
+    });
+  }
+
 
   void _startAnimation() async {
     await Future.delayed(const Duration(milliseconds: 1000));
