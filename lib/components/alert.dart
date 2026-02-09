@@ -85,6 +85,7 @@ Future mostrarAlerta(BuildContext context, {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorsecundario,
+                    foregroundColor: colorWhite,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -92,7 +93,7 @@ Future mostrarAlerta(BuildContext context, {
                   ),
                   child: Text(
                     "CONTINUAR",
-                    style: TextStyle(fontWeight: FontWeight.bold,color: colorWhite),
+                    style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   
                   onPressed: () =>  Navigator.pop(context, true),

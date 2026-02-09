@@ -197,7 +197,7 @@ class _HomePageState extends State<HomePage> {
     floating: true,
     snap: true,
     pinned: false,
-
+    automaticallyImplyLeading: false,
     flexibleSpace: FlexibleSpaceBar(
       collapseMode: CollapseMode.parallax,
 

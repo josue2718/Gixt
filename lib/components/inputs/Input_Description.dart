@@ -57,7 +57,7 @@ class CustomDescriptionFormField extends StatelessWidget {
         ),
         suffixIcon: Icon(icon, color:  Theme.of(context).colorScheme.surface),
       ),
-      
+      validator: validator,
     );
   }
 }

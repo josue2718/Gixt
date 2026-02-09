@@ -12,10 +12,10 @@ import 'package:gixt/cache.dart';
 import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
-import 'package:gixt/components/inputs/input.dart';
-import 'package:gixt/components/inputs/inputfecha.dart';
-import 'package:gixt/components/inputs/inputphone.dart';
-import 'package:gixt/components/inputs/pick_image.dart';
+import 'package:gixt/components/inputs/Input.dart';
+import 'package:gixt/components/inputs/Input_Fecha.dart';
+import 'package:gixt/components/inputs/Input_Phone.dart';
+import 'package:gixt/components/inputs/Pick_Image.dart';
 import 'package:gixt/providers/theme_provider.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
 import 'package:gixt/services/ubicaciones/location_service.dart';
@@ -279,7 +279,6 @@ class _PerfilPageState extends State<PerfilPage> {
                 //     builder: (context) => const UbicacionesPage(),
                 //   ),
                 // );
-                
               },
               child: Container(
                 width: 80,
@@ -456,6 +455,7 @@ class _PerfilPageState extends State<PerfilPage> {
       snap: false, // NO animación automática
       elevation: 0,
       toolbarHeight: 80,
+      automaticallyImplyLeading: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
@@ -525,83 +525,83 @@ class _PerfilPageState extends State<PerfilPage> {
     );
   }
 
- Widget _buidFormularioInfo() {
-  _first_nameController.text = user.user[0].first_name;
-  _last_nameController.text = user.user[0].last_name;
-  _emailController.text = user.user[0].email;
-  _phoneController.text = user.user[0].phone;
-  _fecha_nacimientoController.text = user.user[0].fecnac;
-  _genero = user.user[0].genero;
+  Widget _buidFormularioInfo() {
+    _first_nameController.text = user.user[0].first_name;
+    _last_nameController.text = user.user[0].last_name;
+    _emailController.text = user.user[0].email;
+    _phoneController.text = user.user[0].phone;
+    _fecha_nacimientoController.text = user.user[0].fecnac;
+    _genero = user.user[0].genero;
 
-  return Padding(
-    padding: const EdgeInsets.all(15),
-    child: Form(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Informacion de la cuenta',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: Theme.of(context).colorScheme.surface,
+    return Padding(
+      padding: const EdgeInsets.all(15),
+      child: Form(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Informacion de la cuenta',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.surface,
+              ),
             ),
-          ),
 
-          const SizedBox(height: 30),
+            const SizedBox(height: 30),
 
-          /// NOMBRE
-          CustomTextFormField(
-            controller: _first_nameController,
-            label: 'Nombre',
-            readOnly: false,
-            icon: Icons.person,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor ingrese un nombre';
-              }
-              return null;
-            },
-          ),
+            /// NOMBRE
+            CustomTextFormField(
+              controller: _first_nameController,
+              label: 'Nombre',
+              readOnly: false,
+              icon: Icons.person,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un nombre';
+                }
+                return null;
+              },
+            ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          /// APELLIDO
-          CustomTextFormField(
-            controller: _last_nameController,
-            label: 'Apellido',
-            readOnly: false,
-            icon: Icons.person,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor ingrese un apellido';
-              }
-              return null;
-            },
-          ),
+            /// APELLIDO
+            CustomTextFormField(
+              controller: _last_nameController,
+              label: 'Apellido',
+              readOnly: false,
+              icon: Icons.person,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un apellido';
+                }
+                return null;
+              },
+            ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          /// CORREO
-          CustomTextFormField(
-            controller: _emailController,
-            label: 'Correo',
-            icon: Icons.email,
-            keyboardType: TextInputType.emailAddress,
-            readOnly:true,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Por favor ingrese un correo';
-              }
-              return null;
-            },
-          ),
+            /// CORREO
+            CustomTextFormField(
+              controller: _emailController,
+              label: 'Correo',
+              icon: Icons.email,
+              keyboardType: TextInputType.emailAddress,
+              readOnly: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingrese un correo';
+                }
+                return null;
+              },
+            ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          /// TELÉFONO
-           CustomTextFormFieldPhone(
+            /// TELÉFONO
+            CustomTextFormFieldPhone(
               controller: _phoneController,
               label: 'Telefono',
               readOnly: false,
@@ -614,91 +614,98 @@ class _PerfilPageState extends State<PerfilPage> {
               },
             ),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          /// FECHA NACIMIENTO (se queda como TextFormField por formatter)
-         CustomTextFormFieldfecha(controller: _fecha_nacimientoController),
+            /// FECHA NACIMIENTO (se queda como TextFormField por formatter)
+            CustomTextFormFieldfecha(controller: _fecha_nacimientoController),
 
-          const SizedBox(height: 20),
+            const SizedBox(height: 20),
 
-          /// GÉNERO
-          Text(
-            'Género',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.surface,
-              fontSize: 15,
-            ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  value: 'H',
-                  groupValue: _genero,
-                  activeColor: colorsecundario,
-                  title: Text(
-                    'Hombre',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() => _genero = value);
-                  },
-                ),
-              ),
-              Expanded(
-                child: RadioListTile<String>(
-                  value: 'M',
-                  groupValue: _genero,
-                  activeColor: colorsecundario,
-                  title: Text(
-                    'Mujer',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() => _genero = value);
-                  },
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 40),
-
-          ElevatedButton(
-            onPressed: _Crear,
-            style: ElevatedButton.styleFrom(
-              fixedSize: const Size(300, 50),
-              backgroundColor: colorsecundario,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              'Actualizar',
-              style: TextStyle(
-                fontSize: 18,
-                color: colorWhite,
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          TextButton(
-            onPressed: () {},
-            child: Text(
-              'Eliminar Cuenta',
+            /// GÉNERO
+            Text(
+              'Género',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.surface,
+                fontSize: 15,
               ),
             ),
-          ),
-          const SizedBox(height: 70),
-        ],
+            Row(
+              children: [
+                Expanded(
+                  child: RadioListTile<String>(
+                    value: 'H',
+                    groupValue: _genero,
+                    fillColor: MaterialStateProperty.resolveWith<Color>((
+                      states,
+                    ) {
+                      if (states.contains(MaterialState.selected)) {
+                        return colorsecundario;
+                      }
+                      return Theme.of(context).colorScheme.surface;
+                    }),
+                    title: Text(
+                      'Hombre',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() => _genero = value);
+                    },
+                  ),
+                ),
+                Expanded(
+                  child: RadioListTile<String>(
+                    value: 'M',
+                    groupValue: _genero,
+                    fillColor: MaterialStateProperty.resolveWith<Color>((
+                      states,
+                    ) {
+                      if (states.contains(MaterialState.selected)) {
+                        return colorsecundario;
+                      }
+                      return Theme.of(context).colorScheme.surface;
+                    }),
+                    title: Text(
+                      'Mujer',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                    onChanged: (value) {
+                      setState(() => _genero = value);
+                    },
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 40),
+
+            ElevatedButton(
+              onPressed: _Crear,
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(300, 50),
+                backgroundColor: colorsecundario,
+                foregroundColor: colorWhite,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text('Actualizar', style: TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () {},
+              child: Text(
+                'Eliminar Cuenta',
+                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+              ),
+            ),
+            const SizedBox(height: 70),
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

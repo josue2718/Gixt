@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/circleimage.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:gixt/pages/ViewAgendaPage.dart';
+import 'package:gixt/services/reservas/Agenda_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CardsAgenda extends StatelessWidget {
@@ -10,7 +12,7 @@ class CardsAgenda extends StatelessWidget {
     super.key,
     required this.url_img,
     required this.nombre,
-    required this.id_servicio,
+    required this.id_trabajo,
     required this.img_trabajador,
     required this.trabajador,
     required this.fecha,
@@ -23,7 +25,7 @@ class CardsAgenda extends StatelessWidget {
 
   final String nombre;
   final String url_img;
-  final String id_servicio;
+  final String id_trabajo;
   final String? img_trabajador;
   final String trabajador;
   final String descripcion;
@@ -68,19 +70,19 @@ class CardsAgenda extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       child: SizedBox(
         child: Card(
-          elevation: 5,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
           color: Theme.of(context).colorScheme.primary,
           child: InkWell(
             onTap: () {
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) => ServicioPage(id_servicio: id_servicio),
-              //   ),
-              // );
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ViewAgendaPage(id_trabajo : id_trabajo),
+                ),
+              );
             },
             child: Padding(
               padding: const EdgeInsets.all(0),

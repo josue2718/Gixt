@@ -39,7 +39,7 @@ class CardsServicios extends StatelessWidget {
       child: SizedBox(
         width: 250,
         child:  Card(
-          elevation: 5,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),

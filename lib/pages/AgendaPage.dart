@@ -1,23 +1,13 @@
 import 'dart:math';
-
-import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/cards/cardsAgenda.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/sketor/cardsCategoria.dart';
 import 'package:gixt/services/Agenda/Agenda_service.dart';
-import 'package:gixt/services/Anuncios_service.dart';
-import 'package:gixt/services/Auth/categorias_service.dart';
-import 'package:gixt/services/servicios/serviciosByCat_service.dart';
-import 'package:gixt/services/servicios/servicios_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shimmer/shimmer.dart';
 
 class AgendaPage extends StatefulWidget {
 
@@ -129,7 +119,9 @@ class _AgendaPageState extends State<AgendaPage> {
                       SliverToBoxAdapter(child: _buildTitle()),
                       SliverToBoxAdapter(child: _buildServicios("pendiente")),
                       SliverToBoxAdapter(child: _buildTitle2()),
-                      SliverToBoxAdapter(child: _buildServicios("aceptado")),
+                      SliverToBoxAdapter(child: _buildServicios("finalizado")),
+                      SliverToBoxAdapter(child: _buildTitle3()),
+                      SliverToBoxAdapter(child: _buildServicios("cancelado")),
                       const SliverToBoxAdapter(child: SizedBox(height: 100)),
                     ],
                   ),
@@ -151,6 +143,7 @@ class _AgendaPageState extends State<AgendaPage> {
       snap: false, // NO animación automática
       elevation: 0,
       toolbarHeight: 80,
+      automaticallyImplyLeading: false,
       iconTheme: const IconThemeData(
         color: Colors.white, // 👈 color del ícono
       ),
@@ -259,10 +252,7 @@ class _AgendaPageState extends State<AgendaPage> {
             Spacer(),
             InkWell(
               onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
-                // );
+
               },
               child: Icon(
                 Icons.arrow_forward_ios,
@@ -275,6 +265,39 @@ class _AgendaPageState extends State<AgendaPage> {
       ).animate().fade().slideX(begin: -0.2),
     );
   }
+
+  Widget _buildTitle3() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      child: Container(
+        alignment: Alignment.topLeft,
+        child: Row(
+          children: [
+            Text(
+              'Trabajos Cancelado',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color:  Theme.of(context).colorScheme.surface,
+              ),
+            ),
+            Spacer(),
+            InkWell(
+              onTap: () {
+
+              },
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 20,
+                color:  Theme.of(context).colorScheme.surface,
+              ),
+            ),
+          ],
+        ),
+      ).animate().fade().slideX(begin: -0.2),
+    );
+  }
+
 
  Widget _buildServicios(String tipo) {
   // Filtrar por estado
@@ -307,7 +330,7 @@ class _AgendaPageState extends State<AgendaPage> {
         url_img: agenda.imgServicio,
         nombre: agenda.nombreServicio,
         img_trabajador: agenda.imgTrabajador,
-        id_servicio: agenda.idServicio,
+        id_trabajo: agenda.idTrabajo,
         trabajador: agenda.trabajador,
         fecha: agenda.fechaTrabajo,
         hora: agenda.horaTrabajo,

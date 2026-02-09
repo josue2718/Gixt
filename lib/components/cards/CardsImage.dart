@@ -15,7 +15,7 @@ class CardsImage extends StatelessWidget {
       child: SizedBox(
         width: 150, // 🔥 ANCHO FIJO OBLIGATORIO
         child: Card(
-          elevation: 5,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),

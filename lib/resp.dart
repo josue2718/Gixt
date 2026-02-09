@@ -1,825 +1,749 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter_animate/flutter_animate.dart';
-// import 'package:flutter_dotenv/flutter_dotenv.dart';
-// import 'package:flutter_svg/svg.dart';
-// import 'package:gixt/Componets/Indicador.dart';
-// import 'package:gixt/Componets/Nacimientoformatter.dart';
-// import 'package:gixt/Componets/alert.dart';
-// import 'package:gixt/Componets/categoriasoption.dart';
-// import 'package:gixt/Componets/colors.dart';
-// import 'package:gixt/Componets/opciones.dart';
-// import 'package:gixt/Componets/sketor/opciones.dart';
-// import 'package:gixt/cache.dart';
-// import 'package:gixt/pages/root.dart';
-// import 'package:gixt/services/Auth/categorias_service.dart';
-// import 'package:gixt/services/Auth/cuenta_service.dart';
-// import 'package:google_fonts/google_fonts.dart';
-// import 'package:http/http.dart' as http; // Importar el paquete http
-// import 'dart:convert'; // Para trabajar con JSON
-// import 'package:keyboard_dismisser/keyboard_dismisser.dart';
-// import 'dart:async';
-// import 'dart:io';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:image_cropper/image_cropper.dart';
-// import 'package:flutter/services.dart';
+import 'dart:io';
+import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gixt/cache.dart';
+import 'package:gixt/components/Indicador.dart';
+import 'package:gixt/components/alert.dart';
+import 'package:gixt/components/circleimage.dart';
+import 'package:gixt/components/colors.dart';
+import 'package:gixt/services/reservas/Agenda_service.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 
-// class ExpressPage extends StatefulWidget {
-//   const ExpressPage({super.key});
+class ViewAgendaPage extends StatefulWidget {
+  const ViewAgendaPage({super.key, required this.id_trabajo});
+  final String id_trabajo;
+  @override
+  State<ViewAgendaPage> createState() => _ViewAgendaPageState();
+}
 
-//   @override
-//   State<ExpressPage> createState() => _ExpressPageState();
-// }
+class _ViewAgendaPageState extends State<ViewAgendaPage> {
+  bool isLoading = false;
+  bool hasMore = true;
+  final AgendaById_service agenda = AgendaById_service();
+  final ScrollController _scrollController = ScrollController();
+  final PreferencesService _preferencesService = PreferencesService();
+  @override
+  void initState() {
+    super.initState();
+    print("Entré a Mi Servicio");
+    _initial();
+  }
 
-// class _ExpressPageState extends State<ExpressPage> {
-//   final _formKey = GlobalKey<FormState>();
-//   final _formKeyinfo = GlobalKey<FormState>();
-//   final _formKeyImg = GlobalKey<FormState>();
-//   final _emailController = TextEditingController();
-//   final _passwordController = TextEditingController();
-//   final _passwordconfirmarController = TextEditingController();
-//   final _first_nameController = TextEditingController();
-//   final _last_nameController = TextEditingController();
-//   final _phoneController = TextEditingController();
-//   final _fecha_nacimientoController = TextEditingController();
-//   bool _isObscured = true;
-//   bool _isObscured1 = true;
-//   final PageController _controller = PageController();
-//   final PreferencesService _preferencesService = PreferencesService();
-//   final ApiCategorias apicategoria = ApiCategorias();
-//   int? _categoriaSeleccionada;
+  Future<void> _initial() async {
+    bool ok = await agenda.fetchServicioData(widget.id_trabajo);
+    if (!ok) {
+      if (!mounted) return;
+      Future.microtask(() async {
+        await mostrarAlerta(
+          context,
+          titulo: "Error",
+          mensaje: "No se pudo obtener la información",
+          tipo: TipoAlerta.error,
+        );
 
-//   int _paginaActual = 0;
-// List<File?> _images = List.generate(4, (_) => null);
-//   String? _genero;
-//   String? _token;
-//   String? _inicio;
-//   String? _id;
-//   String? _img;
-//   String? _user;
+        Navigator.pop(context);
+      });
+    }
 
-//   void _Crear() async {
-//     if (_image == null) {
-//       mostrarAlerta(
-//         context,
-//         titulo: 'Imagen requerida',
-//         mensaje: 'Por favor selecciona una imagen de perfil',
-//         tipo: TipoAlerta.advertencia,
-//       );
-//       return;
-//     }
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (_) => Indicador(),
-//     );
+    setState(() {});
+  }
 
-//     final result = await CuentaService.Crear(
-//       email: _emailController.text,
-//       password: _passwordController.text,
-//       firstName: _first_nameController.text,
-//       lastName: _last_nameController.text,
-//       imagen: _image ?? File(''),
-//       phone: _phoneController.text,
-//       ciudad: "_ciudadController.text",
-//       longitud: 11,
-//       latitud: 11,
-//       genero: _genero ?? "",
-//       fechaNacimiento: _fecha_nacimientoController.text,
-//       tokenFcm: "cfddds",
-//     );
+  Future<void> _onRefresh() async {
+    setState(() {
+      print('Actualizando datos...');
+      hasMore = true;
+    });
+    bool ok = await agenda.fetchServicioData(widget.id_trabajo);
+    if (!ok) {
+      if (!mounted) return;
+      Future.microtask(() async {
+        await mostrarAlerta(
+          context,
+          titulo: "Error",
+          mensaje: "No se pudo obtener la información",
+          tipo: TipoAlerta.error,
+        );
 
-//     Navigator.pop(context);
+        Navigator.pop(context);
+      });
+    }
+    setState(() {});
+  }
 
-//     if (result['success'] == true) {
-//       final data = result['data'];
-//       String message = "Bienvenido ${data['username']}";
-//       Future.microtask(() async {
-//         await mostrarAlerta(
-//           context,
-//           titulo: "Bienvenido",
-//           mensaje: message,
-//           tipo: TipoAlerta.exito,
-//         );
-//         Navigator.pushReplacement(
-//           context,
-//           MaterialPageRoute(builder: (context) => RootPage()),
-//         );
-//       });
-//     } else {
-//       mostrarAlerta(
-//         context,
-//         titulo: "Error",
-//         mensaje: result['message'],
-//         tipo: TipoAlerta.error,
-//       );
-//     }
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return KeyboardDismisser(
+      child: Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: FutureBuilder(
+          future: Future.wait([]),
+          builder: (context, snapshot) {
+            if (agenda.agenda.isEmpty) {
+              return Indicador();
+            }
+            return KeyboardDismisser(
+              child: Scaffold(
+                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                body: RefreshIndicator(
+                  onRefresh: _onRefresh,
+                  child: CustomScrollView(
+                    controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      _buildSliverAppBar(),
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 10,
+                        ),
+                        sliver: SliverList(
+                          delegate: SliverChildListDelegate([
+                            _buildInformacion()
+                                .animate()
+                                .fade(duration: 400.ms)
+                                .scale(begin: const Offset(0.9, 0.9)),
+                            const SizedBox(height: 40),
+                          ]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
 
-// Future<void> _pickImageFromCamera(int index) async {
-//   final picker = ImagePicker();
+  SliverAppBar _buildSliverAppBar() {
+    return SliverAppBar(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      expandedHeight: 90,
+      pinned: false,
+      floating: true,
+      snap: true,
+      elevation: 0,
+      toolbarHeight: 90,
 
-//   final XFile? pickedFile = await picker.pickImage(
-//     source: ImageSource.camera, // 📸 CÁMARA
-//     imageQuality: 85,
-//   );
+      iconTheme: IconThemeData(
+        color: Theme.of(context).colorScheme.surface, // 👈 color del ícono
+      ),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
+      ),
+      flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
+        title: Text(
+          'Agenda',
+          style: GoogleFonts.poppins(
+            fontSize: 30,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+          ),
+        ),
+      ),
+    );
+  }
 
-//   if (pickedFile == null) return;
+Widget _buildInformacion() {
+  return Padding(
+    padding: const EdgeInsets.all(16),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Título principal
+        Text(
+          'Información de la reserva',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.surface,
+          ),
+        ),
+        const SizedBox(height: 24),
 
-//   final croppedFile = await ImageCropper().cropImage(
-//     sourcePath: pickedFile.path,
-//     uiSettings: [
-//       AndroidUiSettings(
-//         toolbarTitle: 'Recortar imagen',
-//         toolbarColor: Colors.black,
-//         toolbarWidgetColor: Colors.white,
-//         lockAspectRatio: true,
-//         initAspectRatio: CropAspectRatioPreset.square,
-//       ),
-//       IOSUiSettings(
-//         title: 'Recortar imagen',
-//         aspectRatioLockEnabled: true,
-//         aspectRatioPresets: [CropAspectRatioPreset.square],
-//       ),
-//     ],
-//   );
+        // BARRA DE ESTATUS ESTILO MERCADO LIBRE
+        _buildStatusBar(agenda.agenda[0].estadoTrabajo),
+        
+        const SizedBox(height: 32),
 
-//   if (croppedFile == null) return;
+        // Sección Trabajador
+        _buildSectionCard(
+          icon: Icons.person,
+          title: 'Trabajador',
+          child: _buildProfile(),
+        ),
 
-//   setState(() {
-//     _images[index] = File(croppedFile.path);
-//   });
-// }
+        const SizedBox(height: 16),
 
-//   @override
-//   void dispose() {
-//     _controller.dispose();
-//     super.dispose();
-//     apicategoria.fetchEmpresaData(1);
-//   }
+        // Sección Servicio
+        _buildSectionCard(
+          icon: Icons.home_repair_service,
+          title: 'Servicio',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${agenda.agenda[0].nombreServicio}',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${agenda.agenda[0].descripcionServicio}',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+                ),
+              ),
+            ],
+          ),
+        ),
 
-//   void initState() {
-//     super.initState();
-//     // 👇 SE EJECUTA AL ENTRR A LA PÁGINA
-//     print("Entré a Restaurantes");
-//     apicategoria.fetchEmpresaData(1);
-//   }
+        const SizedBox(height: 16),
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final paginas = [
-//       _buidFormularioInfo(),
-//       _buidFormularioCategoria(),
-//       _buidFormularioUbicacion(),
-//     ];
-//     return Scaffold(
-//       backgroundColor: colorfondo,
-//       body: CustomScrollView(
-//         slivers: [
-//           _buildSliverAppBar(),
-//           SliverFillRemaining(
-//             hasScrollBody: true,
-//             child: Column(
-//               children: [
-//                 Expanded(
-//                   child: PageView(
-//                     controller: _controller,
-//                     physics: const NeverScrollableScrollPhysics(),
-//                     onPageChanged: (i) => setState(() => _paginaActual = i),
-//                     children: paginas,
-//                   ),
-//                 ),
+        // Sección Descripción
+        _buildSectionCard(
+          icon: Icons.description,
+          title: 'Descripción',
+          child: Text(
+            '${agenda.agenda[0].descripcion}',
+            style: TextStyle(
+              fontSize: 15,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+            ),
+          ),
+        ),
 
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.center,
-//                   children: List.generate(paginas.length, (i) => _dot(i)),
-//                 ),
+        const SizedBox(height: 16),
 
-//                 const SizedBox(height: 150),
-//               ],
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
+        // Sección Fecha y Hora
+        _buildSectionCard(
+          icon: Icons.calendar_today,
+          title: 'Fecha del servicio',
+          child: Row(
+            children: [
+              Icon(
+                Icons.event,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${agenda.agenda[0].fechaTrabajo}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Icon(
+                Icons.access_time,
+                color: Theme.of(context).colorScheme.primary,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${agenda.agenda[0].horaTrabajo}',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+            ],
+          ),
+        ),
 
-//   SliverAppBar _buildSliverAppBar() {
-//     return SliverAppBar(
-//       backgroundColor: colorprimario,
-//       expandedHeight: 90,
-//       pinned: true, //  deja solo la barra pequeña visible
-//       floating: false, //  NO aparece al subir
-//       snap: false, // NO animación automática
-//       elevation: 0,
-//       toolbarHeight: 90,
-//       shape: const RoundedRectangleBorder(
-//         borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-//       ),
-//       flexibleSpace: FlexibleSpaceBar(
-//         centerTitle: true,
-//         title: Text(
-//           'Express',
-//           style: GoogleFonts.poppins(
-//             fontSize: 25,
-//             fontWeight: FontWeight.w600,
-//             color: colorsecundario,
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+        const SizedBox(height: 16),
 
-//   Widget _dot(int index) {
-//     return AnimatedContainer(
-//       duration: const Duration(milliseconds: 300),
-//       margin: const EdgeInsets.symmetric(horizontal: 4),
-//       width: _paginaActual == index ? 12 : 8,
-//       height: _paginaActual == index ? 12 : 8,
-//       decoration: BoxDecoration(
-//         color: _paginaActual == index
-//             ? colorWhite
-//             : colorWhite.withOpacity(0.4),
-//         shape: BoxShape.circle,
-//       ),
-//     );
-//   }
+        // Sección Ubicación
+        _buildSectionCard(
+          icon: Icons.location_on,
+          title: 'Ubicación',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${agenda.agenda[0].direccionMaps}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '${agenda.agenda[0].calle}, ${agenda.agenda[0].colonia}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                ),
+              ),
+              Text(
+                '${agenda.agenda[0].estadoUbicacion}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: imageBox1(agenda.agenda[0].ubicacionImagen),
+              ),
+            ],
+          ),
+        ),
 
-//   InputDecoration _inputDecoration({
-//     required String label,
-//     required IconData icon,
-//     VoidCallback? onIconTap,
-//   }) {
-//     return InputDecoration(
-//       labelText: label,
-//       labelStyle: const TextStyle(color: colorWhite),
-//       focusedBorder: const UnderlineInputBorder(
-//         borderSide: BorderSide(color: colorWhite),
-//       ),
-//       suffixIcon: onIconTap == null
-//           ? Icon(icon, color: colorWhite)
-//           : IconButton(
-//               icon: Icon(icon, color: colorWhite),
-//               onPressed: onIconTap,
-//             ),
-//     );
-//   }
+        const SizedBox(height: 16),
 
-//   Widget _buidFormularioInfo() {
-//     final screenHeight = MediaQuery.of(context).size.height;
-//     return Padding(
-//       padding: const EdgeInsets.all(15),
-//       child: SingleChildScrollView(
-//         physics: const BouncingScrollPhysics(),
-//         child: Form(
-//           child: Column(
-//             mainAxisSize: MainAxisSize.min,
-//             crossAxisAlignment: CrossAxisAlignment.stretch,
-//             children: [
-//               Column(
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 crossAxisAlignment: CrossAxisAlignment.center,
-//                 children: [
-//                   Text(
-//                     'Informacion del servicio Express',
-//                     style: TextStyle(
-//                       fontSize: 20,
-//                       fontWeight: FontWeight.bold,
-//                       color: colorWhite,
-//                     ),
-//                   ),
-//                   SizedBox(height: 10),
-//                 ],
-//               ),
-//               const SizedBox(height: 20),
-//               TextFormField(
-//                 controller: _first_nameController,
-//                 style: const TextStyle(color: colorWhite),
-//                 cursorColor: colorWhite,
-//                 decoration: InputDecoration(
-//                   labelText: '¿Qué problema tienes?',
-//                   labelStyle: const TextStyle(color: colorWhite),
-//                   border: const UnderlineInputBorder(),
-//                   focusedBorder: const UnderlineInputBorder(
-//                     borderSide: BorderSide(color: colorWhite),
-//                   ),
-//                   suffixIcon: const Icon(Icons.person, color: colorWhite),
-//                   errorStyle: const TextStyle(
-//                     color: colorWhite,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 validator: (value) {
-//                   if (value == null || value.isEmpty) {
-//                     return 'Por favor ingrese el problema';
-//                   }
-//                   return null;
-//                 },
-//               ),
-//               const SizedBox(height: 20),
-//               TextFormField(
-//                 controller: _last_nameController,
-//                 style: const TextStyle(color: colorWhite),
-//                 cursorColor: colorWhite,
-//                 decoration: InputDecoration(
-//                   labelText: 'Descripción del problema',
-//                   labelStyle: const TextStyle(color: colorWhite),
-//                   border: const UnderlineInputBorder(),
-//                   focusedBorder: const UnderlineInputBorder(
-//                     borderSide: BorderSide(color: colorWhite),
-//                   ),
-//                   suffixIcon: const Icon(Icons.person, color: colorWhite),
-//                   errorStyle: const TextStyle(
-//                     color: colorWhite,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 validator: (value) {
-//                   if (value == null || value.isEmpty) {
-//                     return 'Por favor ingrese la descripcion del problema';
-//                   }
-//                   return null;
-//                 },
-//               ),
-//               const SizedBox(height: 20),
-//               TextFormField(
-//                 controller: _phoneController,
-//                 style: const TextStyle(color: colorWhite),
-//                 cursorColor: colorWhite,
-//                 keyboardType: TextInputType.phone,
-//                 maxLength: 10,
-//                 decoration: InputDecoration(
-//                   labelText: 'Telefono de contacto',
-//                   labelStyle: const TextStyle(color: colorWhite),
-//                   border: const UnderlineInputBorder(),
-//                   focusedBorder: const UnderlineInputBorder(
-//                     borderSide: BorderSide(color: colorWhite),
-//                   ),
-//                   suffixIcon: const Icon(Icons.phone, color: colorWhite),
-//                   errorStyle: const TextStyle(
-//                     color: colorWhite,
-//                     fontWeight: FontWeight.bold,
-//                   ),
-//                 ),
-//                 validator: (value) {
-//                   if (value == null || value.isEmpty) {
-//                     return 'Por favor ingrese un telefono';
-//                   }
-//                   return null;
-//                 },
-//               ),
-//               SizedBox(height: 20),
-//               Column(
-//                 mainAxisAlignment: MainAxisAlignment.center,
-//                 crossAxisAlignment: CrossAxisAlignment.center,
-//                 children: [
-//                   Text(
-//                     'Evidencia del problema',
-//                     style: TextStyle(
-//                       fontSize: 20,
-//                       fontWeight: FontWeight.bold,
-//                       color: colorWhite,
-//                     ),
-//                   ),
-//                   SizedBox(height: 10),
-//                 ],
-//               ),
-//               SizedBox(height: 20),
-//               _buidFormularioImg(),
-//               ElevatedButton(
-//                 onPressed: () {
-//                   // if (!(_formKey.currentState?.validate() ?? false)) return;
-//                   _controller.nextPage(
-//                     duration: const Duration(milliseconds: 300),
-//                     curve: Curves.easeInOut,
-//                   );
-//                 },
-//                 style: ElevatedButton.styleFrom(
-//                   fixedSize: const Size(300, 50),
-//                   backgroundColor: colorWhite,
-//                   foregroundColor: colorprimario,
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(10),
-//                   ),
-//                 ),
-//                 child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
-//               ),
+        // Sección Imágenes
+        _buildSectionCard(
+          icon: Icons.photo_library,
+          title: 'Imágenes',
+          child: _buildImg(),
+        ),
 
-//               SizedBox(height: 50),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+        const SizedBox(height: 16),
 
-//   Widget _buidFormularioUbicacion() {
-//     final screenHeight = MediaQuery.of(context).size.height;
-//     return Padding(
-//       padding: const EdgeInsets.all(15),
-//       child: Form(
-//         child: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           crossAxisAlignment: CrossAxisAlignment.stretch,
-//           children: [
-//             Column(
-//               mainAxisAlignment: MainAxisAlignment.center,
-//               crossAxisAlignment: CrossAxisAlignment.center,
-//               children: [
-//                 Text(
-//                   'Ubicacion del servicio Express',
-//                   style: TextStyle(
-//                     fontSize: 20,
-//                     fontWeight: FontWeight.bold,
-//                     color: colorWhite,
-//                   ),
-//                 ),
-//                 SizedBox(height: 10),
-//               ],
-//             ),
-//             const SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: _Crear,
-//               style: ElevatedButton.styleFrom(
-//                 fixedSize: const Size(300, 50),
-//                 backgroundColor: colorWhite,
-//                 foregroundColor: colorprimario,
-//                 shape: RoundedRectangleBorder(
-//                   borderRadius: BorderRadius.circular(10),
-//                 ),
-//               ),
-//               child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
-//             ),
+        // Sección Pago
+        _buildSectionCard(
+          icon: Icons.payment,
+          title: 'Información de pago',
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Tipo de pago:',
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+                    ),
+                  ),
+                  Text(
+                    '${agenda.agenda[0].tipoPago}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total:',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                    Text(
+                      '\$${agenda.agenda[0].precio}',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
 
-//             const SizedBox(height: 20),
-//             TextButton(
-//               onPressed: () {
-//                 _controller.previousPage(
-//                   duration: const Duration(milliseconds: 300),
-//                   curve: Curves.easeInOut,
-//                 );
-//               },
-//               style: TextButton.styleFrom(foregroundColor: colorWhite),
-//               child: const Text('Regresar'),
-//             ),
-//             SizedBox(height: 50),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
+        const SizedBox(height: 24),
+      ],
+    ),
+  );
+}
 
-//   Widget _buidFormularioCategoria() {
-//     return Padding(
-//       padding: const EdgeInsets.all(15),
-//       child: SingleChildScrollView(
-//         physics: const BouncingScrollPhysics(),
-//         child: Form(
-//           child: Column(
-//             crossAxisAlignment: CrossAxisAlignment.stretch,
-//             children: [
-//               Text(
-//                 'Categoría del servicio Express',
-//                 textAlign: TextAlign.center,
-//                 style: TextStyle(
-//                   fontSize: 20,
-//                   fontWeight: FontWeight.bold,
-//                   color: colorWhite,
-//                 ),
-//               ),
-//               const SizedBox(height: 15),
-//               _buildCategoriaItem(),
-//               const SizedBox(height: 20),
-//               ElevatedButton(
-//                 onPressed: () {
-//                   if (_categoriaSeleccionada == null) {
-//                     mostrarAlerta(
-//                       context,
-//                       titulo: 'Categoría requerida',
-//                       mensaje: 'Por favor selecciona una categoría',
-//                       tipo: TipoAlerta.advertencia,
-//                     );
-//                     return;
-//                   }
-//                   _controller.nextPage(
-//                     duration: const Duration(milliseconds: 300),
-//                     curve: Curves.easeInOut,
-//                   );
-//                 },
-//                 style: ElevatedButton.styleFrom(
-//                   fixedSize: const Size(300, 50),
-//                   backgroundColor: colorWhite,
-//                   foregroundColor: colorprimario,
-//                   shape: RoundedRectangleBorder(
-//                     borderRadius: BorderRadius.circular(10),
-//                   ),
-//                 ),
-//                 child: const Text(
-//                   'Crear Cuenta',
-//                   style: TextStyle(fontSize: 18),
-//                 ),
-//               ),
-//               const SizedBox(height: 20),
-//               TextButton(
-//                 onPressed: () {
-//                   _controller.previousPage(
-//                     duration: const Duration(milliseconds: 300),
-//                     curve: Curves.easeInOut,
-//                   );
-//                 },
-//                 style: TextButton.styleFrom(foregroundColor: colorWhite),
-//                 child: const Text('Regresar'),
-//               ),
-//               const SizedBox(height: 20),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
+// WIDGET DE BARRA DE ESTATUS ESTILO MERCADO LIBRE
+Widget _buildStatusBar(String estadoTrabajo) {
+  final estados = ['Pendiente', 'En proceso', 'Completado', 'Cancelado'];
+  
+  // Determinar el índice del estado actual
+  int currentIndex = 0;
+  if (estadoTrabajo.toLowerCase().contains('proceso')) {
+    currentIndex = 1;
+  } else if (estadoTrabajo.toLowerCase().contains('completado') || 
+             estadoTrabajo.toLowerCase().contains('finalizado')) {
+    currentIndex = 2;
+  } else if (estadoTrabajo.toLowerCase().contains('cancelado')) {
+    currentIndex = 3;
+  }
 
-//   Widget _buildCategoriaItem() {
-//     final isLoading = apicategoria.categorias.isEmpty;
-//     return GridView.builder(
-//       shrinkWrap: true,
-//       physics: const NeverScrollableScrollPhysics(),
-//       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//         crossAxisCount: 1,
-//         mainAxisSpacing: 16,
-//         childAspectRatio: 4,
-//       ),
-//       itemCount: isLoading ? 3 : apicategoria.categorias.length,
-//       itemBuilder: (context, index) {
-//         if (isLoading) {
-//           return const OptionsSkeleton();
-//         }
-//         final categoria = apicategoria.categorias[index];
-//         return OptionsCategorias(
-//           nombre: categoria.nombre,
-//           id: categoria.id_categoria,
-//           selectedId: _categoriaSeleccionada,
-//           onSelected: (id) {
-//             setState(() {
-//               _categoriaSeleccionada = id;
-//             });
-//           },
-//         );
-//       },
-//     ).animate().fade().slideX(begin: -0.2);
-//   }
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Estado del servicio',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
+          ),
+        ),
+        const SizedBox(height: 20),
+        
+        // Barra de progreso
+        Row(
+          children: List.generate(estados.length * 2 - 1, (index) {
+            if (index.isEven) {
+              // Es un círculo de estado
+              final stateIndex = index ~/ 2;
+              final isActive = stateIndex <= currentIndex;
+              final isCanceled = currentIndex == 3;
+              
+              return _buildStatusCircle(
+                isActive: isActive,
+                isCurrent: stateIndex == currentIndex,
+                isCanceled: isCanceled && stateIndex == 3,
+              );
+            } else {
+              // Es una línea conectora
+              final lineIndex = index ~/ 2;
+              final isActive = lineIndex < currentIndex;
+              
+              return Expanded(
+                child: Container(
+                  height: 3,
+                  color: isActive 
+                      ? (currentIndex == 3 ? Colors.red : Theme.of(context).colorScheme.primary)
+                      : Colors.grey[300],
+                ),
+              );
+            }
+          }),
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Etiquetas de estados
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(estados.length, (index) {
+            if (index < 3) {
+              return Expanded(
+                child: Text(
+                  estados[index],
+                  textAlign: index == 0 ? TextAlign.start : 
+                           index == 1 ? TextAlign.center : 
+                           TextAlign.end,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: index == currentIndex ? FontWeight.bold : FontWeight.normal,
+                    color: index <= currentIndex 
+                        ? Theme.of(context).colorScheme.surface
+                        : Colors.grey[400],
+                  ),
+                ),
+              );
+            } else {
+              // Estado cancelado en línea separada si está activo
+              return const SizedBox.shrink();
+            }
+          }),
+        ),
+        
+        // Mostrar cancelado si aplica
+        if (currentIndex == 3) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              'Cancelado',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
+            ),
+          ),
+        ],
+        
+        const SizedBox(height: 16),
+        
+        // Chip con el estado actual
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: _getStatusColor(currentIndex).withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _getStatusColor(currentIndex),
+                width: 1.5,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  _getStatusIcon(currentIndex),
+                  size: 18,
+                  color: _getStatusColor(currentIndex),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  estadoTrabajo,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: _getStatusColor(currentIndex),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
-//   Widget _buidFormularioImg() {
-//     final screenHeight = MediaQuery.of(context).size.height;
-//     return Padding(
-//       padding: const EdgeInsets.symmetric(horizontal: 20),
-//       child: Column(
-//         children: [
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//             crossAxisAlignment: CrossAxisAlignment.center,
-//             children: [
-//               Column(
-//                 children: [
-//                   _image == null
-//                       ? Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(255, 177, 177, 177),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: IconButton(
-//                             onPressed: () {},
-//                             icon: const Icon(
-//                               Icons.person,
-//                             ), // Usa un icono de calendario
-//                             color: const Color.fromARGB(255, 255, 255, 255),
-//                             iconSize: 65,
-//                           ),
-//                         )
-//                       : Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(0, 103, 10, 10),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: ClipRRect(
-//                             borderRadius: BorderRadius.circular(20),
-//                             child: Image.file(_image!, fit: BoxFit.cover),
-//                           ),
-//                         ),
-//                   SizedBox(height: 25),
-//                   Transform.translate(
-//                     offset: Offset(
-//                       70,
-//                       -70,
-//                     ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-//                     child: Container(
-//                       decoration: BoxDecoration(
-//                         color: colorprimario,
-//                         borderRadius: BorderRadius.circular(20),
-//                       ),
-//                       width: 50,
-//                       height: 50,
-//                       child: IconButton(
-//                         onPressed: () {
-//                           _pickImage();
-//                         },
-//                         icon: const Icon(
-//                           Icons.add_a_photo_outlined,
-//                         ), // Usa un icono de calendario
-//                         color: const Color.fromARGB(255, 255, 255, 255),
-//                         iconSize: 25,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//               Column(
-//                 children: [
-//                   _image1 == null
-//                       ? Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(255, 177, 177, 177),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: IconButton(
-//                             onPressed: () {},
-//                             icon: const Icon(
-//                               Icons.person,
-//                             ), // Usa un icono de calendario
-//                             color: const Color.fromARGB(255, 255, 255, 255),
-//                             iconSize: 65,
-//                           ),
-//                         )
-//                       : Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(0, 103, 10, 10),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: ClipRRect(
-//                             borderRadius: BorderRadius.circular(20),
-//                             child: Image.file(_image1!, fit: BoxFit.cover),
-//                           ),
-//                         ),
-//                   SizedBox(height: 25),
-//                   Transform.translate(
-//                     offset: Offset(
-//                       70,
-//                       -70,
-//                     ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-//                     child: Container(
-//                       decoration: BoxDecoration(
-//                         color: colorprimario,
-//                         borderRadius: BorderRadius.circular(20),
-//                       ),
-//                       width: 50,
-//                       height: 50,
-//                       child: IconButton(
-//                         onPressed: () {
-//                           _pickImage1();
-//                         },
-//                         icon: const Icon(
-//                           Icons.add_a_photo_outlined,
-//                         ), // Usa un icono de calendario
-//                         color: const Color.fromARGB(255, 255, 255, 255),
-//                         iconSize: 25,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ],
-//           ),
-//           Row(
-//             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//             crossAxisAlignment: CrossAxisAlignment.center,
-//             children: [
-//               Column(
-//                 children: [
-//                   _image2 == null
-//                       ? Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(255, 177, 177, 177),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: IconButton(
-//                             onPressed: () {},
-//                             icon: const Icon(
-//                               Icons.person,
-//                             ), // Usa un icono de calendario
-//                             color: const Color.fromARGB(255, 255, 255, 255),
-//                             iconSize: 65,
-//                           ),
-//                         )
-//                       : Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(0, 103, 10, 10),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: ClipRRect(
-//                             borderRadius: BorderRadius.circular(20),
-//                             child: Image.file(_image2!, fit: BoxFit.cover),
-//                           ),
-//                         ),
-//                   SizedBox(height: 25),
-//                   Transform.translate(
-//                     offset: Offset(
-//                       70,
-//                       -70,
-//                     ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-//                     child: Container(
-//                       decoration: BoxDecoration(
-//                         color: colorprimario,
-//                         borderRadius: BorderRadius.circular(20),
-//                       ),
-//                       width: 50,
-//                       height: 50,
-//                       child: IconButton(
-//                         onPressed: () {
-//                           _pickImage2();
-//                         },
-//                         icon: const Icon(
-//                           Icons.add_a_photo_outlined,
-//                         ), // Usa un icono de calendario
-//                         color: const Color.fromARGB(255, 255, 255, 255),
-//                         iconSize: 25,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//               Column(
-//                 children: [
-//                   _image3 == null
-//                       ? Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(255, 177, 177, 177),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: IconButton(
-//                             onPressed: () {},
-//                             icon: const Icon(
-//                               Icons.person,
-//                             ), // Usa un icono de calendario
-//                             color: const Color.fromARGB(255, 255, 255, 255),
-//                             iconSize: 65,
-//                           ),
-//                         )
-//                       : Container(
-//                           decoration: BoxDecoration(
-//                             color: Color.fromARGB(0, 103, 10, 10),
-//                             borderRadius: BorderRadius.circular(20),
-//                           ),
-//                           width: 150,
-//                           height: 150,
-//                           child: ClipRRect(
-//                             borderRadius: BorderRadius.circular(20),
-//                             child: Image.file(_image3!, fit: BoxFit.cover),
-//                           ),
-//                         ),
-//                   SizedBox(height: 25),
-//                   Transform.translate(
-//                     offset: Offset(
-//                       70,
-//                       -70,
-//                     ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-//                     child: Container(
-//                       decoration: BoxDecoration(
-//                         color: colorprimario,
-//                         borderRadius: BorderRadius.circular(20),
-//                       ),
-//                       width: 50,
-//                       height: 50,
-//                       child: IconButton(
-//                         onPressed: () {
-//                           _pickImage3();
-//                         },
-//                         icon: const Icon(
-//                           Icons.add_a_photo_outlined,
-//                         ), // Usa un icono de calendario
-//                         color: const Color.fromARGB(255, 255, 255, 255),
-//                         iconSize: 25,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ],
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
+Widget _buildStatusCircle({
+  required bool isActive,
+  required bool isCurrent,
+  required bool isCanceled,
+}) {
+  return Container(
+    width: 28,
+    height: 28,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: isCanceled 
+          ? Colors.red 
+          : isActive 
+              ? Theme.of(context).colorScheme.primary 
+              : Colors.grey[300],
+      border: Border.all(
+        color: isCanceled 
+            ? Colors.red 
+            : isActive 
+                ? Theme.of(context).colorScheme.primary 
+                : Colors.grey[300]!,
+        width: isCurrent ? 3 : 2,
+      ),
+    ),
+    child: isActive
+        ? Icon(
+            isCanceled ? Icons.close : Icons.check,
+            size: 16,
+            color: Colors.white,
+          )
+        : null,
+  );
+}
+
+Color _getStatusColor(int statusIndex) {
+  switch (statusIndex) {
+    case 0:
+      return Colors.orange;
+    case 1:
+      return Colors.blue;
+    case 2:
+      return Colors.green;
+    case 3:
+      return Colors.red;
+    default:
+      return Colors.grey;
+  }
+}
+
+IconData _getStatusIcon(int statusIndex) {
+  switch (statusIndex) {
+    case 0:
+      return Icons.schedule;
+    case 1:
+      return Icons.autorenew;
+    case 2:
+      return Icons.check_circle;
+    case 3:
+      return Icons.cancel;
+    default:
+      return Icons.info;
+  }
+}
+
+// WIDGET DE TARJETA DE SECCIÓN
+Widget _buildSectionCard({
+  required IconData icon,
+  required String title,
+  required Widget child,
+}) {
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.05),
+          blurRadius: 10,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                icon,
+                size: 24,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.surface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        child,
+      ],
+    ),
+  );
+}
+
+Widget _buildImg() {
+  return SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        imageBox1(agenda.agenda[0].imagen1),
+        const SizedBox(width: 16),
+        imageBox1(agenda.agenda[0].imagen2),
+      ],
+    ),
+  );
+}
+
+Widget imageBox1(String? imagen) {
+  return Container(
+    width: 150,
+    height: 150,
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(12),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    child: imagen == null
+        ? Container(
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.image_not_supported,
+              color: Colors.grey,
+              size: 50,
+            ),
+          )
+        : ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: CachedNetworkImage(
+              imageUrl: imagen,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => Center(child: Indicador()),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.broken_image, size: 50),
+            ),
+          ),
+  );
+}
+
+Widget _buildProfile() {
+  return Row(
+    children: [
+      Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Circleimage(
+          w: 70,
+          h: 70,
+          link_imagen: agenda.agenda[0].trabajadorImagen,
+        ),
+      ),
+      const SizedBox(width: 16),
+      Expanded(
+        child: Text(
+          '${agenda.agenda[0].trabajadorNombre}',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+          ),
+        ),
+      ),
+    ],
+  );
+}
+
+}

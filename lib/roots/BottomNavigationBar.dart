@@ -101,7 +101,7 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         children: [
           Icon(
             isSelected ? activeIcon : icon,
-            color: isSelected ? colorsecundario : Colors.grey.withOpacity(0.6),
+            color: isSelected ? colorsecundario : colorWhite,
             size: 28,
           ),
           Text(
@@ -109,7 +109,7 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
             style: TextStyle(
               color: isSelected
                   ? colorsecundario
-                  : Colors.grey.withOpacity(0.6),
+                  : colorWhite,
               fontSize: 10,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
@@ -129,12 +129,12 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         height: 55,
         decoration: BoxDecoration(
           // Si está seleccionado brilla, si no, mantiene un color sólido
-          color: isSelected ? colorWhite : Colors.grey.withOpacity(0.6),
+          color: isSelected ? colorsecundario : colorsecundario.withOpacity(0.6),
           shape: BoxShape.circle,
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: colorfondo..withOpacity(0.4),
+                    color: colorsecundario..withOpacity(0.4),
                     blurRadius: 15,
                     spreadRadius: 2,
                   ),
@@ -143,7 +143,7 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         ),
         child: Icon(
           isSelected ? Icons.flash_on : Icons.flash_on,
-          color: isSelected ?  colorfondo: Colors.white,
+          color: isSelected ?  colorWhite: Colors.white,
           size: 30,
         ),
       ),
@@ -189,3 +189,5 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         false;
   }
 }
+
+// Colors.grey.withOpacity(0.6)

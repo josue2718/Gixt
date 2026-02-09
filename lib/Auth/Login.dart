@@ -7,7 +7,7 @@ import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/inputs/input.dart';
-import 'package:gixt/components/inputs/inputpassword.dart';
+import 'package:gixt/components/inputs/Input_Password.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/auth_service.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
@@ -217,7 +217,6 @@ class _LoginState extends State<LoginPage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: colorWhite,
                 ),
               ),
             ),

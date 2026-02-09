@@ -36,7 +36,7 @@ class CardsServiciosCategoria extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       child: SizedBox(
         child: Card(
-          elevation: 4,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -101,7 +101,7 @@ class CardsServiciosCategoria extends StatelessWidget {
                             style: GoogleFonts.poppins(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
-                              color: Theme.of(context).colorScheme.surface,
+                              color: colorWhite,
                             ),
                             textAlign: TextAlign.center,
                             maxLines: 1,
@@ -147,7 +147,7 @@ class CardsServiciosCategoria extends StatelessWidget {
                             vertical: 5,
                           ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface.withOpacity(0.95),
+                            color: colorWhite.withOpacity(0.95),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
                               BoxShadow(
@@ -170,7 +170,7 @@ class CardsServiciosCategoria extends StatelessWidget {
                                 '$estrellas',
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
-                                  color: colorfondo,
+                                  color: colorBlack,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -230,7 +230,7 @@ class CardsServiciosCategoria extends StatelessWidget {
                                       '\$',
                                       style: GoogleFonts.poppins(
                                         fontSize: 12,
-                                        color: Theme.of(context).colorScheme.surface,
+                                        color: colorWhite,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -239,7 +239,7 @@ class CardsServiciosCategoria extends StatelessWidget {
                                       precio.toStringAsFixed(2),
                                       style: GoogleFonts.poppins(
                                         fontSize: 12,
-                                        color: Theme.of(context).colorScheme.surface,
+                                        color: colorWhite,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),

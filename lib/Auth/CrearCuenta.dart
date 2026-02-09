@@ -8,11 +8,11 @@ import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/inputs/Nacimientoformatter.dart';
-import 'package:gixt/components/inputs/input.dart';
-import 'package:gixt/components/inputs/inputfecha.dart';
-import 'package:gixt/components/inputs/inputpassword.dart';
-import 'package:gixt/components/inputs/inputphone.dart';
-import 'package:gixt/components/inputs/pick_image.dart';
+import 'package:gixt/components/inputs/Input.dart';
+import 'package:gixt/components/inputs/Input_Fecha.dart';
+import 'package:gixt/components/inputs/Input_Password.dart';
+import 'package:gixt/components/inputs/Input_Phone.dart';
+import 'package:gixt/components/inputs/Pick_Image.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/cuenta_service.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
@@ -386,13 +386,14 @@ class _CrearcuentaState extends State<Crearcuenta> {
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(300, 50),
                 backgroundColor: colorsecundario,
+                foregroundColor: colorWhite,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               child: const Text(
                 'Siguiente',
-                style: TextStyle(fontSize: 18, color: colorWhite),
+                style: TextStyle(fontSize: 18),
               ),
             ),
           ],
@@ -561,13 +562,14 @@ class _CrearcuentaState extends State<Crearcuenta> {
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(300, 50),
                 backgroundColor: colorsecundario,
+                foregroundColor: colorWhite,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               child: const Text(
                 'Siguiente',
-                style: TextStyle(fontSize: 18, color: colorWhite),
+                style: TextStyle(fontSize: 18),
               ),
             ),
             TextButton(
@@ -712,14 +714,14 @@ class _CrearcuentaState extends State<Crearcuenta> {
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(300, 50),
                 backgroundColor: colorsecundario,
-                foregroundColor: colorprimario,
+                foregroundColor: colorWhite,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               child: const Text(
                 'Crear Cuenta',
-                style: TextStyle(fontSize: 18, color: colorWhite),
+                style: TextStyle(fontSize: 18),
               ),
             ),
             TextButton(
