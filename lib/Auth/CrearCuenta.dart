@@ -41,25 +41,20 @@ class _CrearcuentaState extends State<Crearcuenta> {
   final _first_nameController = TextEditingController();
   final _last_nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _fecha_nacimientoController = TextEditingController();
+  final  _birth_dateControlle = TextEditingController();
   bool _isObscured = true;
   bool _isObscured1 = true;
   final PageController _controller = PageController();
   final PreferencesService _preferencesService = PreferencesService();
   int _paginaActual = 0;
   File? _image;
-  String? _genero;
+  String? _gender;
   String? _token;
   String? _inicio;
   String? _id;
   String? _img;
   String? _user;
-  double longitud = 0;
-  double latitud = 0;
-  String? calle;
-  String? ciudad;
-  String? estado;
-  bool? tyc;
+  bool? terms;
   GoogleMapController? mapController;
   LatLng? posicionActual = LatLng(20.9674, -89.5926);
 
@@ -84,18 +79,18 @@ class _CrearcuentaState extends State<Crearcuenta> {
     if (_image == null) {
       mostrarAlerta(
         context,
-        titulo: 'Imagen requerida',
-        mensaje: 'Por favor selecciona una imagen de perfil',
-        tipo: TipoAlerta.advertencia,
+        title: 'Imagen requerida',
+        message: 'Por favor selecciona una imagen de perfil',
+        type: alert_type.advertencia,
       );
       return;
     }
-    if (!tyc!) {
+    if (!terms!) {
       mostrarAlerta(
         context,
-        titulo: 'Términos y condiciones',
-        mensaje: 'Debes aceptar los términos y condiciones para continuar.',
-        tipo: TipoAlerta.advertencia,
+        title: 'Términos y condiciones',
+        message: 'Debes aceptar los términos y condiciones para continuar.',
+        type: alert_type.advertencia,
       );
       return;
     }
@@ -111,14 +106,12 @@ class _CrearcuentaState extends State<Crearcuenta> {
       password: _passwordController.text,
       firstName: _first_nameController.text,
       lastName: _last_nameController.text,
-      imagen: _image ?? File(''),
+      image: _image ?? File(''),
       phone: _phoneController.text,
-      ciudad: ciudad!,
-      longitud: longitud,
-      latitud: latitud,
-      genero: _genero ?? "",
-      fechaNacimiento: _fecha_nacimientoController.text,
-      tokenFcm: "cfddds",
+      gender: _gender ?? "",
+      birth_date:  _birth_dateControlle.text,
+      terms: terms!
+
     );
 
     Navigator.pop(context);
@@ -136,9 +129,9 @@ class _CrearcuentaState extends State<Crearcuenta> {
         );
         await mostrarAlerta(
           context,
-          titulo: "Bienvenido",
-          mensaje: message,
-          tipo: TipoAlerta.exito,
+          title: "Bienvenido",
+          message: message,
+          type: alert_type.exito,
         );
         Navigator.pushReplacement(
           context,
@@ -149,9 +142,9 @@ class _CrearcuentaState extends State<Crearcuenta> {
       Future.microtask(() async {
         await mostrarAlerta(
           context,
-          titulo: "Error",
-          mensaje: result['message'],
-          tipo: TipoAlerta.error,
+          title: "Error",
+          message: result['message'],
+          type: alert_type.error,
         );
 
         Navigator.pushReplacement(
@@ -182,46 +175,6 @@ class _CrearcuentaState extends State<Crearcuenta> {
       Navigator.pop(context);
       return true;
     }
-  }
-
-  void getcalle() {
-    GeocodingHelper.obtenerCiudadDesdeCoordenadas(
-      latitud: latitud,
-      longitud: longitud,
-      onResult: (ciudadResult, calleResult, estadoResult) {
-        setState(() {
-          ciudad = ciudadResult;
-          calle = calleResult;
-          estado = estadoResult;
-          print(calle);
-        });
-      },
-    );
-  }
-
-  void obtenerCoordenadas() async {
-    try {
-      Position pos = await LocationService.obtenerUbicacion();
-      latitud = pos.latitude;
-      longitud = pos.longitude;
-      setState(() {
-        posicionActual = LatLng(pos.latitude, pos.longitude);
-      });
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future<void> _irAMiUbicacion() async {
-    final position = await Geolocator.getCurrentPosition();
-    final nuevaPos = LatLng(position.latitude, position.longitude);
-
-    setState(() {
-      posicionActual = nuevaPos;
-      latitud = position.latitude;
-      longitud = position.longitude;
-    });
-    getcalle();
   }
 
   @override
@@ -372,9 +325,9 @@ class _CrearcuentaState extends State<Crearcuenta> {
                     _passwordconfirmarController.text) {
                   mostrarAlerta(
                     context,
-                    titulo: 'Las contraseñas no coinciden',
-                    mensaje: 'Por favor, revisa la contraseña',
-                    tipo: TipoAlerta.advertencia,
+                    title: 'Las contraseñas no coinciden',
+                    message: 'Por favor, revisa la contraseña',
+                    type: alert_type.advertencia,
                   );
                   return;
                 }
@@ -469,7 +422,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
             ),
 
             const SizedBox(height: 20),
-            CustomTextFormFieldfecha(controller: _fecha_nacimientoController),
+            CustomTextFormFieldfecha(controller:  _birth_dateControlle),
 
             const SizedBox(height: 20),
             Column(
@@ -497,7 +450,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                           }
                           return Theme.of(context).colorScheme.surface;
                         }),
-                        groupValue: _genero,
+                        groupValue: _gender,
                         activeColor: Theme.of(context).colorScheme.surface,
                         title: Text(
                           'Hombre',
@@ -507,7 +460,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            _genero = value;
+                            _gender= value;
                           });
                         },
                       ),
@@ -515,7 +468,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                     Expanded(
                       child: RadioListTile<String>(
                         value: 'M',
-                        groupValue: _genero,
+                        groupValue: _gender,
                         fillColor: MaterialStateProperty.resolveWith<Color>((
                           states,
                         ) {
@@ -533,7 +486,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            _genero = value;
+                            _gender = value;
                           });
                         },
                       ),
@@ -546,12 +499,12 @@ class _CrearcuentaState extends State<Crearcuenta> {
             ElevatedButton(
               onPressed: () {
                 if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
-                if (_genero == null) {
+                if (_gender == null) {
                   mostrarAlerta(
                     context,
-                    titulo: 'Género requerido',
-                    mensaje: 'Por favor, selecciona tu género',
-                    tipo: TipoAlerta.advertencia,
+                    title: 'Género requerido',
+                    message: 'Por favor, selecciona tu género',
+                    type: alert_type.advertencia,
                   );
                   return;
                 }
@@ -675,7 +628,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
               children: [
                 Expanded(
                   child: RadioListTile<bool>(
-                    value: tyc!,
+                    value: true,
                     fillColor: MaterialStateProperty.resolveWith<Color>((
                       states,
                     ) {
@@ -684,7 +637,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                       }
                       return Theme.of(context).colorScheme.surface;
                     }),
-                    groupValue: tyc,
+                    groupValue: terms,
                     activeColor: Theme.of(context).colorScheme.surface,
                     title: Text(
                       'Acepto los terminos y condiciones',
@@ -694,7 +647,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                     ),
                     onChanged: (value) {
                       setState(() {
-                        tyc = value;
+                        terms = value;
                       });
                     },
                   ),

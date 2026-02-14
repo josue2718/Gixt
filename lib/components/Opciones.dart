@@ -4,13 +4,13 @@ import 'package:gixt/components/colors.dart';
 import 'package:gixt/pages/CategoriaPage.dart';
 
 class Options extends StatelessWidget {
-  final String nombre;
+  final String name;
   final int id;
   final VoidCallback? onTap; // Añadido para manejar el clic
 
   const Options({
     super.key,
-    required this.nombre,
+    required this.name,
     required this.id,
     this.onTap,
   });
@@ -29,7 +29,7 @@ class Options extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>CategoriaPage(id_categoria: id , nombre : nombre),
+                  builder: (context) =>CategoriaPage(category_id: id , name : name),
                 ),
               );
             },
@@ -55,7 +55,7 @@ class Options extends StatelessWidget {
             const SizedBox(height: 8),
             // Texto descriptivo
             Text(
-              nombre,
+              name,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

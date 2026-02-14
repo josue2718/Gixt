@@ -6,58 +6,39 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 
-class ServiciosFav {
-  String service_id;
-  String service_name;
-  String first_name;
-  String userImage;
-  String category;
-  double price;
-  String image;
-  int rating;
-  String description;
+class Categorias {
+  String name;
+  int category_id;
 
-  ServiciosFav({
- required this.service_id,
-    required this.service_name,
-    required this.first_name,
-    required this.userImage,
-    required this.category,
-    required this.price,
-    required this.image,
-    required this.rating,
-    required this.description,
-  });
+  Categorias({required this.name, required this.category_id});
 
-  factory ServiciosFav.fromJson(Map<String, dynamic> json) {
-    return ServiciosFav(
-      service_id: json['service_id'],
-      service_name: json['service_name'],
-      first_name: json['first_name'],
-      userImage: json['userImage'],
-      category: json['category'],
-      price: (json['price'] as num).toDouble(),
-      image: json['image'],
-      rating: json['rating'],
-      description: json['description'],
+  factory Categorias.fromJson(Map<String, dynamic> json) {
+    return Categorias(
+      name: json['name'],
+      category_id: json['category_id'],
     );
+  }
+
+  @override
+  String toString() {
+    return 'Empresa(nombre: $name,)';
   }
 }
 
-class ServiciosFav_service {
-  List<ServiciosFav> servicios = []; // Lista de empresas
+class Categorias_service {
+  List<Categorias> categorias = []; // Lista de empresas
   bool isLoading = false;
   bool hasMore = true;
-  static const String _cacheKey = 'servicios_fav_cache';
-  static const String _cacheTimeKey = 'servicios_fav_cache_time';
-  set loading(bool loading) {}
+  static const String _cacheKey = 'categorias_cache';
+  static const String _cacheTimeKey = 'categorias_cache_time';
 
+  set loading(bool loading) {}
   Future<void> updatedata() async {
-    print("📦 actualizando servicios");
+    print("📦 actualizando categorias");
     await fetchFromApi();
   }
 
-  Future<bool> fetchServicioData() async {
+  Future<bool> fetchCategoriasData() async {
     final prefs = await SharedPreferences.getInstance();
 
     // config cache
@@ -74,24 +55,24 @@ class ServiciosFav_service {
         cachedTime != null &&
         now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) <
             cacheDuration) {
-      print("📦 Usando cache favoritos");
+      print("📦 Usando cache categorias");
 
       final List<dynamic> jsonData = json.decode(cachedData);
-      servicios
+      categorias
         ..clear()
-        ..addAll(jsonData.map((e) => ServiciosFav.fromJson(e)));
+        ..addAll(jsonData.map((e) => Categorias.fromJson(e)));
 
       return true;
     }
 
-    print("🚫 Cache inválido → API Fav");
+    print("🚫 Cache inválido → API categorias");
     return await fetchFromApi();
   }
 
   Future<bool> fetchFromApi() async {
     final prefs = await SharedPreferences.getInstance();
 
-    print("🌐 Llamando API fav");
+    print("🌐 Llamando API categorias");
 
     final token = prefs.getString('token');
     String? id = prefs.getString('id');
@@ -103,17 +84,24 @@ class ServiciosFav_service {
 
       final response = await http
           .get(
-            Uri.parse('${dotenv.env['API_URL']}/api/Favorites/id/$id'),
+            Uri.parse('${dotenv.env['API_URL']}/api/Categories'),
             headers: headers,
           )
           .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
-        final List<dynamic> jsonResponse = json.decode(response.body);
-        servicios
+        final List<dynamic> jsonResponse = json.decode(
+          response.body,
+        ); // Decodifica como una lista
+        categorias.clear();
+        categorias.addAll(
+          jsonResponse.map((item) => Categorias.fromJson(item)).toList(),
+        );
+        categorias
           ..clear()
-          ..addAll(jsonResponse.map((e) => ServiciosFav.fromJson(e)));
+          ..addAll(jsonResponse.map((e) => Categorias.fromJson(e)));
 
+        //  guardar cache
         await prefs.setString(_cacheKey, response.body);
         await prefs.setInt(
           _cacheTimeKey,

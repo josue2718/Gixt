@@ -12,10 +12,10 @@ import 'package:gixt/components/cards/cardsServicios.dart';
 import 'package:gixt/components/circleimage.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/opciones.dart';
-import 'package:gixt/components/sketor/cardsRestraurantes.dart';
+import 'package:gixt/components/sketor/cardsServicios.dart';
 import 'package:gixt/components/sketor/opciones.dart';
 import 'package:gixt/services/Anuncios_service.dart';
-import 'package:gixt/services/Auth/categorias_service.dart';
+import 'package:gixt/services/servicios/categorias_service.dart';
 import 'package:gixt/services/servicios/servicios_service.dart';
 import 'package:gixt/services/servicios/serviciosbyfav.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
@@ -34,7 +34,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool hasMore = true;
   final Servicios_service api = Servicios_service();
   final ServiciosFav_service fav = ServiciosFav_service();
   final Categorias_service categorias = Categorias_service();
@@ -51,7 +50,9 @@ class _HomePageState extends State<HomePage> {
   double latitud = 0;
   GoogleMapController? mapController;
   LatLng posicionActual = LatLng(20.9674, -89.5926);
-  bool isnot = false;
+  bool isLoading = false;
+  bool hasMore = true;
+  bool timeout = false;
 
   void initState() {
     super.initState();
@@ -61,7 +62,6 @@ class _HomePageState extends State<HomePage> {
     getcalle();
     _loadUserId();
     _Initial();
-
   }
 
   Future<void> _loadUserId() async {
@@ -74,35 +74,57 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _onRefresh() async {
     setState(() {
-      print('Actualizando datos...');
-      anuncio.updatedata();
-      api.updatedata();
-      fav.fetchServicioData();
-      hasMore = true;
+      isLoading = true;
+      timeout = false;
     });
+      
+    await  anuncio.updatedata();
+    await   api.updatedata();
+    await   categorias.updatedata();
+    await   fav.updatedata();
+    _Validation();
+      
   }
 
   Future<void> _Initial() async {
+    setState(() {
+      isLoading = true;
+      timeout = false;
+    });
     bool ok = await api.fetchServicioData();
     bool okfav = await fav.fetchServicioData();
-    bool okData =  await categorias.fetchEmpresaData();
-    bool okAnc = await anuncio.fetchData();
+    bool okData =  await categorias.fetchCategoriasData();
+    bool okAnc = await anuncio.fetchAnuncioData();
     if (!okData || !okfav || !ok|| !okAnc) {
       if (!mounted) return;
       mostrarAlerta(
         context,
-        titulo: "Error",
-        mensaje: "No se pudo obtener la información",
-        tipo: TipoAlerta.error,
+        title: "Error",
+        message: "No se pudo obtener la información",
+        type: alert_type.error,
       );
     }
-
+    _Validation();
+  }
+  
+  Future<void> _Validation() async {
+  print('empezando contador');
+    Future.delayed(const Duration(seconds: 10), () {
+      if (isLoading) {
+        setState(() {
+          timeout = true;
+        });
+        print('terminando contador');
+      }
+    });
     setState(() {
-      print('Iniciando home');
-      hasMore = true;
+      if (api.servicios.isNotEmpty) {
+        isLoading = false;
+      }
     });
   }
   
+
   void obtenerCoordenadas() async {
     try {
       Position pos = await LocationService.obtenerUbicacion();
@@ -257,7 +279,7 @@ class _HomePageState extends State<HomePage> {
               Circleimage(
                 w: 48,
                 h: 48,
-                link_imagen: img,
+                image_url: img,
               ),
             ],
           ),
@@ -366,7 +388,7 @@ class _HomePageState extends State<HomePage> {
             return const OptionsSkeleton();
           }
           final categoria = categorias.categorias[index];
-          return Options(nombre: categoria.nombre, id: categoria.id_categoria);
+          return Options(name: categoria.name, id: categoria.category_id);
         },
       ).animate().fade().slideX(begin: -0.2),
     );
@@ -374,7 +396,15 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildServicios() {
     final isLoading = api.servicios.isEmpty;
-
+    if (timeout) {
+      return const ListTile(
+        title: Text(
+          "No tienes servicios sercanos",
+          style: TextStyle(color: colorWhite),
+        ),
+        leading: Icon(Icons.location_off),
+      );
+    }
     return SizedBox(
       height: 400,
       child: GridView.builder(
@@ -390,24 +420,24 @@ class _HomePageState extends State<HomePage> {
             ? 3 //  skeletons visibles
             : api.servicios.length,
         itemBuilder: (context, index) {
-          if (isLoading) {
+          if (isLoading && !timeout) {
             return const CardsEmpresaSkeleton();
           }
           try {
             final servicio = api.servicios[index];
 
             return CardsServicios(
-                  url_img: servicio.img_servicio,
-                  nombre: servicio.nombre_servicio,
-                  img_trabajador: servicio.img_trabajador,
-                  id_servicio: servicio.id_servicio,
-                  trabajador: servicio.trabajador,
-                  categoria: servicio.categoria,
-                  estrellas: servicio.calificacion,
-                  precio: servicio.precio,
-                  descripcion: servicio.descripcion,
-                  favorito: false,
-                )
+                image_url: servicio.image,
+                name: servicio.service_name,
+                worker_image: servicio.userImage,
+                service_id: servicio.service_id,
+                worker: servicio.first_name,
+                category: servicio.category,
+                stars: servicio.rating,
+                price: servicio.price,
+                description: servicio.description,
+                favorito: false,
+              )
                 .animate()
                 .fade(duration: 400.ms)
                 .slideY(begin: 0.15)
@@ -429,10 +459,10 @@ class _HomePageState extends State<HomePage> {
             CarouselSlider.builder(
               itemCount: anuncio.anuncio.length,
               itemBuilder: (context, index, realIndex) {
-                final descuento = anuncio.anuncio[index];
+                final anuncios = anuncio.anuncio[index];
                 return Container(
                   width: 360,
-                  child: cardsofertas(link_imagen: descuento.img),
+                  child: cardsofertas(link_imagen: anuncios.image_url),
                 );
               },
               options: CarouselOptions(
@@ -535,15 +565,15 @@ class _HomePageState extends State<HomePage> {
             final servicio = fav.servicios[index];
 
             return CardsServicios(
-                  url_img: servicio.img_servicio,
-                  nombre: servicio.nombre_servicio,
-                  img_trabajador: servicio.img_trabajador,
-                  id_servicio: servicio.id_servicio,
-                  trabajador: servicio.trabajador,
-                  categoria: servicio.categoria,
-                  estrellas: servicio.calificacion,
-                  precio: servicio.precio,
-                  descripcion: servicio.descripcion,
+                image_url: servicio.image,
+                name: servicio.service_name,
+                worker_image: servicio.userImage,
+                service_id: servicio.service_id,
+                worker: servicio.first_name,
+                category: servicio.category,
+                stars: servicio.rating,
+                price: servicio.price,
+                description: servicio.description,
                   favorito: true,
                 )
                 .animate()

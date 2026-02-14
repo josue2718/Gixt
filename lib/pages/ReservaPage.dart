@@ -27,13 +27,14 @@ import 'package:table_calendar/table_calendar.dart';
 class ReservaPage extends StatefulWidget {
   const ReservaPage({
     super.key,
-    required this.id_servicio,
-    required this.nombre,
-    required this.descripcion,
+    required this.service_id,
+    required this.name,
+    required this.description,
   });
-  final String id_servicio;
-  final String nombre;
-  final String descripcion;
+
+  final String service_id;
+  final String name;
+  final String description;
   @override
   State<ReservaPage> createState() => _ReservaPageState();
 }
@@ -42,8 +43,8 @@ class _ReservaPageState extends State<ReservaPage> {
   final _formKey = GlobalKey<FormState>();
   final _formKeyinfo = GlobalKey<FormState>();
   final _formKeyImg = GlobalKey<FormState>();
-  final _problemaController = TextEditingController();
-  final _descripcionController = TextEditingController();
+  final _problemController = TextEditingController();
+  final _descriptionController = TextEditingController();
   final _timeController = TextEditingController();
   final _phoneController = TextEditingController();
   final _dateController = TextEditingController();
@@ -60,31 +61,31 @@ class _ReservaPageState extends State<ReservaPage> {
 
   int _paginaActual = 0;
   List<File?> _images = List.generate(2, (_) => null);
-  String? _pago;
+  String? _payment;
   String? _token;
   String? _inicio;
   String? _id;
   String? _img;
   String? _user;
   String? ubicaciontext;
-  bool tyc = false;
+  bool terms = false;
 
   void _Crear() async {
-    if (_pago == null) {
+    if (_payment == null) {
       mostrarAlerta(
         context,
-        titulo: 'Se requieren un metodo de pago',
-        mensaje: 'Selecciona un metodo de pago',
-        tipo: TipoAlerta.advertencia,
+        title: 'Se requieren un metodo de pago',
+        message: 'Selecciona un metodo de pago',
+        type: alert_type.advertencia,
       );
       return;
     }
-    if (!tyc!) {
+    if (!terms!) {
       mostrarAlerta(
         context,
-        titulo: 'Se requieren aceptar',
-        mensaje: 'Acepta los terminos y condiciones',
-        tipo: TipoAlerta.advertencia,
+        title: 'Se requieren aceptar',
+        message: 'Acepta los terminos y condiciones',
+        type: alert_type.advertencia,
       );
       return;
     }
@@ -95,17 +96,18 @@ class _ReservaPageState extends State<ReservaPage> {
     );
 
     final result = await AddServicioService.Crear(
-      id_servicio: widget.id_servicio,
-      id_ubicacion: _ubicacionSeleccionada.toString(),
-      fecha_trabajo: _dateController.text,
-      hora_trabajo: _timeController.text,
-      problema: _problemaController.text,
-      descripcion: _descripcionController.text,
+      service_id: widget.service_id,
+      location_id: _ubicacionSeleccionada.toString(),
+      job_date: _dateController.text,
+      job_time: _timeController.text,
+      problem: _problemController.text,
+      description: _descriptionController.text,
       image_1: _images[0]!,
       image_2: _images[1]!,
-      tyc: tyc!,
-      tipo_pago: _pago!,
+      payment_method: _payment!,
+      terms: terms!,
     );
+
 
     Navigator.pop(context);
 
@@ -113,9 +115,9 @@ class _ReservaPageState extends State<ReservaPage> {
       Future.microtask(() async {
         await mostrarAlerta(
           context,
-          titulo: "Creado Correctamente",
-          mensaje: 'Espera que el trabajador confime para segir con el proceso',
-          tipo: TipoAlerta.exito,
+          title: "Creado Correctamente",
+          message: 'Espera que el trabajador confime para segir con el proceso',
+          type: alert_type.exito,
         );
         Navigator.pushReplacement(
           context,
@@ -125,9 +127,9 @@ class _ReservaPageState extends State<ReservaPage> {
     } else {
       mostrarAlerta(
         context,
-        titulo: "Error",
-        mensaje: result['message'],
-        tipo: TipoAlerta.error,
+        title: "Error",
+        message: result['message'],
+        type: alert_type.error,
       );
     }
   }
@@ -304,7 +306,7 @@ class _ReservaPageState extends State<ReservaPage> {
 
             /// PROBLEMA
             CustomTextFormField(
-              controller: _problemaController,
+              controller: _problemController,
               label: '¿Qué problema tienes?',
               icon: Icons.person,
               readOnly: false,
@@ -320,7 +322,7 @@ class _ReservaPageState extends State<ReservaPage> {
 
             /// DESCRIPCIÓN (multiline, se deja normal)
             CustomDescriptionFormField(
-              controller: _descripcionController,
+              controller: _descriptionController,
               minLines: 4,
               maxLines: 6,
               validator: (value) {
@@ -405,9 +407,9 @@ class _ReservaPageState extends State<ReservaPage> {
                 if (imagenesValidas.length != 2) {
                   mostrarAlerta(
                     context,
-                    titulo: 'Se requieren 2 imágenes',
-                    mensaje: 'Debes subir exactamente 2 imágenes de evidencia',
-                    tipo: TipoAlerta.advertencia,
+                    title: 'Se requieren 2 imágenes',
+                    message: 'Debes subir exactamente 2 imágenes de evidencia',
+                    type: alert_type.advertencia,
                   );
                   return;
                 }
@@ -463,9 +465,9 @@ class _ReservaPageState extends State<ReservaPage> {
                 if (_ubicacionSeleccionada == null) {
                   mostrarAlerta(
                     context,
-                    titulo: 'Se requieren una ubicacion',
-                    mensaje: 'Selecciona una ubicacion',
-                    tipo: TipoAlerta.advertencia,
+                    title: 'Se requieren una ubicacion',
+                    message: 'Selecciona una ubicacion',
+                    type: alert_type.advertencia,
                   );
                   return;
                 }
@@ -516,20 +518,21 @@ class _ReservaPageState extends State<ReservaPage> {
         }
         final ubicacion = ubicaciones.ubicacion[index];
         return UbicacionesInput(
-          calle: ubicacion.calle,
-          colonia: ubicacion.colonia,
-          estado: ubicacion.estado,
-          ciudad: ubicacion.ciudad,
-          descripcion: ubicacion.direccionMaps,
-          id: ubicacion.id_ubicacion,
+          calle: ubicacion.street,
+          colonia: ubicacion.neighborhood,
+          estado: ubicacion.state,
+          ciudad: ubicacion.city,
+          descripcion: ubicacion.maps_address,
+          id: ubicacion.location_id,
           selectedId: _ubicacionSeleccionada,
           onSelected: (id) {
             setState(() {
               _ubicacionSeleccionada = id;
-              ubicaciontext = ubicacion.direccionMaps;
+              ubicaciontext = ubicacion.maps_address;
             });
           },
         );
+
       },
     ).animate().fade().slideX(begin: -0.2);
   }
@@ -677,7 +680,7 @@ class _ReservaPageState extends State<ReservaPage> {
                   SizedBox(height: 20),
                   _buildPrecio(),
                   SizedBox(height: 20),
-                  _buildTYC(),
+                  _buildterms(),
                   SizedBox(height: 20),
                 ],
               ),
@@ -742,7 +745,9 @@ class _ReservaPageState extends State<ReservaPage> {
               ),
             ],
           ),
-          child: Row(
+          child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
             children: [
               imageBox1(0),
               const SizedBox(width: 10),
@@ -750,6 +755,7 @@ class _ReservaPageState extends State<ReservaPage> {
               const SizedBox(width: 10),
             ],
           ),
+          )
         ),
       ],
     );
@@ -796,7 +802,7 @@ class _ReservaPageState extends State<ReservaPage> {
           child: Column(
             children: [
               Text(
-                '${widget.nombre}',
+                '${widget.name}',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -805,7 +811,7 @@ class _ReservaPageState extends State<ReservaPage> {
               ),
               const SizedBox(height: 10),
               Text(
-                '${widget.descripcion}',
+                '${widget.description}',
                 style: TextStyle(
                   fontSize: 15,
                   color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
@@ -870,7 +876,7 @@ class _ReservaPageState extends State<ReservaPage> {
               ),
 
               Text(
-                '${_descripcionController.text}',
+                '${_descriptionController.text}',
                 style: TextStyle(
                   fontSize: 15,
                   color: Theme.of(context).colorScheme.surface,
@@ -1100,8 +1106,8 @@ class _ReservaPageState extends State<ReservaPage> {
                   children: [
                     Expanded(
                       child: RadioListTile<String>(
-                        value: 'efectivo',
-                        groupValue: _pago,
+                        value: 'cash',
+                        groupValue: _payment,
                         fillColor: MaterialStateProperty.resolveWith<Color>((
                           states,
                         ) {
@@ -1117,14 +1123,14 @@ class _ReservaPageState extends State<ReservaPage> {
                           ),
                         ),
                         onChanged: (value) {
-                          setState(() => _pago = value);
+                          setState(() => _payment = value);
                         },
                       ),
                     ),
                     Expanded(
                       child: RadioListTile<String>(
-                        value: 'tarjeta',
-                        groupValue: _pago,
+                        value: 'card',
+                        groupValue: _payment,
                         fillColor: MaterialStateProperty.resolveWith<Color>((
                           states,
                         ) {
@@ -1140,7 +1146,7 @@ class _ReservaPageState extends State<ReservaPage> {
                           ),
                         ),
                         onChanged: (value) {
-                          setState(() => _pago = value);
+                          setState(() => _payment = value);
                         },
                       ),
                     ),
@@ -1154,7 +1160,7 @@ class _ReservaPageState extends State<ReservaPage> {
     );
   }
 
-  Widget _buildTYC() {
+  Widget _buildterms() {
     return Column(
       children: [
         Row(
@@ -1209,7 +1215,7 @@ class _ReservaPageState extends State<ReservaPage> {
                           }
                           return Theme.of(context).colorScheme.surface;
                         }),
-                        groupValue: tyc,
+                        groupValue: terms,
                         activeColor: Theme.of(context).colorScheme.surface,
                         title: Text(
                           'Acepto los terminos y condiciones',
@@ -1219,7 +1225,7 @@ class _ReservaPageState extends State<ReservaPage> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            tyc = value!;
+                            terms = value!;
                           });
                         },
                       ),

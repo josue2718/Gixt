@@ -32,7 +32,6 @@ class CustomTextFormFieldPhone extends StatelessWidget {
       inputFormatters: [
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(10),
-        PhoneDashFormatter(),
       ],
       decoration: InputDecoration(
         labelText: label,

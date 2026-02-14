@@ -44,20 +44,18 @@ class _AgendaPageState extends State<AgendaPage> {
       api.agenda.clear();
     });
 
-    bool ok = await api.fetchData(
-    );
-
+    bool ok = await api.fetchAgendaData();
+    print(ok);
     if (!ok) {
       if (!mounted) return;
       Future.microtask(() async {
       await mostrarAlerta(
         context,
-        titulo: "Error",
-        mensaje: "No se pudo obtener la información",
-        tipo: TipoAlerta.error,
+        title: "Error",
+        message: "No se pudo obtener la información",
+        type: alert_type.error,
       );
       
-      Navigator.pop(context);
       });
 
     }
@@ -67,30 +65,10 @@ class _AgendaPageState extends State<AgendaPage> {
 
   
   Future<void> _onRefresh() async {
-    setState(() {
-    
-      hasMore = true;
-      api.agenda.clear();
-      isLoading = true;
-    });
-
-    print('Actualizando datos...');
-    bool ok = await api.updatedata();
-
-    if (!ok) {
-      if (!mounted) return;
-      Future.microtask(() async {
-      await mostrarAlerta(
-        context,
-        titulo: "Error",
-        mensaje: "No se pudo obtener la información",
-        tipo: TipoAlerta.error,
-      );
-      
-      ;
-      });
-    }
-    setState(() => isLoading = false);
+     await api.updatedata();
+     setState(() {
+       
+     });
   }
 
   @override
@@ -115,13 +93,13 @@ class _AgendaPageState extends State<AgendaPage> {
                       _buildSliverAppBar(),
                       const SliverToBoxAdapter(child: SizedBox(height: 20)),
                       SliverToBoxAdapter(child: _buildTitle1()),
-                      SliverToBoxAdapter(child: _buildServicios("en_proceso")),
+                      SliverToBoxAdapter(child: _buildServicios("in_progress")),
                       SliverToBoxAdapter(child: _buildTitle()),
-                      SliverToBoxAdapter(child: _buildServicios("pendiente")),
+                      SliverToBoxAdapter(child: _buildServicios("pending")),
                       SliverToBoxAdapter(child: _buildTitle2()),
-                      SliverToBoxAdapter(child: _buildServicios("finalizado")),
+                      SliverToBoxAdapter(child: _buildServicios("completed")),
                       SliverToBoxAdapter(child: _buildTitle3()),
-                      SliverToBoxAdapter(child: _buildServicios("cancelado")),
+                      SliverToBoxAdapter(child: _buildServicios("canceled")),
                       const SliverToBoxAdapter(child: SizedBox(height: 100)),
                     ],
                   ),
@@ -298,11 +276,10 @@ class _AgendaPageState extends State<AgendaPage> {
     );
   }
 
-
  Widget _buildServicios(String tipo) {
   // Filtrar por estado
   final List<Agenda> filtrados =
-      api.agenda.where((a) => a.estado == tipo).toList();
+      api.agenda.where((a) => a.job_status == tipo).toList();
 
   final bool isLoading1 = filtrados.isEmpty;
 
@@ -327,17 +304,17 @@ class _AgendaPageState extends State<AgendaPage> {
       final agenda = filtrados[index];
 
       return CardsAgenda(
-        url_img: agenda.imgServicio,
-        nombre: agenda.nombreServicio,
-        img_trabajador: agenda.imgTrabajador,
-        id_trabajo: agenda.idTrabajo,
-        trabajador: agenda.trabajador,
-        fecha: agenda.fechaTrabajo,
-        hora: agenda.horaTrabajo,
-        precio: agenda.precio,
-        descripcion: agenda.descripcionServicio,
-        direccion: agenda.direccion,
-        status: agenda.estado,
+        image_url: agenda.service_image,
+        name: agenda.service_name,
+        worker_image: agenda.worker_image,
+        job_id: agenda.job_id,
+        worker: agenda.worker_first_name,
+        date: agenda.job_date,
+        time: agenda.job_time,
+        price: agenda.price,
+        description: agenda.service_description,
+        address: agenda.maps_address,
+        status: agenda.job_status,
       )
           .animate()
           .fade(duration: 400.ms)

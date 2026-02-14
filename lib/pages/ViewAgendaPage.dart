@@ -42,9 +42,9 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
       Future.microtask(() async {
         await mostrarAlerta(
           context,
-          titulo: "Error",
-          mensaje: "No se pudo obtener la información",
-          tipo: TipoAlerta.error,
+          title: "Error",
+          message: "No se pudo obtener la información",
+          type: alert_type.error,
         );
 
         Navigator.pop(context);
@@ -65,9 +65,9 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
       Future.microtask(() async {
         await mostrarAlerta(
           context,
-          titulo: "Error",
-          mensaje: "No se pudo obtener la información",
-          tipo: TipoAlerta.error,
+          title: "Error",
+          message: "No se pudo obtener la información",
+          type: alert_type.error,
         );
 
         Navigator.pop(context);
@@ -120,10 +120,8 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                         ),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            _buildInformacion()
-                                .animate()
-                                .fade(duration: 400.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
+                            _buildInformacion(),
+                               
                             const SizedBox(height: 40),
                           ]),
                         ),
@@ -190,17 +188,19 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                 ),
               ),
               SizedBox(height: 20),
-              Barstatus(estadoTrabajo: agenda.agenda[0].estadoTrabajo),
+              Barstatus(estadoTrabajo: agenda.agenda[0].job_status).animate().fade().slideX(begin: -0.2,),
               SizedBox(height: 20),
-              _buildTrabajador(),
+              _buildTrabajador() .animate().fade().slideX(begin: -0.2,),
               SizedBox(height: 20),
-              _buildServicio(),
+              _buildServicio().animate().fade().slideX(begin: -0.2,),
               SizedBox(height: 20),
-              _buildTrabajo(),
+              _buildTrabajo() .animate().fade().slideX(begin: -0.2,),
               SizedBox(height: 20),
-              _buildUbicacion(),
+              _buildImg().animate().fade().slideX(begin: -0.2,),
               SizedBox(height: 20),
-              _buildPrecio(),
+              _buildUbicacion() .animate().fade().slideX(begin: -0.2,),
+              SizedBox(height: 20),
+              _buildPrecio().animate().fade().slideX(begin: -0.2,),
             ],
           ),
           const SizedBox(height: 20),
@@ -273,8 +273,10 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
   Widget _buildTrabajador() {
     return Column(
       children: [
+        SizedBox(height: 20),
         Row(
           children: [
+            SizedBox(height: 20),
             Text(
               'Trabajador',
               textAlign: TextAlign.center,
@@ -311,7 +313,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
               Circleimage(
                 w: 80,
                 h: 80,
-                link_imagen: agenda.agenda[0].trabajadorImagen,
+                image_url: agenda.agenda[0].worker_image,
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -319,11 +321,67 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                        child: Text(
+                          agenda.agenda[0].worker_username,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                        ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorWhite.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${agenda.agenda[0].worker_rating}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: colorBlack,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
                     Text(
-                      '${agenda.agenda[0].trabajadorNombre}',
+                      agenda.agenda[0].worker_description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
                         color: Theme.of(context).colorScheme.surface,
                       ),
                     ),
@@ -378,7 +436,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
           child: Column(
             children: [
               Text(
-                '${agenda.agenda[0].nombreServicio}',
+                '${agenda.agenda[0].service_name}',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w600,
@@ -387,7 +445,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
               ),
               const SizedBox(height: 10),
               Text(
-                '${agenda.agenda[0].descripcionServicio}',
+                '${agenda.agenda[0].service_description}',
                 style: TextStyle(
                   fontSize: 15,
                   color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
@@ -452,7 +510,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
               ),
 
               Text(
-                '${agenda.agenda[0].descripcion}',
+                '${agenda.agenda[0].description}',
                 style: TextStyle(
                   fontSize: 15,
                   color: Theme.of(context).colorScheme.surface,
@@ -479,7 +537,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${agenda.agenda[0].fechaTrabajo}',
+                    '${agenda.agenda[0].job_date}',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -494,7 +552,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '${agenda.agenda[0].horaTrabajo}',
+                    '${agenda.agenda[0].job_time}',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
@@ -549,7 +607,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
           ),
           child: Row(
             children: [
-              imageBox(agenda.agenda[0].ubicacionImagen),
+              imageBox(agenda.agenda[0].location_image),
               SizedBox(width: 20),
               Expanded(
                 child: Column(
@@ -557,14 +615,14 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '${agenda.agenda[0].direccionMaps}',
+                      '${agenda.agenda[0].maps_address}',
                       style: TextStyle(
                         fontSize: 15,
                         color: Theme.of(context).colorScheme.surface,
                       ),
                     ),
                     Text(
-                      '${agenda.agenda[0].estadoUbicacion} ${agenda.agenda[0].colonia} ',
+                      '${agenda.agenda[0].state} ${agenda.agenda[0].neighborhood} ',
                       style: TextStyle(
                         fontSize: 15,
                         color: Theme.of(context).colorScheme.surface,
@@ -573,7 +631,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                     SizedBox(height: 20),
                     ElevatedButton.icon(
                       onPressed: () {
-                        // abrirGoogleMaps(latitud, longitud);
+                        abrirGoogleMaps(agenda.agenda[0].latitude, agenda.agenda[0].longitude);
                       },
                       icon: const Icon(Icons.map, color: colorWhite),
                       label: const Text(
@@ -670,7 +728,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                         ],
                       ),
                       child: Text(
-                        '${agenda.agenda[0].precio}',
+                        '${agenda.agenda[0].price}',
                         style: GoogleFonts.poppins(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -717,7 +775,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                         ],
                       ),
                       child: Text(
-                        '${agenda.agenda[0].tipoPago}',
+                        '${agenda.agenda[0].payment_method}',
                         style: GoogleFonts.poppins(
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
@@ -738,4 +796,58 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
       ],
     );
   }
+
+  Widget _buildImg() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            SizedBox(height: 20),
+            Text(
+              'Imagenes',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 23,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.surface,
+              ),
+            ),
+            Spacer(),
+            Icon(
+              Icons.photo,
+              size: 25,
+              color: Theme.of(context).colorScheme.surface,
+            ),
+          ],
+        ),
+        SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+            children: [
+              imageBox(agenda.agenda[0].image_1),
+              const SizedBox(width: 20),
+              imageBox(agenda.agenda[0].image_2),
+              const SizedBox(width: 10),
+            ],
+          ),
+          )
+        ),
+      ],
+    );
+  }
+
 }

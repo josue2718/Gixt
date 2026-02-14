@@ -3,28 +3,28 @@ import 'package:flutter_svg/svg.dart';
 import 'colors.dart';
 
 // Definimos los tipos de alerta para mayor control
-enum TipoAlerta { exito, error, advertencia }
+enum alert_type { exito, error, advertencia }
 
 Future mostrarAlerta(BuildContext context, {
-  required String titulo, 
-  required String mensaje, 
-  required TipoAlerta tipo
+required String title,
+required String message,
+required alert_type type
 }) {
   
   // Configuración dinámica según el tipo
   String assetPath;
   Color colorIcono;
 
-  switch (tipo) {
-    case TipoAlerta.exito:
+  switch (type) {
+    case alert_type.exito:
       assetPath = 'assets/correcto.png'; // Aquí usas la palomita
       colorIcono = const Color.fromARGB(255, 48, 255, 75);
       break;
-    case TipoAlerta.error:
+    case alert_type.error:
       assetPath = 'assets/error.png';      // Aquí usas la X
       colorIcono = Colors.redAccent;
       break;
-    case TipoAlerta.advertencia:
+    case alert_type.advertencia:
       assetPath = 'assets/alerta.png'; // Aquí usas el signo !
       colorIcono = Colors.orangeAccent;
       break;
@@ -63,7 +63,7 @@ Future mostrarAlerta(BuildContext context, {
               ),
               SizedBox(height: 20),
               Text(
-                titulo.toUpperCase(),
+                title.toUpperCase(),
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface,
                   fontSize: 20,
@@ -72,7 +72,7 @@ Future mostrarAlerta(BuildContext context, {
               ),
               SizedBox(height: 10),
               Text(
-                mensaje,
+                message,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
@@ -100,7 +100,7 @@ Future mostrarAlerta(BuildContext context, {
                 ),
                 
               ),
-              if (tipo == TipoAlerta.advertencia)...[
+              if (type == alert_type.advertencia)...[
               TextButton(
                 onPressed: () {
                   Navigator.pop(context, false); 

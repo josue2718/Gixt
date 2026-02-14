@@ -1,26 +1,29 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 
 class Anuncio {
-  int id_anuncio;
-  String img;
+  int advertisement_id;
+  String image_url;
 
-  Anuncio({required this.id_anuncio, required this.img});
+  Anuncio({required this.advertisement_id, required this.image_url});
 
   factory Anuncio.fromJson(Map<String, dynamic> json) {
-    return Anuncio(id_anuncio: json['id_anuncio'], img: json['img']);
+    return Anuncio(advertisement_id: json['advertisement_id'], image_url: json['image_url']);
   }
 
   @override
   String toString() {
-    return 'Empresa(nombre: $id_anuncio, url_img: $img)';
+    return 'Empresa(nombre: $advertisement_id, url_img: $image_url)';
   }
 }
 
 class Anuncio_service {
-  List<Anuncio> anuncio = []; 
+  List<Anuncio> anuncio = [];
   bool isLoading = false;
   bool hasMore = true;
   static const String _cacheKey = 'anuncio_cache';
@@ -29,22 +32,29 @@ class Anuncio_service {
   set loading(bool loading) {}
 
   Future<void> updatedata() async {
-    await fetchData(forceRefresh: true);
+    print("📦 actualizando anuncios");
+    await fetchFromApi();
   }
 
-  Future<bool> fetchData({bool forceRefresh = false}) async {
+  Future<bool> fetchAnuncioData() async {
+    final prefs = await SharedPreferences.getInstance();
 
-    final prefs = await SharedPreferences.getInstance(); // ⏱ cache config
-    const cacheDuration = Duration(minutes: 10); // 🔍 revisar cache
+    // config cache
+    const cacheDuration = Duration(days: 1);
+
+    // leer cache
     final cachedData = prefs.getString(_cacheKey);
     final cachedTime = prefs.getInt(_cacheTimeKey);
+
     final now = DateTime.now();
 
-    if (!forceRefresh &&
-      cachedData != null &&
-      cachedTime != null &&
-      now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) <
-      cacheDuration) {
+    //  validar cache
+    if (cachedData != null &&
+        cachedTime != null &&
+        now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) <
+            cacheDuration) {
+      print("📦 Usando cache anuncios");
+
       final List<dynamic> jsonData = json.decode(cachedData);
       anuncio
         ..clear()
@@ -53,20 +63,32 @@ class Anuncio_service {
       return true;
     }
 
+    print("🚫 Cache inválido → API anuncios");
+    return await fetchFromApi();
+  }
+
+  Future<bool> fetchFromApi() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    print("🌐 Llamando API anuncios");
+
     final token = prefs.getString('token');
+    String? id = prefs.getString('id');
+
     final headers = {'Authorization': 'Bearer $token'};
 
     try {
       isLoading = true;
 
-      final response = await http.get(
-        Uri.parse('${dotenv.env['API_URL']}/api/Anuncios'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse('${dotenv.env['API_URL']}/api/Advertisements'),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonResponse = json.decode(response.body);
-        print(jsonResponse);
         anuncio
           ..clear()
           ..addAll(jsonResponse.map((e) => Anuncio.fromJson(e)));
@@ -76,11 +98,20 @@ class Anuncio_service {
           _cacheTimeKey,
           DateTime.now().millisecondsSinceEpoch,
         );
-
         return true;
-      } else {
-        return false;
       }
+
+      print("❌ Error HTTP: ${response.statusCode}");
+      return false;
+    } on TimeoutException {
+      print("⏱️ Timeout de la API");
+      return false;
+    } on SocketException {
+      print("🌐 Sin conexión a internet");
+      return false;
+    } catch (e) {
+      print("❌ Error inesperado: $e");
+      return false;
     } finally {
       isLoading = false;
     }

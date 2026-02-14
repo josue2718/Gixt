@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -16,6 +17,7 @@ import 'package:gixt/components/inputs/Input.dart';
 import 'package:gixt/components/inputs/Input_Fecha.dart';
 import 'package:gixt/components/inputs/Input_Phone.dart';
 import 'package:gixt/components/inputs/Pick_Image.dart';
+import 'package:gixt/pages/UbicacionesPage.dart';
 import 'package:gixt/providers/theme_provider.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
 import 'package:gixt/services/ubicaciones/location_service.dart';
@@ -42,28 +44,18 @@ class _PerfilPageState extends State<PerfilPage> {
   bool hasMore = true;
   final User_service user = User_service();
   final ScrollController _scrollController = ScrollController();
-  final _usernameController = TextEditingController();
-  final _formKeyinfo = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _passwordconfirmarController = TextEditingController();
   final _first_nameController = TextEditingController();
   final _last_nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _fecha_nacimientoController = TextEditingController();
+  final _birth_dateController = TextEditingController();
   final PreferencesService _preferencesService = PreferencesService();
-  String? _genero;
+  String? _gender;
   String? _imageUrl;
   File? _image;
   String? _img;
   String? _user;
-  double longitud = 0;
-  double latitud = 0;
-  String? calle;
-  String? ciudad;
-  String? estado;
-  GoogleMapController? mapController;
-  LatLng? posicionActual = LatLng(20.9674, -89.5926);
+
 
   Future<void> _updateUser(String user, String img) async {
     await _preferencesService.clearPreferencesUser();
@@ -77,8 +69,7 @@ class _PerfilPageState extends State<PerfilPage> {
   void initState() {
     super.initState();
     print("Entré a Mi perfil");
-    user.fetchData();
-    obtenerCoordenadas();
+    _Initial();
   }
 
   Future<void> _onRefresh() async {
@@ -90,15 +81,14 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   Future<void> _Initial() async {
-    obtenerCoordenadas();
-    bool ok = await user.fetchData();
+    bool ok = await user.fetchUserData();
     if (!ok) {
       if (!mounted) return;
       mostrarAlerta(
         context,
-        titulo: "Error",
-        mensaje: "No se pudo obtener la información",
-        tipo: TipoAlerta.error,
+        title: "Error",
+        message: "No se pudo obtener la información",
+        type: alert_type.error,
       );
     }
 
@@ -111,9 +101,9 @@ class _PerfilPageState extends State<PerfilPage> {
   void _logout() async {
     bool continuar = await mostrarAlerta(
       context,
-      titulo: "Logout",
-      mensaje: 'Seguro que deseas cerrar sesión?',
-      tipo: TipoAlerta.advertencia,
+      title: "Logout",
+      message: 'Seguro que deseas cerrar sesión?',
+      type: alert_type.advertencia,
     );
     if (!continuar) return;
     final prefs = await SharedPreferences.getInstance();
@@ -132,16 +122,13 @@ class _PerfilPageState extends State<PerfilPage> {
     );
 
     final result = await UpdateService.Crear(
-      firstName: _first_nameController.text,
-      lastName: _last_nameController.text,
-      imagen: _image,
+      first_name: _first_nameController.text,
+      last_name: _last_nameController.text,
+      image: _image,
       phone: _phoneController.text,
-      ciudad: ciudad!,
-      longitud: longitud,
-      latitud: latitud,
-      genero: _genero ?? "",
-      fechaNacimiento: _fecha_nacimientoController.text,
-      tokenFcm: "cfddds",
+      gender: _gender ?? "",
+      birth_date: _birth_dateController.text,
+
     );
 
     Navigator.pop(context);
@@ -150,18 +137,18 @@ class _PerfilPageState extends State<PerfilPage> {
       final data = result['data'];
       mostrarAlerta(
         context,
-        titulo: "Datos Actualizados",
-        mensaje: 'tus datos se actualizo correctamente',
-        tipo: TipoAlerta.exito,
+        title: "Datos Actualizados",
+        message: 'tus datos se actualizo correctamente',
+        type: alert_type.exito,
       );
       await user.updatedata();
-      _updateUser(user.user[0].username, user.user[0].url_img);
+      _updateUser(user.user[0].username, user.user[0].image_url);
     } else {
       mostrarAlerta(
         context,
-        titulo: "Error",
-        mensaje: result['message'],
-        tipo: TipoAlerta.error,
+        title: "Error",
+        message: result['message'],
+        type: alert_type.error,
       );
     }
   }
@@ -176,34 +163,6 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-  void getcalle() {
-    GeocodingHelper.obtenerCiudadDesdeCoordenadas(
-      latitud: latitud,
-      longitud: longitud,
-      onResult: (ciudadResult, calleResult, estadoResult) {
-        setState(() {
-          ciudad = ciudadResult;
-          calle = calleResult;
-          estado = estadoResult;
-          print(calle);
-        });
-      },
-    );
-  }
-
-  void obtenerCoordenadas() async {
-    try {
-      Position pos = await LocationService.obtenerUbicacion();
-      latitud = pos.latitude;
-      longitud = pos.longitude;
-      setState(() {
-        posicionActual = LatLng(pos.latitude, pos.longitude);
-      });
-      getcalle();
-    } catch (e) {
-      print(e);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -211,7 +170,7 @@ class _PerfilPageState extends State<PerfilPage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: FutureBuilder(
-          future: Future.wait([user.fetchData()]),
+          future: Future.wait([]),
           builder: (context, snapshot) {
             if (user.user.isEmpty) {
               return Indicador();
@@ -273,12 +232,12 @@ class _PerfilPageState extends State<PerfilPage> {
               hoverColor: Colors.transparent,
               borderRadius: BorderRadius.circular(12),
               onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(
-                //     builder: (context) => const UbicacionesPage(),
-                //   ),
-                // );
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UbicacionesPage(),
+                  ),
+                );
               },
               child: Container(
                 width: 80,
@@ -474,7 +433,7 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   Widget _buildIMGPerfil() {
-    _imageUrl = "${user.user[0].url_img}";
+    _imageUrl = "${user.user[0].image_url}";
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Column(
@@ -483,16 +442,17 @@ class _PerfilPageState extends State<PerfilPage> {
             clipBehavior: Clip.none,
             children: [
               Container(
+                width: 150,
+                height: 150,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: colorsecundario, width: 3),
                 ),
-                width: 150,
-                height: 150,
                 child: CircleAvatar(
+                  backgroundColor: Colors.transparent,
                   backgroundImage: _image != null
                       ? FileImage(_image!)
-                      : NetworkImage(_imageUrl!),
+                      : CachedNetworkImageProvider(_imageUrl!),
                 ),
               ),
               SizedBox(height: 25),
@@ -530,8 +490,8 @@ class _PerfilPageState extends State<PerfilPage> {
     _last_nameController.text = user.user[0].last_name;
     _emailController.text = user.user[0].email;
     _phoneController.text = user.user[0].phone;
-    _fecha_nacimientoController.text = user.user[0].fecnac;
-    _genero = user.user[0].genero;
+    _birth_dateController.text = user.user[0].birth_date;
+    _gender = user.user[0].gender;
 
     return Padding(
       padding: const EdgeInsets.all(15),
@@ -617,7 +577,7 @@ class _PerfilPageState extends State<PerfilPage> {
             const SizedBox(height: 20),
 
             /// FECHA NACIMIENTO (se queda como TextFormField por formatter)
-            CustomTextFormFieldfecha(controller: _fecha_nacimientoController),
+            CustomTextFormFieldfecha(controller:_birth_dateController),
 
             const SizedBox(height: 20),
 
@@ -634,7 +594,7 @@ class _PerfilPageState extends State<PerfilPage> {
                 Expanded(
                   child: RadioListTile<String>(
                     value: 'H',
-                    groupValue: _genero,
+                    groupValue: _gender,
                     fillColor: MaterialStateProperty.resolveWith<Color>((
                       states,
                     ) {
@@ -650,14 +610,14 @@ class _PerfilPageState extends State<PerfilPage> {
                       ),
                     ),
                     onChanged: (value) {
-                      setState(() => _genero = value);
+                      setState(() => _gender = value);
                     },
                   ),
                 ),
                 Expanded(
                   child: RadioListTile<String>(
                     value: 'M',
-                    groupValue: _genero,
+                    groupValue: _gender,
                     fillColor: MaterialStateProperty.resolveWith<Color>((
                       states,
                     ) {
@@ -673,7 +633,7 @@ class _PerfilPageState extends State<PerfilPage> {
                       ),
                     ),
                     onChanged: (value) {
-                      setState(() => _genero = value);
+                      setState(() => _gender = value);
                     },
                   ),
                 ),

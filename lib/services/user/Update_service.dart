@@ -7,16 +7,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class UpdateService {
   static Future<Map<String, dynamic>> Crear({
-    required String firstName,
-    required String lastName,
-    final File? imagen, // ahora es File
+    required String first_name,
+    required String last_name,
+    final File? image, // ahora es File
     required String phone,
-    required String ciudad,
-    required double longitud,
-    required double latitud,
-    required String genero,
-    required String fechaNacimiento,
-    required String tokenFcm,
+    required String gender,
+    required String birth_date,
   }) async {
     int attempts = 0;
     const int maxAttempts = 2;
@@ -31,23 +27,20 @@ class UpdateService {
         var request = http.MultipartRequest('PUT', uri);
 
         // Campos de texto
-        request.fields['id_user'] = id_user!;
-        request.fields['first_name'] = firstName;
-        request.fields['last_name'] = lastName;
+        request.fields['user_id'] = id_user!;
+        request.fields['first_name'] = first_name;
+        request.fields['last_name'] = last_name;
         request.fields['phone'] = phone;
-        request.fields['ciudad'] = ciudad;
-        request.fields['longitud'] = longitud.toString();
-        request.fields['latitud'] = latitud.toString();
-        request.fields['genero'] = genero;
-        request.fields['fecha_nacimiento'] = fechaNacimiento;
-        request.fields['token_fcm'] = tokenFcm;
+        request.fields['gender'] = gender;
+        request.fields['birth_date'] = birth_date;
+     
 
         // Archivo
-        if (imagen!= null) {
+        if (image!= null) {
           request.files.add(
             await http.MultipartFile.fromPath(
-              'imagen',
-              imagen!.path,
+              'image',
+              image!.path,
             ),
           );
         }

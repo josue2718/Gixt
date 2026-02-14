@@ -25,8 +25,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
 class ServicioPage extends StatefulWidget {
-  const ServicioPage({super.key, required this.id_servicio});
-  final String id_servicio;
+  const ServicioPage({super.key, required this.service_id});
+  final String service_id;
   @override
   State<ServicioPage> createState() => _ServicioPageState();
 }
@@ -46,22 +46,24 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   Future<void> _initial() async {
-    bool ok = await serviciosById.fetchServicioData(widget.id_servicio);
+    bool ok = await serviciosById.fetchServicioData(widget.service_id);
     if (!ok) {
       if (!mounted) return;
       Future.microtask(() async {
         await mostrarAlerta(
           context,
-          titulo: "Error",
-          mensaje: "No se pudo obtener la información",
-          tipo: TipoAlerta.error,
+          title: "Error",
+          message: "No se pudo obtener la información",
+          type: alert_type.error,
         );
 
         Navigator.pop(context);
       });
     }
-    fav = serviciosById.servicios[0].fav;
-    setState(() {});
+
+    setState(() {
+      fav = serviciosById.servicios[0].favorite;
+    });
   }
 
   Future<void> _onRefresh() async {
@@ -69,15 +71,15 @@ class _ServicioPageState extends State<ServicioPage> {
       print('Actualizando datos...');
       hasMore = true;
     });
-    bool ok = await serviciosById.fetchServicioData(widget.id_servicio);
+    bool ok = await serviciosById.fetchServicioData(widget.service_id);
     if (!ok) {
       if (!mounted) return;
       Future.microtask(() async {
         await mostrarAlerta(
           context,
-          titulo: "Error",
-          mensaje: "No se pudo obtener la información",
-          tipo: TipoAlerta.error,
+          title: "Error",
+          message: "No se pudo obtener la información",
+          type: alert_type.error,
         );
 
         Navigator.pop(context);
@@ -90,7 +92,7 @@ class _ServicioPageState extends State<ServicioPage> {
     setState(() {
       fav = !fav;
     });
-    final result = await FavoritoService.Crear(id_servicio: widget.id_servicio);
+    final result = await FavoritoService.Crear(service_id: widget.service_id);
     print(result);
     if (result['success'] == true) {
       setState(() {
@@ -196,7 +198,7 @@ class _ServicioPageState extends State<ServicioPage> {
   Widget _buildTitle() {
     return Expanded(
       child: Text(
-        serviciosById.servicios[0].nombreServicio,
+        serviciosById.servicios[0].service_name,
         maxLines: 2,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
@@ -251,7 +253,7 @@ class _ServicioPageState extends State<ServicioPage> {
               Circleimage(
                 w: 80,
                 h: 80,
-                link_imagen: serviciosById.servicios[0].imgTrabajador,
+                image_url: serviciosById.servicios[0].worker_img,
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -259,17 +261,63 @@ class _ServicioPageState extends State<ServicioPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      serviciosById.servicios[0].trabajador,
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                        child: Text(
+                          serviciosById.servicios[0].worker_name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                        ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorWhite.withOpacity(0.95),
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.15),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.star_rounded,
+                                color: Colors.amber,
+                                size: 18,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${serviciosById.servicios[0].worker_rating}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: colorBlack,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      serviciosById.servicios[0].desTrabajador,
+                      serviciosById.servicios[0].des_trabajador,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -357,7 +405,7 @@ class _ServicioPageState extends State<ServicioPage> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      '\$ ${serviciosById.servicios[0].precio}',
+                      '\$ ${serviciosById.servicios[0].price}',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -397,7 +445,7 @@ class _ServicioPageState extends State<ServicioPage> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      '${serviciosById.servicios[0].precio}',
+                      '${serviciosById.servicios[0].price}',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -441,7 +489,7 @@ class _ServicioPageState extends State<ServicioPage> {
                     ),
                     SizedBox(height: 5),
                     Text(
-                      '${serviciosById.servicios[0].calificacion}',
+                      '${serviciosById.servicios[0].rating}',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -459,91 +507,88 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   Widget _buildImgServicios() {
-    final isLoading1 = serviciosById.servicios[0].imagenes.isEmpty;
+    final isLoading1 = serviciosById.servicios[0].images.isEmpty;
     return Column(
-        children: [
-          Row(
-            children: [
-              Text(
-                'Mis Referencias ',
-                style: GoogleFonts.poppins(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
+      children: [
+        Row(
+          children: [
+            Text(
+              'Mis Referencias ',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.surface,
               ),
-              Spacer(),
-              InkWell(
-                onTap: () {
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(builder: (context) => CategoriasPage()),
-                  // );
-                },
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 20,
-                  color: Theme.of(context).colorScheme.surface,
+            ),
+            Spacer(),
+            InkWell(
+              onTap: () {
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
+                // );
+              },
+              child: Icon(
+                Icons.arrow_forward_ios,
+                size: 20,
+                color: Theme.of(context).colorScheme.surface,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 200,
+                child: GridView.builder(
+                  controller: _scrollController,
+                  scrollDirection: Axis.horizontal,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 1,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.5,
+                  ),
+                  itemCount: isLoading1
+                      ? 3 //  skeletons visibles
+                      : serviciosById.servicios[0].images.length,
+                  itemBuilder: (context, index) {
+                    if (isLoading1) {
+                      return const CardsImgSkeleton();
+                    }
+                    try {
+                      final servicio = serviciosById.servicios[0].images[index];
+
+                      return CardsImage(url_img: servicio)
+                          .animate()
+                          .fade(duration: 400.ms)
+                          .slideY(begin: 0.15)
+                          .scale(begin: const Offset(0.96, 0.96));
+                    } catch (e) {
+                      return const SizedBox(); // widget vacío
+                    }
+                  },
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primary,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(
-                  height: 200,
-                  child: GridView.builder(
-                    controller: _scrollController,
-                    scrollDirection: Axis.horizontal,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 1,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 1.5,
-                        ),
-                    itemCount: isLoading1
-                        ? 3 //  skeletons visibles
-                        : serviciosById.servicios[0].imagenes.length,
-                    itemBuilder: (context, index) {
-                      if (isLoading1) {
-                        return const CardsImgSkeleton();
-                      }
-                      try {
-                        final servicio =
-                            serviciosById.servicios[0].imagenes[index];
-
-                        return CardsImage(url_img: servicio)
-                            .animate()
-                            .fade(duration: 400.ms)
-                            .slideY(begin: 0.15)
-                            .scale(begin: const Offset(0.96, 0.96));
-                      } catch (e) {
-                        return const SizedBox(); // widget vacío
-                      }
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      
+        ),
+      ],
     );
   }
 
@@ -587,7 +632,7 @@ class _ServicioPageState extends State<ServicioPage> {
             ],
           ),
           child: Text(
-            serviciosById.servicios[0].descripcion,
+            serviciosById.servicios[0].description,
             style: TextStyle(
               fontSize: 15,
               color: Theme.of(context).colorScheme.surface,
@@ -659,9 +704,9 @@ class _ServicioPageState extends State<ServicioPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ReservaPage(
-                      id_servicio: serviciosById.servicios[0].idServicio,
-                      nombre: serviciosById.servicios[0].nombreServicio,
-                      descripcion : serviciosById.servicios[0].descripcion
+                      service_id: serviciosById.servicios[0].service_id,
+                      name: serviciosById.servicios[0].service_name,
+                      description: serviciosById.servicios[0].description,
                     ),
                   ),
                 );

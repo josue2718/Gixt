@@ -1,48 +1,51 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 
 class User {
-  String id_user;
+  String user_id;
   String username;
   String first_name;
   String last_name;
   String phone;
-  String url_img;
+  String image_url;
   String email;
-  String fecnac;
-  String genero;
+  String birth_date;
+  String gender;
 
   User({
-    required this.id_user,
+    required this.user_id,
     required this.username,
-    required this.url_img,
+    required this.image_url,
     required this.first_name,
     required this.last_name,
     required this.phone,
     required this.email,
-    required this.fecnac,
-    required this.genero,
+    required this.birth_date,
+    required this.gender,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id_user: json['id_user'],
+      user_id: json['user_id'],
       username: json['username'],
-      url_img: json['imagen'],
+      image_url: json['imagen'],
       first_name: json['first_name'],
       last_name: json['last_name'],
       phone: json['phone'],
       email: json['email'],
-      fecnac: json['fecha_nacimiento'],
-      genero: json['genero'],
+      birth_date: json['birth_date'],
+      gender: json['gender'],
     );
   }
 
   @override
   String toString() {
-    return 'Empresa(nombre: $username, url_img: $url_img)';
+    return 'Empresa(nombre: $username, url_img: $image_url)';
   }
 }
 
@@ -56,45 +59,60 @@ class User_service {
   set loading(bool loading) {}
 
   Future<void> updatedata() async {
-    await fetchData(forceRefresh: true);
+    print("📦 actualizando user");
+    await fetchFromApi();
   }
 
-  Future<bool> fetchData({bool forceRefresh = false}) async {
-  
+  Future<bool> fetchUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    String? id_user = prefs.getString('id'); 
-    const cacheDuration = Duration(minutes: 10);
 
-    // 🔍 revisar cache
+    // config cache
+    const cacheDuration = Duration(days: 1);
+
+    // leer cache
     final cachedData = prefs.getString(_cacheKey);
     final cachedTime = prefs.getInt(_cacheTimeKey);
 
     final now = DateTime.now();
 
-    if (!forceRefresh &&
-        cachedData != null &&
+    //  validar cache
+    if (cachedData != null &&
         cachedTime != null &&
         now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) <
             cacheDuration) {
+      print("📦 Usando cache user");
 
-        final Map<String, dynamic> jsonData = json.decode(cachedData);
-        user
-          ..clear()
-          ..add(User.fromJson(jsonData));
+      final Map<String, dynamic> jsonData = json.decode(cachedData);
+      user
+        ..clear()
+        ..add(User.fromJson(jsonData));
 
       return true;
     }
 
+    print("🚫 Cache inválido → API user");
+    return await fetchFromApi();
+  }
+
+  Future<bool> fetchFromApi() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    print("🌐 Llamando API user");
+
     final token = prefs.getString('token');
+    String? id_user = prefs.getString('id');
+
     final headers = {'Authorization': 'Bearer $token'};
 
     try {
       isLoading = true;
 
-      final response = await http.get(
-        Uri.parse('${dotenv.env['API_URL']}/api/Users/id/${id_user}'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse('${dotenv.env['API_URL']}/api/Users/id/${id_user}'),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
@@ -109,10 +127,18 @@ class User_service {
           DateTime.now().millisecondsSinceEpoch,
         );
         return true;
-      } else {
-        print('Error en la solicitud: ${response.statusCode}');
-        return false;
       }
+      print("❌ Error HTTP: ${response.statusCode}");
+      return false;
+    } on TimeoutException {
+      print("⏱️ Timeout de la API");
+      return false;
+    } on SocketException {
+      print("🌐 Sin conexión a internet");
+      return false;
+    } catch (e) {
+      print("❌ Error inesperado: $e");
+      return false;
     } finally {
       isLoading = false;
     }

@@ -7,16 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AddServicioService {
   static Future<Map<String, dynamic>> Crear({
-    required String id_servicio,
-    required String id_ubicacion,
-    required String fecha_trabajo,
-    required String hora_trabajo,
-    required String problema,
-    required String descripcion,
+    required String service_id,
+    required String location_id,
+    required String job_date,
+    required String job_time,
+    required String problem,
+    required String description,
     required File image_1,
     required File image_2,
-    required bool tyc,
-    required String tipo_pago
+    required String payment_method,
+    required bool terms,
+
 
   }) async {
     
@@ -30,32 +31,33 @@ class AddServicioService {
     while (attempts < maxAttempts) {
       print("llamando a crear");
       try {
-        final uri = Uri.parse('${dotenv.env['API_URL']}/api/Trabajos');
+        final uri = Uri.parse('${dotenv.env['API_URL']}/api/Jobs');
 
         // Crear MultipartRequest
         var request = http.MultipartRequest('POST', uri);
 
         // Campos de texto
-        request.fields['id_cliente'] = id_user!;
-        request.fields['id_servicio'] = id_servicio;
-        request.fields['id_ubicacion'] = id_ubicacion;
-        request.fields['fecha_trabajo'] = fecha_trabajo;
-        request.fields['hora_trabajo'] = hora_trabajo;
-        request.fields['problema'] = problema;
-        request.fields['descripcion'] = descripcion;
-        request.fields['tipo_pago'] = tipo_pago;
-        request.fields['tyc'] = tyc.toString();
+        request.fields['client_id'] = id_user!;
+        request.fields['service_id'] = service_id;
+        request.fields['location_id'] = location_id;
+        request.fields['job_date'] = job_date;
+        request.fields['job_time'] = job_time;
+        request.fields['problem'] = problem;
+        request.fields['description'] = description;
+        request.fields['payment_method'] = payment_method;
+        request.fields['terms'] = terms.toString();
+
 
         // Archivo
         request.files.add(
           await http.MultipartFile.fromPath(
-            'imagen_1', // nombre del campo que espera el backend
+            'image_1', // nombre del campo que espera el backend
             image_1.path,
           ),
         );
         request.files.add(
           await http.MultipartFile.fromPath(
-            'imagen_2', // nombre del campo que espera el backend
+            'image_2', // nombre del campo que espera el backend
             image_2.path,
           ),
         );

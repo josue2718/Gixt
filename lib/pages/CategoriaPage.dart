@@ -11,7 +11,7 @@ import 'package:gixt/components/cards/cardsCategoria.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/sketor/cardsCategoria.dart';
 import 'package:gixt/services/Anuncios_service.dart';
-import 'package:gixt/services/Auth/categorias_service.dart';
+import 'package:gixt/services/servicios/categorias_service.dart';
 import 'package:gixt/services/servicios/serviciosByCat_service.dart';
 import 'package:gixt/services/servicios/servicios_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,12 +20,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
 
 class CategoriaPage extends StatefulWidget {
-  final int id_categoria;
-  final String nombre;
+  final int category_id;
+  final String name;
   const CategoriaPage({
     super.key,
-    required this.id_categoria,
-    required this.nombre,
+    required this.category_id,
+    required this.name,
   });
 
   @override
@@ -38,6 +38,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
   final ValueNotifier<int> _currentIndexNotifier = ValueNotifier<int>(0);
   bool isLoading = false;
   bool hasMore = true;
+  bool timeout = false;
   int pageNumber = 1;
   String? img;
   String? username;
@@ -57,90 +58,81 @@ class _CategoriaPageState extends State<CategoriaPage> {
   Future<void> _loadInitialData() async {
     setState(() {
       isLoading = true;
+      timeout = false;
       pageNumber = 1;
-      hasMore = true;
       api.servicios.clear();
     });
 
-    bool ok = await api.fetchServicioCatData(
-      widget.id_categoria,
-      pageNumber,
-    );
+    bool ok = await api.fetchServicioCatData(widget.category_id, pageNumber);
 
     if (!ok) {
       if (!mounted) return;
       Future.microtask(() async {
-      await mostrarAlerta(
-        context,
-        titulo: "Error",
-        mensaje: "No se pudo obtener la información",
-        tipo: TipoAlerta.error,
-      );
-      
-      Navigator.pop(context);
-      });
+        await mostrarAlerta(
+          context,
+          title: "Error",
+          message: "No se pudo obtener la información",
+          type: alert_type.error,
+        );
 
+        Navigator.pop(context);
+      });
     }
 
-    setState(() => isLoading = false);
+    _Validation();
   }
 
   Future<void> _loadMore() async {
     if (isLoading || !hasMore) return;
-
-       setState(() => isLoading = false);
+    isLoading = true;
     pageNumber++;
-
-   bool ok = await api.fetchServicioCatData(
-      widget.id_categoria,
-      pageNumber,
-    );
-
-    if (!ok) {
-      if (!mounted) return;
-     Future.microtask(() async {
-      await mostrarAlerta(
-        context,
-        titulo: "Error",
-        mensaje: "No se pudo obtener la información",
-        tipo: TipoAlerta.error,
-      );
-      
-      Navigator.pop(context);
-      });
-    }
+    bool ok = await api.fetchServicioCatData(widget.category_id, pageNumber);
     setState(() => isLoading = false);
   }
 
   Future<void> _onRefresh() async {
+
     setState(() {
-    
-      hasMore = true;
+      isLoading = true;
+      timeout = false;
       pageNumber = 1;
       api.servicios.clear();
-      isLoading = true;
     });
 
-    print('Actualizando datos...');
-    bool ok = await api.fetchServicioCatData(
-      widget.id_categoria,
-      pageNumber,
-    );
+    bool ok = await api.fetchServicioCatData(widget.category_id, pageNumber);
 
     if (!ok) {
       if (!mounted) return;
       Future.microtask(() async {
-      await mostrarAlerta(
-        context,
-        titulo: "Error",
-        mensaje: "No se pudo obtener la información",
-        tipo: TipoAlerta.error,
-      );
-      
-      Navigator.pop(context);
+        await mostrarAlerta(
+          context,
+          title: "Error",
+          message: "No se pudo obtener la información",
+          type: alert_type.error,
+        );
+
+        Navigator.pop(context);
       });
     }
-    setState(() => isLoading = false);
+
+    _Validation();
+  }
+
+  Future<void> _Validation() async {
+    print('empezando contador');
+    Future.delayed(const Duration(seconds: 10), () {
+      if (isLoading) {
+        setState(() {
+          timeout = true;
+        });
+        print('terminando contador');
+      }
+    });
+    setState(() {
+      if (api.servicios.isNotEmpty) {
+        isLoading = false;
+      }
+    });
   }
 
   @override
@@ -149,9 +141,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: FutureBuilder(
-          future: Future.wait([
-            
-          ]),
+          future: Future.wait([]),
           builder: (context, snapshot) {
             return KeyboardDismisser(
               child: Scaffold(
@@ -196,7 +186,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
-          widget.nombre,
+          widget.name,
           style: GoogleFonts.poppins(
             fontSize: 30,
             fontWeight: FontWeight.w600,
@@ -219,7 +209,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color:  Theme.of(context).colorScheme.surface,
+                color: Theme.of(context).colorScheme.surface,
               ),
             ),
             Spacer(),
@@ -233,7 +223,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
               child: Icon(
                 Icons.arrow_forward_ios,
                 size: 20,
-                color:  Theme.of(context).colorScheme.surface,
+                color: Theme.of(context).colorScheme.surface,
               ),
             ),
           ],
@@ -244,6 +234,15 @@ class _CategoriaPageState extends State<CategoriaPage> {
 
   Widget _buildServicios() {
     final isLoading1 = api.servicios.isEmpty;
+    if (timeout) {
+      return const ListTile(
+        title: Text(
+          "No tienes servicios sercanos",
+          style: TextStyle(color: colorWhite),
+        ),
+        leading: Icon(Icons.location_off),
+      );
+    }
     return GridView.builder(
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
@@ -268,20 +267,17 @@ class _CategoriaPageState extends State<CategoriaPage> {
           final servicio = api.servicios[index];
 
           return CardsServiciosCategoria(
-                url_img: servicio.img_servicio,
-                nombre: servicio.nombre_servicio,
-                img_trabajador: servicio.img_trabajador,
-                id_servicio: servicio.id_servicio,
-                trabajador: servicio.trabajador,
-                categoria: servicio.categoria,
-                estrellas: servicio.calificacion,
-                precio: servicio.precio,
-                descripcion: servicio.descripcion,
-              )
-              .animate()
-              .fade(duration: 400.ms)
-              .slideY(begin: 0.15)
-              .scale(begin: const Offset(0.96, 0.96));
+                image_url: servicio.image,
+                name: servicio.service_name,
+                worker_image: servicio.userImage,
+                service_id: servicio.service_id,
+                worker: servicio.first_name,
+                category: servicio.category,
+                stars: servicio.rating,
+                price: servicio.price,
+                description: servicio.description,
+              );
+               
         } catch (e) {
           return const SizedBox(); // widget vacío
         }

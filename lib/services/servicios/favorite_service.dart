@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class FavoritoService {
   static Future<Map<String, dynamic>> Crear({
-    required String id_servicio,
+    required String service_id,
   }) async {
     
     int attempts = 0;
@@ -21,7 +21,7 @@ class FavoritoService {
       print("llamando a crear");
       try {
         final response = await http.put(
-          Uri.parse('${dotenv.env['API_URL']}/api/Favoritos/${id_servicio}?iduser=${id_user}'),
+          Uri.parse('${dotenv.env['API_URL']}/api/Favorites?id=${service_id}&userId=${id_user}'),
           headers: headers,
         );
         print(response);

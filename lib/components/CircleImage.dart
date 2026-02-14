@@ -5,14 +5,14 @@ import 'package:gixt/components/colors.dart';
 class Circleimage extends StatelessWidget {
   const Circleimage({
     super.key,
-    required this.link_imagen,
+    required this.image_url,
     required this.w,
     required this.h,
   });
 
   final double h;
   final double w;
-  final String? link_imagen;
+  final String? image_url;
 
   @override
   Widget build(BuildContext context) {
@@ -24,9 +24,9 @@ class Circleimage extends StatelessWidget {
         border: Border.all(color: colorsecundario, width: 2),
       ),
       child: ClipOval(
-        child: link_imagen != null
+        child: image_url != null
             ? CachedNetworkImage(
-                imageUrl: link_imagen!,
+                imageUrl: image_url!,
                 fit: BoxFit.cover,
                 errorWidget: (context, url, error) => _placeholder(),
               )

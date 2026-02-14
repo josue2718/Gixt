@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +9,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/cache.dart';
+import 'package:gixt/pages/SinInternet.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
-import 'providers/theme_provider.dart'; // 👈 Nuevo import
+import 'providers/theme_provider.dart'; 
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// 🔔 NOTIFICACIONES LOCALES
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -55,6 +59,7 @@ Future<void> main() async {
   );
 }
 
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -89,16 +94,32 @@ class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
   final PreferencesService _preferencesService = PreferencesService();
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  late StreamSubscription<List<ConnectivityResult>> _subscription;
 
   
   @override
   void initState() {
     super.initState();
+     _subscription = Connectivity()
+          .onConnectivityChanged
+          .listen(_onConnectivityChange);
+    
     _startAnimation();
     _requestPermission();
-    _getFCMToken();
     _listenForeground();
+   
   }
+
+void _onConnectivityChange(List<ConnectivityResult> results) {
+  if (results.contains(ConnectivityResult.none)) {
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => SininternetPage()),
+      );
+  } else {
+    print("✅ Conectado a internet");
+  }
+}
 
   Future<void> _requestPermission() async {
     await _firebaseMessaging.requestPermission(
@@ -108,46 +129,45 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 
-  /// 🔥 TOKEN FCM
-  Future<void> _getFCMToken() async {
-    String? token = await _firebaseMessaging.getToken();
-
-    if (token != null) {
-      print("🔥 FCM TOKEN: $token");
-
-      // 👉 ENVÍALO A TU API C#
-      // sendTokenToApi(token);
-    }
-  }
 
   /// 🔔 FOREGROUND
   void _listenForeground() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final notification = message.notification;
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+    final notification = message.notification;
 
-      if (notification != null) {
-        const AndroidNotificationDetails androidDetails =
-            AndroidNotificationDetails(
-          'canal_pedidos',
-          'Pedidos',
-          channelDescription: 'Notificaciones de pedidos',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        );
+    if (notification != null) {
 
-        const NotificationDetails notificationDetails =
-            NotificationDetails(android: androidDetails);
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        'canal_pedidos',
+        'Pedidos',
+        channelDescription: 'Notificaciones de pedidos',
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
 
-        await flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          notificationDetails,
-        );
-      }
-    });
-  }
+      const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails notificationDetails = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await flutterLocalNotificationsPlugin.show(
+        notification.hashCode,
+        notification.title,
+        notification.body,
+        notificationDetails,
+      );
+    }
+  });
+}
+
 
 
   void _startAnimation() async {

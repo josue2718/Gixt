@@ -1,48 +1,51 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 
 class Servicios {
-  String nombre_servicio;
-  String id_servicio;
-  String trabajador;
-  String img_trabajador;
-  String categoria;
-  double precio;
-  String img_servicio;
-  int calificacion;
-  String descripcion;
+  String service_id;
+  String service_name;
+  String first_name;
+  String userImage;
+  String category;
+  double price;
+  String image;
+  int rating;
+  String description;
 
   Servicios({
-    required this.nombre_servicio,
-    required this.categoria,
-    required this.img_trabajador,
-    required this.trabajador,
-    required this.precio,
-    required this.img_servicio,
-    required this.id_servicio,
-    required this.calificacion,
-    required this.descripcion,
+    required this.service_id,
+    required this.service_name,
+    required this.first_name,
+    required this.userImage,
+    required this.category,
+    required this.price,
+    required this.image,
+    required this.rating,
+    required this.description,
   });
 
   factory Servicios.fromJson(Map<String, dynamic> json) {
     return Servicios(
-      nombre_servicio: json['nombre_servicio'],
-      categoria: json['categoria'],
-      trabajador: json['first_name'],
-      precio: json['precio'],
-      img_trabajador: json['imagenuser'],
-      img_servicio: json['imagen'],
-      descripcion: json['descripcion'],
-      id_servicio: json['id_servicio'],
-      calificacion: json['calificacion'],
+      service_id: json['service_id'],
+      service_name: json['service_name'],
+      first_name: json['first_name'],
+      userImage: json['userImage'],
+      category: json['category'],
+      price: (json['price'] as num).toDouble(),
+      image: json['image'],
+      rating: json['rating'],
+      description: json['description'],
     );
   }
 
   @override
   String toString() {
-    return 'Empresa(nombre: $nombre_servicio, direccion: $categoria, url_img: $img_servicio)';
+    return 'Servicio(service_name: $service_name, category: $category, price: $price)';
   }
 }
 
@@ -56,32 +59,28 @@ class Servicios_service {
 
   set loading(bool loading) {}
   Future<void> updatedata() async {
-    await fetchServicioData(forceRefresh: true);
+    print("📦 actualizando servicios");
+    await fetchFromApi();
   }
 
-  Future<bool> fetchServicioData({
-    bool forceRefresh = false,
-  }) async {
-
-    print("fetch servicios");
-
+  Future<bool> fetchServicioData() async {
     final prefs = await SharedPreferences.getInstance();
 
-    // cache config
-    const cacheDuration = Duration(minutes: 10);
+    // config cache
+    const cacheDuration = Duration(seconds: 1);
 
-    // revisar cache
+    // leer cache
     final cachedData = prefs.getString(_cacheKey);
     final cachedTime = prefs.getInt(_cacheTimeKey);
 
     final now = DateTime.now();
 
-    if (!forceRefresh &&
-        cachedData != null &&
+    // validar cache
+    if (cachedData != null &&
         cachedTime != null &&
         now.difference(DateTime.fromMillisecondsSinceEpoch(cachedTime)) <
             cacheDuration) {
-      print("Usando cache");
+      print("📦 Usando cache servicios");
 
       final List<dynamic> jsonData = json.decode(cachedData);
       servicios
@@ -91,43 +90,56 @@ class Servicios_service {
       return true;
     }
 
-    print("🌐 Llamando API");
+    print("🚫 Cache inválido → API");
+    return await fetchFromApi();
+  }
+
+  Future<bool> fetchFromApi() async {
+    final prefs = await SharedPreferences.getInstance();
+    print("🌐 Llamando API fetch servicios");
 
     final token = prefs.getString('token');
-    final headers = {'Authorization': 'Bearer $token'};
-
+    String? id = prefs.getString('id');
     try {
       isLoading = true;
 
-      final response = await http.get(
-        Uri.parse('${dotenv.env['API_URL']}/api/Servicios'),
-        headers: headers,
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse('${dotenv.env['API_URL']}/api/Services'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonResponse = json.decode(response.body);
-        servicios.clear();
-        servicios.addAll(
-          jsonResponse.map((item) => Servicios.fromJson(item)).toList(),
-        );
+
         servicios
           ..clear()
           ..addAll(jsonResponse.map((e) => Servicios.fromJson(e)));
 
+        // guardar cache
         await prefs.setString(_cacheKey, response.body);
         await prefs.setInt(
           _cacheTimeKey,
           DateTime.now().millisecondsSinceEpoch,
         );
+
         return true;
-      } else {
-        servicios.clear();
-        return false;
       }
+
+      print("❌ Error HTTP: ${response.statusCode}");
+      return false;
+    } on TimeoutException {
+      print("⏱️ Timeout de la API");
+      return false;
+    } on SocketException {
+      print("🌐 Sin conexión a internet");
+      return false;
+    } catch (e) {
+      print("❌ Error inesperado: $e");
+      return false;
     } finally {
       isLoading = false;
     }
   }
-
- 
 }

@@ -8,6 +8,7 @@ import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/inputs/input.dart';
 import 'package:gixt/components/inputs/Input_Password.dart';
+import 'package:gixt/config/device.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/auth_service.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
@@ -57,6 +58,9 @@ class _LoginState extends State<LoginPage> {
   void _login() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     FocusScope.of(context).unfocus();
+
+    var device = await DeviceService.getDeviceData();
+     
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -66,6 +70,9 @@ class _LoginState extends State<LoginPage> {
     final result = await AuthService.login(
       email: _emailController.text,
       password: _passwordController.text,
+      deviceId: device["deviceId"] ?? '',
+      deviceName: device["deviceName"] ?? '', 
+      tokenFcm: device["tokenFcm"] ?? '',
     );
 
     Navigator.pop(context); // cerrar loader
@@ -83,9 +90,9 @@ class _LoginState extends State<LoginPage> {
         );
         await mostrarAlerta(
           context,
-          titulo: "Bienvenido",
-          mensaje: message,
-          tipo: TipoAlerta.exito,
+          title: "Bienvenido",
+          message: message,
+          type: alert_type.exito,
         );
         Navigator.pushReplacement(
           context,
@@ -95,9 +102,9 @@ class _LoginState extends State<LoginPage> {
     } else {
       mostrarAlerta(
         context,
-        titulo: "Error",
-        mensaje: result['message'],
-        tipo: TipoAlerta.error,
+        title: "Error",
+        message: result['message'],
+        type: alert_type.error,
       );
     }
   }

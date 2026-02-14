@@ -1,48 +1,52 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 
 class ServiciosByCat {
-  String nombre_servicio;
-  String id_servicio;
-  String trabajador;
-  String img_trabajador;
-  String categoria;
-  double precio;
-  String img_servicio;
-  int calificacion;
-  String descripcion;
+  String service_id;
+  String service_name;
+  String first_name;
+  String userImage;
+  String category;
+  double price;
+  String image;
+  int rating;
+  String description;
+
 
   ServiciosByCat({
-    required this.nombre_servicio,
-    required this.categoria,
-    required this.img_trabajador,
-    required this.trabajador,
-    required this.precio,
-    required this.img_servicio,
-    required this.id_servicio,
-    required this.calificacion,
-    required this.descripcion,
+    required this.service_id,
+    required this.service_name,
+    required this.first_name,
+    required this.userImage,
+    required this.category,
+    required this.price,
+    required this.image,
+    required this.rating,
+    required this.description,
   });
 
   factory ServiciosByCat.fromJson(Map<String, dynamic> json) {
     return ServiciosByCat(
-      nombre_servicio: json['nombre_servicio'],
-      categoria: json['categoria'],
-      trabajador: json['first_name'],
-      precio: json['precio'],
-      img_trabajador: json['imagenuser'],
-      img_servicio: json['imagen'],
-      descripcion: json['descripcion'],
-      id_servicio: json['id_servicio'],
-      calificacion: json['calificacion'],
+      service_id: json['service_id'],
+      service_name: json['service_name'],
+      first_name: json['first_name'],
+      userImage: json['userImage'],
+      category: json['category'],
+      price: (json['price'] as num).toDouble(),
+      image: json['image'],
+      rating: json['rating'],
+      description: json['description'],
     );
   }
 
   @override
   String toString() {
-    return 'Empresa(nombre: $nombre_servicio, direccion: $categoria, url_img: $img_servicio)';
+    return 'Servicio(service_name: $service_name, category: $category, price: $price)';
   }
 }
 
@@ -57,7 +61,6 @@ class ServiciosByCat_service {
     int pageNumber, {
     bool forceRefresh = false,
   }) async {
-
     final prefs = await SharedPreferences.getInstance();
 
     final token = prefs.getString('token');
@@ -66,28 +69,36 @@ class ServiciosByCat_service {
     try {
       isLoading = true;
 
-      final response = await http.get(
-        Uri.parse(
-          '${dotenv.env['API_URL']}/api/Servicios/categoria/${id}?pageNumber=${pageNumber}',
-        ),
-        headers: headers,
-      ).timeout(const Duration(seconds: 15));
+      final response = await http
+          .get(
+            Uri.parse(
+              '${dotenv.env['API_URL']}/api/Services/category/${id}?pageNumber=${pageNumber}',
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
         final List<dynamic> data = jsonResponse['data'];
-        print(data);
+        print(pageNumber);
         servicios
           ..addAll(data.map((item) => ServiciosByCat.fromJson(item)).toList());
-          return true;
-      } else {
-        return false;
-      
+        return true;
       }
+      print("❌ Error HTTP: ${response.statusCode}");
+      return false;
+    } on TimeoutException {
+      print("⏱️ Timeout de la API");
+      return false;
+    } on SocketException {
+      print("🌐 Sin conexión a internet");
+      return false;
+    } catch (e) {
+      print("❌ Error inesperado: $e");
+      return false;
     } finally {
       isLoading = false;
     }
   }
-
- 
 }

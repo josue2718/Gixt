@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
@@ -5,123 +8,134 @@ import 'dart:convert'; // Para trabajar con JSON
 
 class Agenda {
   // IDs
-  String idTrabajo;
-  String idCliente;
+  String job_id;
+  String client_id;
 
-  // Trabajador
-  String trabajadorNombre;
-  String trabajadorUsername;
-  String trabajadorImagen;
+  // worker
+  String worker_first_name;
+  String worker_username;
+  String worker_image;
+  int worker_rating;
+  String worker_description;
 
-  // Ubicación
-  String idUbicacion;
-  String calle;
-  String colonia;
-  String ncasa;
-  String estadoUbicacion;
-  String direccionMaps;
-  String referencias;
-  String ubicacionImagen;
+  // location
+  String location_id;
+  String street;
+  String neighborhood;
+  String house_number;
+  String state;
+  String maps_address;
+  String reference;
+  String location_image;
+  double latitude;
+  double longitude;
 
-  // Servicio
-  String idServicio;
-  String nombreServicio;
-  String descripcionServicio;
-  String imagenServicio;
+  // service
+  String service_id;
+  String service_name;
+  String service_description;
+  String service_image;
 
-  // Trabajo
-  String fechaTrabajo;
-  String horaTrabajo;
-  String descripcion;
-  String problema;
-  double precio;
-  String tipoPago;
-  bool tyc;
-  bool activo;
-  String estadoTrabajo;
-  String pagado;
+  // job
+  String job_date;
+  String job_time;
+  String description;
+  String problem;
+  double price;
+  String payment_method;
+  bool terms;
+  bool is_active;
+  String job_status;
+  String payment_status;
 
-  // Imágenes del trabajo
-  String? imagen1;
-  String? imagen2;
+  // images
+  String? image_1;
+  String? image_2;
 
   Agenda({
-    required this.idTrabajo,
-    required this.idCliente,
-    required this.trabajadorNombre,
-    required this.trabajadorUsername,
-    required this.trabajadorImagen,
-    required this.idUbicacion,
-    required this.calle,
-    required this.colonia,
-    required this.ncasa,
-    required this.estadoUbicacion,
-    required this.direccionMaps,
-    required this.referencias,
-    required this.ubicacionImagen,
-    required this.idServicio,
-    required this.nombreServicio,
-    required this.descripcionServicio,
-    required this.imagenServicio,
-    required this.fechaTrabajo,
-    required this.horaTrabajo,
-    required this.descripcion,
-    required this.problema,
-    required this.precio,
-    required this.tipoPago,
-    required this.tyc,
-    required this.activo,
-    required this.estadoTrabajo,
-    required this.pagado,
-    this.imagen1,
-    this.imagen2,
+    required this.job_id,
+    required this.client_id,
+    required this.worker_first_name,
+    required this.worker_username,
+    required this.worker_image,
+    required this.worker_description,
+    required this.worker_rating,
+    required this.location_id,
+    required this.street,
+    required this.neighborhood,
+    required this.house_number,
+    required this.state,
+    required this.maps_address,
+    required this.reference,
+    required this.location_image,
+    required this.latitude,
+    required this.longitude,
+    required this.service_id,
+    required this.service_name,
+    required this.service_description,
+    required this.service_image,
+    required this.job_date,
+    required this.job_time,
+    required this.description,
+    required this.problem,
+    required this.price,
+    required this.payment_method,
+    required this.terms,
+    required this.is_active,
+    required this.job_status,
+    required this.payment_status,
+    this.image_1,
+    this.image_2,
   });
 
   factory Agenda.fromJson(Map<String, dynamic> json) {
-    final trabajador = json['trabajador'] ?? {};
-    final ubicacion = json['ubicacion'] ?? {};
-    final servicio = json['servicio'] ?? {};
+    final worker = json['worker'] ?? {};
+    final location = json['location'] ?? {};
+    final service = json['service'] ?? {};
 
     return Agenda(
-      idTrabajo: json['id_trabajo'],
-      idCliente: json['id_cliente'],
+      job_id: json['job_id'] ?? '',
+      client_id: json['client_id'] ?? '',
 
-      // Trabajador
-      trabajadorNombre: trabajador['first_name'] ?? '',
-      trabajadorUsername: trabajador['username'] ?? '',
-      trabajadorImagen: trabajador['imagen'] ?? '',
+      // worker
+      worker_first_name: worker['first_name'] ?? '',
+      worker_username: worker['username'] ?? '',
+      worker_image: worker['image'] ?? '',
+      worker_description: worker['description'] ?? '',
+      worker_rating : worker['rating']?? 0,
 
-      // Ubicación
-      idUbicacion: ubicacion['id_ubicacion'] ?? '',
-      calle: ubicacion['calle'] ?? '',
-      colonia: ubicacion['colonia'] ?? '',
-      ncasa: ubicacion['ncasa'] ?? '',
-      estadoUbicacion: ubicacion['estado'] ?? '',
-      direccionMaps: ubicacion['direccion_maps'] ?? '',
-      referencias: ubicacion['referencias'] ?? '',
-      ubicacionImagen: ubicacion['imagen'] ?? '',
+      // location
+      location_id: location['location_id'] ?? '',
+      street: location['street'] ?? '',
+      neighborhood: location['neighborhood'] ?? '',
+      house_number: location['house_number'] ?? '',
+      state: location['state'] ?? '',
+      latitude:  location['latitude'] ?? 0,
+      longitude: location['longitude'] ??0 ,
+      maps_address: location['maps_address'] ?? '',
+      reference: location['reference'] ?? '',
+      location_image: location['image'] ?? '',
 
-      // Servicio
-      idServicio: servicio['id_servicio'] ?? '',
-      nombreServicio: servicio['nombre_servicio'] ?? '',
-      descripcionServicio: servicio['descripcion'] ?? '',
-      imagenServicio: servicio['imagen'] ?? '',
+      // service
+      service_id: service['service_id'] ?? '',
+      service_name: service['service_name'] ?? '',
+      service_description: service['description'] ?? '',
+      service_image: service['image'] ?? '',
 
-      // Trabajo
-      fechaTrabajo: json['fecha_trabajo'],
-      horaTrabajo: json['hora_trabajo'],
-      descripcion: json['descripcion'] ?? '',
-      problema: json['problema'] ?? '',
-      precio: (json['precio'] ?? 0).toDouble(),
-      tipoPago: json['tipo_pago'] ?? '',
-      tyc: json['tyc'] ?? false,
-      activo: json['activo'] ?? false,
-      estadoTrabajo: json['estado'] ?? '',
-      pagado: json['pagado'] ?? '',
+      // job
+      job_date: json['job_date'] ?? '',
+      job_time: json['job_time'] ?? '',
+      description: json['description'] ?? '',
+      problem: json['problem'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      payment_method: json['payment_method'] ?? '',
+      terms: json['terms'] ?? false,
+      is_active: json['is_active'] ?? false,
+      job_status: json['job_status'] ?? '',
+      payment_status: json['payment_status'] ?? '',
 
-      // Imágenes
-      imagen1: json['imagen_1'],
-      imagen2: json['imagen_2'],
+      image_1: json['image_1'],
+      image_2: json['image_2'],
     );
   }
 }
@@ -136,51 +150,45 @@ class AgendaById_service {
   set loading(bool loading) {}
 
   Future<bool> fetchServicioData(String id, {bool forceRefresh = false}) async {
+    print("fetch agenda by id");
 
-  print("fetch agenda by id");
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+    final headers = {'Authorization': 'Bearer $token'};
 
-  final headers = {
-    'Authorization': 'Bearer $token',
-  };
+    try {
+      isLoading = true;
 
-  try {
+      final response = await http
+          .get(
+            Uri.parse('${dotenv.env['API_URL']}/api/Jobs/id/${id}'),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
 
-    isLoading = true;
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
 
-    final response = await http
-        .get(
-          Uri.parse(
-            '${dotenv.env['API_URL']}/api/Trabajos/id/${id}',
-          ),
-          headers: headers,
-        )
-        .timeout(const Duration(seconds: 15));
+        agenda
+          ..clear()
+          ..add(Agenda.fromJson(jsonResponse));
+        return true;
+      }
 
-    if (response.statusCode == 200) {
-
-      final Map<String, dynamic> jsonResponse =
-          json.decode(response.body);
-     
-      agenda
-        ..clear()
-        ..add(Agenda.fromJson(jsonResponse));
-      return true;
+      print("❌ Error HTTP: ${response.statusCode}");
+      return false;
+    } on TimeoutException {
+      print("⏱️ Timeout de la API");
+      return false;
+    } on SocketException {
+      print("🌐 Sin conexión a internet");
+      return false;
+    } catch (e) {
+      print("❌ Error inesperado: $e");
+      return false;
+    } finally {
+      isLoading = false;
     }
-
-    return false; 
   }
-
-  catch (e) {
-    return false; 
-  }
-
-  finally {
-    isLoading = false;
-  }
-}
-
-  
 }

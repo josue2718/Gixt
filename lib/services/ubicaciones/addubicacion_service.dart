@@ -7,50 +7,51 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class AddUbicacionService {
   static Future<Map<String, dynamic>> Crear({
-    required String calle,
-    required String colonia,
-    required String ncasa,
-    required String estado,
-    required String ciudad,
-    required String referencias,
-    required File image,
-    required double latitud,
-    required double longitud,
-    required String direccion_maps
+  required String street,
+  required String neighborhood,
+  required String house_number,
+  required String state,
+  required String city,
+  required String reference,
+  required File image,
+  required String maps_address,
+  required double latitude,
+  required double longitude,
 
   }) async {
     
     int attempts = 0;
     const int maxAttempts = 2;
     final prefs = await SharedPreferences.getInstance();
-    String? id_user = prefs.getString('id');
+    String? user_id = prefs.getString('id');
     final token = prefs.getString('token');
     final headers = {'Authorization': 'Bearer $token'};
 
     while (attempts < maxAttempts) {
       print("llamando a crear");
       try {
-        final uri = Uri.parse('${dotenv.env['API_URL']}/api/Ubicacion');
+        final uri = Uri.parse('${dotenv.env['API_URL']}/api/Location');
 
         // Crear MultipartRequest
         var request = http.MultipartRequest('POST', uri);
 
         // Campos de texto
-        request.fields['id_user'] = id_user!;
-        request.fields['calle'] = calle;
-        request.fields['colonia'] = colonia;
-        request.fields['ncasa'] = ncasa;
-        request.fields['estado'] = estado;
-        request.fields['ciudad'] = ciudad;
-        request.fields['referencias'] = referencias;
-        request.fields['direccion_maps'] = direccion_maps;
-        request.fields['longitud'] = longitud.toString();
-        request.fields['latitud'] = latitud.toString();
+        request.fields['user_id'] = user_id!;
+        request.fields['street'] = street;
+        request.fields['neighborhood'] = neighborhood;
+        request.fields['house_number'] = house_number;
+        request.fields['state'] = state;
+        request.fields['city'] = city;
+        request.fields['reference'] = reference;
+        request.fields['maps_address'] = maps_address;
+        request.fields['longitude'] = longitude.toString();
+        request.fields['latitude'] = latitude.toString();
+
 
         // Archivo
         request.files.add(
           await http.MultipartFile.fromPath(
-            'imagen', // nombre del campo que espera el backend
+            'image', // nombre del campo que espera el backend
             image.path,
           ),
         );

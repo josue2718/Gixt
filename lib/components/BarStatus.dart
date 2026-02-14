@@ -9,16 +9,16 @@ class Barstatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final estados = ['Pendiente', 'en_proceso', 'finalizado', 'cancelado'];
+    final estados = ['pending', 'in_progress', 'completed', 'canceled'];
 
     // Determinar el índice del estado actual
     int currentIndex = 0;
-    if (estadoTrabajo.toLowerCase().contains('proceso')) {
+    if (estadoTrabajo.toLowerCase().contains('pending')) {
       currentIndex = 1;
-    } else if (estadoTrabajo.toLowerCase().contains('finalizado') ||
-        estadoTrabajo.toLowerCase().contains('finalizado')) {
+    } else if (estadoTrabajo.toLowerCase().contains('completed') ||
+        estadoTrabajo.toLowerCase().contains('completed')) {
       currentIndex = 2;
-    } else if (estadoTrabajo.toLowerCase().contains('cancelado')) {
+    } else if (estadoTrabajo.toLowerCase().contains('canceled')) {
       currentIndex = 3;
     }
 

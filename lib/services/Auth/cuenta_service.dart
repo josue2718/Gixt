@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:gixt/config/device.dart';
 import 'package:gixt/services/Auth/auth_service.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,14 +12,11 @@ class CuentaService {
     required String password,
     required String firstName,
     required String lastName,
-    required File imagen, // ahora es File
+    required File image, // ahora es File
     required String phone,
-    required String ciudad,
-    required double longitud,
-    required double latitud,
-    required String genero,
-    required String fechaNacimiento,
-    required String tokenFcm,
+    required String gender,
+    required String  birth_date,
+    required bool terms
   }) async {
     int attempts = 0;
     const int maxAttempts = 2;
@@ -37,18 +35,15 @@ class CuentaService {
         request.fields['first_name'] = firstName;
         request.fields['last_name'] = lastName;
         request.fields['phone'] = phone;
-        request.fields['ciudad'] = ciudad;
-        request.fields['longitud'] = longitud.toString();
-        request.fields['latitud'] = latitud.toString();
-        request.fields['genero'] = genero;
-        request.fields['fecha_nacimiento'] = fechaNacimiento;
-        request.fields['token_fcm'] = tokenFcm;
+        request.fields['gender'] = gender;
+        request.fields['birth_date'] = birth_date;
+        request.fields['terms'] = terms.toString();
 
         // Archivo
         request.files.add(
           await http.MultipartFile.fromPath(
             'imagen', // nombre del campo que espera el backend
-            imagen.path,
+            image.path,
           ),
         );
 
@@ -61,10 +56,14 @@ class CuentaService {
         print(responseString);
 
         if (streamedResponse.statusCode == 200) {
-
+           var device = await DeviceService.getDeviceData();
           final result = await AuthService.login(
             email: email,
-            password: password,
+            password: password, 
+            deviceId: device["deviceId"] ?? '',
+            deviceName: device["deviceName"] ?? '', 
+            tokenFcm: device["tokenFcm"] ?? '',
+            
           );
 
           if (result['success'] == true) {

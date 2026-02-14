@@ -1,63 +1,72 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
+
 class Servicios {
-  String nombreServicio;
-  String idServicio;
-  String trabajador;
-  String imgTrabajador;
-  String categoria;
-  double precio;
-  String imgServicio;
-  int calificacion;
-  String descripcion;
-  String desTrabajador;
-  bool fav;
-  List<String> imagenes;
+  String service_name;
+  String service_id;
+  String worker_name;
+  String worker_img;
+  int worker_rating;
+  String category;
+  double price;
+  String image;
+  int rating;
+  String description;
+  String des_trabajador;
+  bool favorite;
+  List<String> images;
 
   Servicios({
-    required this.nombreServicio,
-    required this.idServicio,
-    required this.trabajador,
-    required this.imgTrabajador,
-    required this.categoria,
-    required this.precio,
-    required this.imgServicio,
-    required this.calificacion,
-    required this.descripcion,
-    required this.imagenes,
-    required this.desTrabajador,
-    required this.fav
+    required this.service_name,
+    required this.service_id,
+    required this.worker_name,
+    required this.worker_img,
+    required this.worker_rating,
+    required this.category,
+    required this.price,
+    required this.image,
+    required this.rating,
+    required this.description,
+    required this.images,
+    required this.des_trabajador,
+    required this.favorite,
   });
 
   factory Servicios.fromJson(Map<String, dynamic> json) {
-    // Primero obtenemos el objeto Trabajador si existe
-    final trabajadorJson = json['trabajador'];
+    final workerJson = json['worker'];
 
     return Servicios(
-      idServicio: json['id_servicio'].toString(),
-      nombreServicio: json['nombre_servicio'] ?? '',
-      categoria: json['categoria'] ?? '',
-      precio: json['precio'],
-      imgServicio: json['imagen'] ?? '',
-      descripcion: json['descripcion'] ?? '',
-      calificacion: json['calificacion'] ?? 0,
-      fav : json['favorito'],
-      // Extraemos del objeto Trabajador
-      trabajador: trabajadorJson != null ? trabajadorJson['username'] ?? '' : '',
-      imgTrabajador: trabajadorJson != null ? trabajadorJson['imagen'] ?? '' : '',
-      desTrabajador: trabajadorJson != null ? trabajadorJson['descripcion'] ?? '' : '',
-      // Lista de imágenes (puede venir vacía)
-      imagenes: List<String>.from(json['imagenes'] ?? []),
+      service_id: json['service_id'] ?? '',
+      service_name: json['service_name'] ?? '',
+      category: json['category'] ?? '',
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      image: json['image'] ?? '',
+      description: json['description'] ?? '',
+      rating: json['rating'] ?? 0,
+      favorite: json['favorite'] ?? false,
+
+      // Datos del worker
+      worker_name: workerJson != null
+          ? workerJson['username'] ?? ''
+          : '',
+      worker_img: workerJson != null
+          ? workerJson['image'] ?? ''
+          : '',
+      worker_rating: workerJson != null
+          ? workerJson['rating'] ?? 0
+          :0,
+      des_trabajador: workerJson != null
+          ? workerJson['description'] ?? ''
+          : '',
+
+      images: List<String>.from(json['images'] ?? []),
     );
   }
-
-  @override
-  String toString() {
-    return 'Serviciosss(fav ${fav})';
-  }
-  
 }
 
 
@@ -70,52 +79,47 @@ class ServiciosById_service {
   set loading(bool loading) {}
 
   Future<bool> fetchServicioData(String id, {bool forceRefresh = false}) async {
+    print("fetch servicios by id");
 
-  print("fetch servicios by id");
+    final prefs = await SharedPreferences.getInstance();
+    String? id_user = prefs.getString('id');
+    final token = prefs.getString('token');
 
-  final prefs = await SharedPreferences.getInstance();
-  String? id_user = prefs.getString('id');
-  final token = prefs.getString('token');
+    final headers = {'Authorization': 'Bearer $token'};
 
-  final headers = {
-    'Authorization': 'Bearer $token',
-  };
+    try {
+      isLoading = true;
 
-  try {
+      final response = await http
+          .get(
+            Uri.parse(
+              '${dotenv.env['API_URL']}/api/Services/id/$id?userId=$id_user',
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
 
-    isLoading = true;
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
 
-    final response = await http
-        .get(
-          Uri.parse(
-            '${dotenv.env['API_URL']}/api/Servicios/id/$id?iduser=$id_user',
-          ),
-          headers: headers,
-        )
-        .timeout(const Duration(seconds: 15));
-
-    if (response.statusCode == 200) {
-
-      final Map<String, dynamic> jsonResponse =
-          json.decode(response.body);
-     
-      servicios
-        ..clear()
-        ..add(Servicios.fromJson(jsonResponse));
-      return true;
+        servicios
+          ..clear()
+          ..add(Servicios.fromJson(jsonResponse));
+        return true;
+      }
+      print("❌ Error HTTP: ${response.statusCode}");
+      return false;
+    } on TimeoutException {
+      print("⏱️ Timeout de la API");
+      return false;
+    } on SocketException {
+      print("🌐 Sin conexión a internet");
+      return false;
+    } catch (e) {
+      print("❌ Error inesperado: $e");
+      return false;
+    } finally {
+      isLoading = false;
     }
-
-    return false; 
   }
-
-  catch (e) {
-    return false; 
-  }
-
-  finally {
-    isLoading = false;
-  }
-}
-
-  
 }

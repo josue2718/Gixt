@@ -10,30 +10,30 @@ import 'package:google_fonts/google_fonts.dart';
 class CardsAgenda extends StatelessWidget {
   const CardsAgenda({
     super.key,
-    required this.url_img,
-    required this.nombre,
-    required this.id_trabajo,
-    required this.img_trabajador,
-    required this.trabajador,
-    required this.fecha,
-    required this.hora,
-    required this.precio,
-    required this.descripcion,
-    required this.direccion,
+   required this.image_url,
+    required this.name,
+    required this.job_id,
+    required this.worker_image,
+    required this.worker,
+    required this.date,
+    required this.time,
+    required this.price,
+    required this.description,
+    required this.address,
     required this.status,
   });
 
-  final String nombre;
-  final String url_img;
-  final String id_trabajo;
-  final String? img_trabajador;
-  final String trabajador;
-  final String descripcion;
-  final String direccion;
-  final double precio;
-  final String fecha;
+  final String name;
+  final String image_url;
+  final String job_id;
+  final String? worker_image;
+  final String worker;
+  final String description;
+  final String address;
+  final double price;
+  final String date;
   final String status;
-  final String hora;
+  final String time;
 
   Color _getStatusColor() {
     switch (status.toLowerCase()) {
@@ -80,7 +80,7 @@ class CardsAgenda extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ViewAgendaPage(id_trabajo : id_trabajo),
+                  builder: (context) => ViewAgendaPage(id_trabajo : job_id),
                 ),
               );
             },
@@ -101,7 +101,7 @@ class CardsAgenda extends StatelessWidget {
                           height: double.maxFinite,
                           width: 120,
                           child: CachedNetworkImage(
-                            imageUrl: url_img,
+                            imageUrl: image_url,
                             fit: BoxFit.cover,
                             placeholder: (context, url) =>
                                 Center(child: Indicador()),
@@ -132,7 +132,7 @@ class CardsAgenda extends StatelessWidget {
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
-                                  fecha,
+                                  date,
                                   style: GoogleFonts.poppins(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
@@ -168,7 +168,7 @@ class CardsAgenda extends StatelessWidget {
                               const SizedBox(width: 4),
                               Flexible(
                                 child: Text(
-                                  hora,
+                                  time,
                                   style: GoogleFonts.poppins(
                                     fontSize: 10,
                                     fontWeight: FontWeight.w600,
@@ -196,12 +196,12 @@ class CardsAgenda extends StatelessWidget {
                               Circleimage(
                                 w: 30,
                                 h: 30,
-                                link_imagen: img_trabajador,
+                                image_url: worker_image,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
-                                  trabajador,
+                                  worker,
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
@@ -243,7 +243,7 @@ class CardsAgenda extends StatelessWidget {
                           const SizedBox(height: 10),
 
                           Text(
-                            nombre,
+                            name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
@@ -257,7 +257,7 @@ class CardsAgenda extends StatelessWidget {
 
                           // Descripción
                           Text(
-                            descripcion,
+                            description,
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: GoogleFonts.poppins(
@@ -278,7 +278,7 @@ class CardsAgenda extends StatelessWidget {
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
-                                  direccion,
+                                  address,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: GoogleFonts.poppins(

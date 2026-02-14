@@ -8,6 +8,9 @@ class AuthService {
   static Future<Map<String, dynamic>> login({
     required String email,
     required String password,
+    required String deviceId,
+    required String deviceName,
+    required String tokenFcm,
   }) async {
     int attempts = 0;
     const int maxAttempts = 15;
@@ -18,11 +21,14 @@ class AuthService {
       try {
         response = await http
             .post(
-              Uri.parse('${dotenv.env['API_URL']}/api/Auth/login'),
+              Uri.parse('${dotenv.env['API_URL']}/api/Auth/login/user'),
               headers: {'Content-Type': 'application/json'},
               body: json.encode({
                 'email': email,
                 'password': password,
+                'deviceId': deviceId,
+                'deviceName': deviceName,
+                'tokenFcm' : tokenFcm
               }),
             )
             .timeout(const Duration(seconds: 30));

@@ -9,27 +9,28 @@ import 'package:google_fonts/google_fonts.dart';
 class CardsServicios extends StatelessWidget {
   const CardsServicios({
     super.key,
-    required this.url_img,
-    required this.nombre,
-    required this.id_servicio,
-    required this.img_trabajador,
-    required this.trabajador,
-    required this.categoria,
-    required this.precio,
-    required this.descripcion,
-    required this.estrellas,
+    required this.image_url,
+    required this.name,
+    required this.service_id,
+    required this.worker_image,
+    required this.worker,
+    required this.category,
+    required this.price,
+    required this.description,
+    required this.stars,
     required this.favorito,
   });
 
-  final String nombre;
-  final String url_img;
-  final String id_servicio;
-  final String? img_trabajador;
-  final String categoria;
-  final String trabajador;
-  final int estrellas;
-  final String descripcion;
-  final double precio;
+  final String name;
+  final String image_url;
+  final String service_id;
+  final String? worker_image;
+  final String category;
+  final String worker;
+  final int stars;
+  final String description;
+  final double price;
+
   final bool favorito;
 
   @override
@@ -49,7 +50,7 @@ class CardsServicios extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ServicioPage(id_servicio: id_servicio),
+                  builder: (context) => ServicioPage(service_id: service_id),
                 ),
               );
             },
@@ -70,7 +71,7 @@ class CardsServicios extends StatelessWidget {
                           height: 150,
                           width: double.infinity,
                           child: CachedNetworkImage(
-                            imageUrl: url_img,
+                            imageUrl: image_url,
                             fit: BoxFit.cover,
                             placeholder: (context, url) =>
                                 Center(child: Indicador()),
@@ -132,7 +133,7 @@ class CardsServicios extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                '$estrellas',
+                                '$stars',
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   color:  colorBlack,
@@ -163,7 +164,7 @@ class CardsServicios extends StatelessWidget {
                             ],
                           ),
                           child: Text(
-                            categoria,
+                            category,
                             style: GoogleFonts.poppins(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
@@ -198,7 +199,7 @@ class CardsServicios extends StatelessWidget {
                               Circleimage(
                                 w: 36,
                                 h: 36,
-                                link_imagen: img_trabajador,
+                                image_url: worker_image,
                               ),
                               const SizedBox(width: 10),
                               Expanded(
@@ -215,7 +216,7 @@ class CardsServicios extends StatelessWidget {
                                       ),
                                     ),
                                     Text(
-                                      trabajador,
+                                      worker,
                                       style: GoogleFonts.poppins(
                                         fontSize: 12,
                                         fontWeight: FontWeight.w600,
@@ -251,7 +252,7 @@ class CardsServicios extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                nombre,
+                                name,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.poppins(
@@ -264,7 +265,7 @@ class CardsServicios extends StatelessWidget {
                               const SizedBox(height: 8),
                               // Descripción
                               Text(
-                                descripcion,
+                                description,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: GoogleFonts.poppins(
@@ -307,7 +308,7 @@ class CardsServicios extends StatelessWidget {
                                         ),
                                         const SizedBox(width: 2),
                                         Text(
-                                          precio.toStringAsFixed(2),
+                                          price.toStringAsFixed(2),
                                           style: GoogleFonts.poppins(
                                             fontSize: 14,
                                             color:colorWhite,

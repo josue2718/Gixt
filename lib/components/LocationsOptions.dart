@@ -1,22 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:gixt/pages/ViewLocationpage.dart';
 
-class UbicacionesOpciones extends StatelessWidget {
-  final String calle;
-  final String colonia;
-  final String estado;
-  final String ciudad;
-  final String descripcion;
+class LocationsOptions extends StatelessWidget {
+  final String street;
+  final String neighborhood;
+  final String state;
+  final String city;
+  final String references;
   final String id;
 
-  const UbicacionesOpciones({
+  const LocationsOptions({
     super.key,
-    required this.calle,
-    required this.colonia,
-    required this.estado,
-    required this.ciudad,
-    required this.descripcion,
+    required this.street,
+    required this.neighborhood,
+    required this.state,
+    required this.city,
+    required this.references,
     required this.id,
   });
 
@@ -24,12 +25,12 @@ class UbicacionesOpciones extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () {
-        // Navigator.push(
-        //   context,
-        //   MaterialPageRoute(
-        //     builder: (context) => ViewUbicacionPage(id_ubicacion: id),
-        //   ),
-        // );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ViewLocationPage(location_id: id),
+          ),
+        );
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -37,13 +38,6 @@ class UbicacionesOpciones extends StatelessWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.25),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Row(
           children: [
@@ -63,7 +57,7 @@ class UbicacionesOpciones extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    calle,
+                    street,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -71,7 +65,7 @@ class UbicacionesOpciones extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${colonia} ${estado} ${ciudad}',
+                    '${neighborhood} ${state} ${city}',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -79,7 +73,7 @@ class UbicacionesOpciones extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    descripcion,
+                    references,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(

@@ -1,52 +1,56 @@
+import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 class Ubicacion {
-  String id_ubicacion;
-  String calle;
-  String colonia;
-  String ncasa;
-  String estado;
-  String ciudad;
-  String referencias;
-  String urlImg;
-  String direccionMaps;
-  double latitud;
-  double longitud;
+  String user_id;
+  String location_id;
+  String street;
+  String neighborhood;
+  String house_number;
+  String state;
+  String city;
+  String reference;
+  String image;
+  String maps_address;
+  double latitude;
+  double longitude;
 
   Ubicacion({
-    required this.id_ubicacion,
-    required this.calle,
-    required this.colonia,
-    required this.ncasa,
-    required this.estado,
-    required this.ciudad,
-    required this.referencias,
-    required this.urlImg,
-    required this.direccionMaps,
-    required this.latitud,
-    required this.longitud,
+    required this.user_id,
+    required this.location_id,
+    required this.street,
+    required this.neighborhood,
+    required this.house_number,
+    required this.state,
+    required this.city,
+    required this.reference,
+    required this.image,
+    required this.maps_address,
+    required this.latitude,
+    required this.longitude,
   });
 
   factory Ubicacion.fromJson(Map<String, dynamic> json) {
     return Ubicacion(
-      id_ubicacion: json['id_ubicacion'].toString(),
-      calle: json['calle'] ?? '',
-      colonia: json['colonia'] ?? '',
-      ncasa: json['ncasa'] ?? '',
-      estado: json['estado'] ?? '',
-      ciudad: json['ciudad'] ?? '',
-      referencias: json['referencias'] ?? '',
-      urlImg: json['url_img'] ?? '',
-      direccionMaps: json['direccion_maps'] ?? '',
-      latitud: (json['latitud'] ?? 0).toDouble(),
-      longitud: (json['longitud'] ?? 0).toDouble(),
+      user_id: json['user_id'] ?? '',
+      location_id: json['location_id'] ?? '',
+      street: json['street'] ?? '',
+      neighborhood: json['neighborhood'] ?? '',
+      house_number: json['house_number'] ?? '',
+      state: json['state'] ?? '',
+      city: json['city'] ?? '',
+      reference: json['reference'] ?? '',
+      image: json['image'] ?? '',
+      maps_address: json['maps_address'] ?? '',
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
     );
   }
 }
-
 
 
 class UbicacionesService {
@@ -69,57 +73,38 @@ class UbicacionesService {
     try {
       isLoading = true;
 
-      final response = await http.get(
-        Uri.parse('${dotenv.env['API_URL']}/api/Ubicacion/id_user/${id_user}'),
-        headers: headers,
-       ).timeout(const Duration(seconds: 15));;
+      final response = await http
+          .get(
+            Uri.parse(
+              '${dotenv.env['API_URL']}/api/Location/user/${id_user}',
+            ),
+            headers: headers,
+          )
+          .timeout(const Duration(seconds: 15));
+      ;
 
       if (response.statusCode == 200) {
         final List<dynamic> jsonResponse = json.decode(response.body);
-      print( jsonResponse); 
-      ubicacion
-        ..clear()
-        ..addAll(jsonResponse.map((e) => Ubicacion.fromJson(e)));
+        print(jsonResponse);
+        ubicacion
+          ..clear()
+          ..addAll(jsonResponse.map((e) => Ubicacion.fromJson(e)));
 
-       return true;
-
-       
-      } else {
-       ubicacion.clear();
-       return false;
+        return true;
       }
+      print("❌ Error HTTP: ${response.statusCode}");
+      return false;
+    } on TimeoutException {
+      print("⏱️ Timeout de la API");
+      return false;
+    } on SocketException {
+      print("🌐 Sin conexión a internet");
+      return false;
+    } catch (e) {
+      print("❌ Error inesperado: $e");
+      return false;
     } finally {
       isLoading = false;
     }
   }
-
-  // Future<void> fetchEmpresatipo(int tipo, int Number) async {
-  //   if (isLoading || !hasMore) return;
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final token = prefs.getString('token');
-  //   final headers = {'Authorization': 'Bearer $token'};
-
-  //   try {
-  //     isLoading = true;
-
-  //     final response = await http.get(
-  //       Uri.parse(
-  //         'https://cateringmid.azurewebsites.net/api/Empresa/tipo/$tipo?pageNumber=$Number&pageSize=200&timestamp=${DateTime.now().millisecondsSinceEpoch}',
-  //       ),
-  //       headers: headers,
-  //     );
-  //     if (response.statusCode == 200) {
-  //       final Map<String, dynamic> jsonResponse = json.decode(response.body);
-  //       final List<dynamic> data = jsonResponse['data'];
-  //       empresas.clear();
-  //       empresas.addAll(data.map((item) => Empresas.fromJson(item)).toList());
-  //     } else if (response.statusCode == 401) {
-  //     } else {
-  //       throw Exception('Error al cargar datos: ${response.statusCode}');
-  //     }
-  //   } catch (e) {
-  //   } finally {
-  //     isLoading = false;
-  //   }
-  // }
 }
