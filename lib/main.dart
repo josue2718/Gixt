@@ -1,11 +1,11 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
+// import 'package:firebase_core/firebase_core.dart';
+// import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/pages/SinInternet.dart';
@@ -16,15 +16,15 @@ import 'config/theme.dart';
 import 'providers/theme_provider.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
-/// 🔔 LOCAL NOTIFICATIONS
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
+// /// 🔔 LOCAL NOTIFICATIONS
+// final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+//     FlutterLocalNotificationsPlugin();
 
-/// 🔔 BACKGROUND HANDLER
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-}
+// /// 🔔 BACKGROUND HANDLER
+// @pragma('vm:entry-point')
+// Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+//   await Firebase.initializeApp();
+// }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,45 +33,45 @@ Future<void> main() async {
 
   await dotenv.load(fileName: ".env");
 
-  /// 🔥 FIREBASE INIT
-  await Firebase.initializeApp();
+  // /// 🔥 FIREBASE INIT
+  // await Firebase.initializeApp();
 
-  /// 🔔 CONFIG FOREGROUND IOS (MUY IMPORTANTE)
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+  // /// 🔔 CONFIG FOREGROUND IOS (MUY IMPORTANTE)
+  // await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+  //   alert: true,
+  //   badge: true,
+  //   sound: true,
+  // );
 
-  /// 🔔 BACKGROUND
-  FirebaseMessaging.onBackgroundMessage(
-    _firebaseMessagingBackgroundHandler,
-  );
+  // /// 🔔 BACKGROUND
+  // FirebaseMessaging.onBackgroundMessage(
+  //   _firebaseMessagingBackgroundHandler,
+  // );
 
-  /// 🔔 LOCAL NOTIFICATIONS INIT
-  const AndroidInitializationSettings initializationSettingsAndroid =
-      AndroidInitializationSettings('@mipmap/ic_launcher');
+  // /// 🔔 LOCAL NOTIFICATIONS INIT
+  // const AndroidInitializationSettings initializationSettingsAndroid =
+  //     AndroidInitializationSettings('@mipmap/ic_launcher');
 
-  const DarwinInitializationSettings initializationSettingsIOS =
-      DarwinInitializationSettings(
-    requestAlertPermission: true,
-    requestBadgePermission: true,
-    requestSoundPermission: true,
-  );
+  // const DarwinInitializationSettings initializationSettingsIOS =
+  //     DarwinInitializationSettings(
+  //   requestAlertPermission: true,
+  //   requestBadgePermission: true,
+  //   requestSoundPermission: true,
+  // );
 
-  const InitializationSettings initializationSettings =
-      InitializationSettings(
-    android: initializationSettingsAndroid,
-    iOS: initializationSettingsIOS,
-  );
+  // const InitializationSettings initializationSettings =
+  //     InitializationSettings(
+  //   android: initializationSettingsAndroid,
+  //   iOS: initializationSettingsIOS,
+  // );
 
-  await flutterLocalNotificationsPlugin.initialize(
-    initializationSettings,
-  );
+  // await flutterLocalNotificationsPlugin.initialize(
+  //   initializationSettings,
+  // );
 
-  /// 🔥 TOKEN DEBUG (puedes quitar luego)
-  String? token = await FirebaseMessaging.instance.getToken();
-  print("🔥 FCM TOKEN: $token");
+  // /// 🔥 TOKEN DEBUG (puedes quitar luego)
+  // String? token = await FirebaseMessaging.instance.getToken();
+  // print("🔥 FCM TOKEN: $token");
 
   runApp(
     ChangeNotifierProvider(
@@ -111,88 +111,88 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   double _opacity = 0.0;
-  final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  late StreamSubscription<List<ConnectivityResult>> _subscription;
+  // final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
+  // late StreamSubscription<List<ConnectivityResult>> _subscription;
 
   @override
   void initState() {
     super.initState();
 
-    _subscription = Connectivity()
-        .onConnectivityChanged
-        .listen(_onConnectivityChange);
+    // _subscription = Connectivity()
+    //     .onConnectivityChanged
+    //     .listen(_onConnectivityChange);
 
-    _initFirebaseMessaging();
+    // _initFirebaseMessaging();
 
     _startAnimation();
   }
 
-  /// 🔥 INIT FIREBASE NOTIFICATIONS
-  Future<void> _initFirebaseMessaging() async {
-    await _requestPermission();
+  // /// 🔥 INIT FIREBASE NOTIFICATIONS
+  // Future<void> _initFirebaseMessaging() async {
+  //   await _requestPermission();
 
-    /// App abierta desde notificación (terminated)
-    FirebaseMessaging.instance.getInitialMessage();
+  //   /// App abierta desde notificación (terminated)
+  //   FirebaseMessaging.instance.getInitialMessage();
 
-    /// Foreground
-    _listenForeground();
-  }
+  //   /// Foreground
+  //   _listenForeground();
+  // }
 
-  void _onConnectivityChange(List<ConnectivityResult> results) {
-    if (results.contains(ConnectivityResult.none)) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SininternetPage()),
-      );
-    }
-  }
+  // void _onConnectivityChange(List<ConnectivityResult> results) {
+  //   if (results.contains(ConnectivityResult.none)) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => SininternetPage()),
+  //     );
+  //   }
+  // }
 
-  Future<void> _requestPermission() async {
-    await _firebaseMessaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-  }
+  // Future<void> _requestPermission() async {
+  //   await _firebaseMessaging.requestPermission(
+  //     alert: true,
+  //     badge: true,
+  //     sound: true,
+  //   );
+  // }
 
-  /// 🔔 FOREGROUND LISTENER
-  void _listenForeground() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final notification = message.notification;
+  // /// 🔔 FOREGROUND LISTENER
+  // void _listenForeground() {
+  //   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+  //     final notification = message.notification;
 
-      if (notification != null) {
-        const AndroidNotificationDetails androidDetails =
-            AndroidNotificationDetails(
-          'canal_pedidos',
-          'Pedidos',
-          channelDescription: 'Notificaciones de pedidos',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        );
+  //     if (notification != null) {
+  //       const AndroidNotificationDetails androidDetails =
+  //           AndroidNotificationDetails(
+  //         'canal_pedidos',
+  //         'Pedidos',
+  //         channelDescription: 'Notificaciones de pedidos',
+  //         importance: Importance.max,
+  //         priority: Priority.high,
+  //         icon: '@mipmap/ic_launcher',
+  //       );
 
-        const DarwinNotificationDetails iosDetails =
-            DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        );
+  //       const DarwinNotificationDetails iosDetails =
+  //           DarwinNotificationDetails(
+  //         presentAlert: true,
+  //         presentBadge: true,
+  //         presentSound: true,
+  //       );
 
-        const NotificationDetails notificationDetails =
-            NotificationDetails(
-          android: androidDetails,
-          iOS: iosDetails,
-        );
+  //       const NotificationDetails notificationDetails =
+  //           NotificationDetails(
+  //         android: androidDetails,
+  //         iOS: iosDetails,
+  //       );
 
-        await flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          notificationDetails,
-        );
-      }
-    });
-  }
+  //       await flutterLocalNotificationsPlugin.show(
+  //         notification.hashCode,
+  //         notification.title,
+  //         notification.body,
+  //         notificationDetails,
+  //       );
+  //     }
+  //   });
+  // }
 
   void _startAnimation() async {
     await Future.delayed(const Duration(milliseconds: 1000));
@@ -228,7 +228,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   void dispose() {
-    _subscription.cancel();
+    // _subscription.cancel();
     super.dispose();
   }
 

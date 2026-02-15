@@ -56,7 +56,7 @@ class CuentaService {
         print(responseString);
 
         if (streamedResponse.statusCode == 200) {
-           var device = await DeviceService.getDeviceData();
+          var device = await DeviceService.getDeviceData();
           final result = await AuthService.login(
             email: email,
             password: password, 
