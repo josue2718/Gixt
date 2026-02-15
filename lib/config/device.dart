@@ -25,6 +25,8 @@ class DeviceService {
 
     // Permiso notificaciones
     await _firebaseMessaging.requestPermission();
+      String? token = await FirebaseMessaging.instance.getToken();
+      print("FCM TOKEN: $token");
 
     // Token FCM
     tokenFcm = await _firebaseMessaging.getToken();
