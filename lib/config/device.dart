@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
-// import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class DeviceService {
   static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
-  // static final FirebaseMessaging _firebaseMessaging =
-  //     FirebaseMessaging.instance;
+  static final FirebaseMessaging _firebaseMessaging =
+      FirebaseMessaging.instance;
 
   /// Obtener información completa del dispositivo
   static Future<Map<String, String?>> getDeviceData() async {
@@ -23,16 +23,16 @@ class DeviceService {
       deviceName = ios.name ?? '';
     }
 
-    // // Permiso notificaciones
-    // await _firebaseMessaging.requestPermission();
+    // Permiso notificaciones
+    await _firebaseMessaging.requestPermission();
 
-    // // Token FCM
-    // tokenFcm = await _firebaseMessaging.getToken();
+    // Token FCM
+    tokenFcm = await _firebaseMessaging.getToken();
 
     return {
       "deviceId": deviceId,
       "deviceName": deviceName,
-      "tokenFcm": 'tokenFcm',
+      "tokenFcm": tokenFcm,
     };
   }
 }
