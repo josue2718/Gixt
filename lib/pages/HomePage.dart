@@ -47,6 +47,8 @@ class _HomePageState extends State<HomePage> {
   String? calle;
   String ciudad = "";
   String estado = "";
+   String pais = "";
+  String colonia = "";
   double longitud = 0;
   double latitud = 0;
   GoogleMapController? mapController;
@@ -144,16 +146,19 @@ class _HomePageState extends State<HomePage> {
     GeocodingHelper.obtenerCiudadDesdeCoordenadas(
       latitud: latitud,
       longitud: longitud,
-      onResult: (ciudadResult, calleResult, estadoResult) {
+      onResult: (ciudadResult, calleResult, estadoResult,paisResult, coloniaResult) {
         setState(() {
           ciudad = ciudadResult;
           calle = calleResult;
           estado = estadoResult;
+          colonia = coloniaResult;
+          pais = paisResult;
           print(calle);
         });
       },
     );
   }
+
 
   @override
 Widget build(BuildContext context) {
