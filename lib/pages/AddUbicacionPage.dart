@@ -34,6 +34,8 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
   final _stateController = TextEditingController();
   final _house_numberController = TextEditingController();
   final PageController _controller = PageController();
+  GoogleMapController? _mapController;
+
   double longitude = 0;
   double latitude = 0;
   int _paginaActual = 0;
@@ -41,11 +43,14 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
   String? calle;
   String? ciudad;
   String? estado;
+  String? pais;
+  String? colonia;
   GoogleMapController? mapController;
   LatLng? posicionActual = LatLng(20.9674, -89.5926);
 
   Future<void> _irAMiUbicacion() async {
     final position = await Geolocator.getCurrentPosition();
+
     final nuevaPos = LatLng(position.latitude, position.longitude);
 
     setState(() {
@@ -53,6 +58,14 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
       latitude = position.latitude;
       longitude = position.longitude;
     });
+
+    // 🔥 MOVER CÁMARA
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: nuevaPos, zoom: 17),
+      ),
+    );
+
     getcalle();
   }
 
@@ -60,11 +73,13 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
     GeocodingHelper.obtenerCiudadDesdeCoordenadas(
       latitud: latitude,
       longitud: longitude,
-      onResult: (ciudadResult, calleResult, estadoResult) {
+      onResult: (ciudadResult, calleResult, estadoResult,paisResult, coloniaResult) {
         setState(() {
           ciudad = ciudadResult;
           calle = calleResult;
           estado = estadoResult;
+          colonia = coloniaResult;
+          pais = paisResult;
           print(calle);
         });
       },
@@ -189,7 +204,6 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                   if (_paginaActual == 1) ...[
                     _buidFormularioInfo(),
                     const SizedBox(height: 50),
-                    
                   ],
 
                   if (_paginaActual == 0)
@@ -240,9 +254,6 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
       ),
     );
   }
-
-
-
 
   Widget _buidFormularioInfo() {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -365,7 +376,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color:  Theme.of(context).colorScheme.surface,
+                      color: Theme.of(context).colorScheme.surface,
                     ),
                   ),
                 ],
@@ -387,7 +398,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                 },
                 style: ElevatedButton.styleFrom(
                   fixedSize: const Size(300, 50),
-                  backgroundColor:  colorsecundario,
+                  backgroundColor: colorsecundario,
                   foregroundColor: colorWhite,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -404,7 +415,6 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
 
   Widget _buidFormularioUbicacion() {
     final h = MediaQuery.of(context).size.height;
-
     return SizedBox(
       height: h,
       child: Stack(
@@ -417,7 +427,9 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
 
             myLocationEnabled: true,
             myLocationButtonEnabled: true,
-
+            onMapCreated: (controller) {
+              _mapController = controller;
+            },
             gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
               Factory<OneSequenceGestureRecognizer>(
                 () => EagerGestureRecognizer(),
@@ -429,6 +441,11 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                 latitude = pos.latitude;
                 longitude = pos.longitude;
               });
+
+              CameraUpdate.newCameraPosition(
+                CameraPosition(target: pos, zoom: 17),
+              );
+
               getcalle();
             },
 
@@ -469,6 +486,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                   ),
                   Text("$calle", style: TextStyle(color: Colors.white)),
                   Text("$ciudad", style: TextStyle(color: Colors.white)),
+                  Text("$colonia", style: TextStyle(color: Colors.white))
                 ],
               ),
             ),

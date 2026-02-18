@@ -7,47 +7,22 @@ class OptionsSkeleton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      width: 85, // Mismo ancho que el componente real
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          /// Icon Circle Skeleton
-          Container(
-            height: 65,
-            width: 65,
-            decoration: BoxDecoration(
-              color: colorprimario, // Fondo tenue
-              shape: BoxShape.circle,
-            ),
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+      child: SizedBox(
+        width: 150,
+        height: 180,
+        child: Card(
+          color: colorprimario,
+          elevation: 0,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           
-          const SizedBox(height: 12),
-
-          /// Text Line Skeleton (Primera línea)
-          Container(
-            height: 10,
-            width: 50,
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(5),
-            ),
+            
           ),
-          
-          const SizedBox(height: 6),
-
-          /// Text Line Skeleton (Segunda línea opcional)
-          Container(
-            height: 10,
-            width: 30,
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(5),
-            ),
-          ),
-        ],
-      ),
+        )
+      )
     )
     .animate(onPlay: (c) => c.repeat())
     .shimmer(

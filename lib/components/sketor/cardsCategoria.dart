@@ -10,7 +10,7 @@ class CardsCategoriaSkeleton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Card(
-        elevation: 5,
+        elevation: 1,
         color: colorprimario,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

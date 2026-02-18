@@ -12,7 +12,7 @@ class CardsImgSkeleton extends StatelessWidget {
       child: SizedBox(
         width:250,
         child: Card(
-          elevation: 5,
+          elevation: 1,
           color: colorprimario,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),

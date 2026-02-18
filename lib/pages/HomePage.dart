@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:gixt/components/SinDatos/cardsServicios.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/cards/CardsOfertaas.dart';
 import 'package:gixt/components/cards/cardsServicios.dart';
@@ -77,13 +78,12 @@ class _HomePageState extends State<HomePage> {
       isLoading = true;
       timeout = false;
     });
-      
-    await  anuncio.updatedata();
-    await   api.updatedata();
-    await   categorias.updatedata();
-    await   fav.updatedata();
+
+    await anuncio.updatedata();
+    await api.updatedata();
+    await categorias.updatedata();
+    await fav.updatedata();
     _Validation();
-      
   }
 
   Future<void> _Initial() async {
@@ -93,10 +93,11 @@ class _HomePageState extends State<HomePage> {
     });
     bool ok = await api.fetchServicioData();
     bool okfav = await fav.fetchServicioData();
-    bool okData =  await categorias.fetchCategoriasData();
+    bool okData = await categorias.fetchCategoriasData();
     bool okAnc = await anuncio.fetchAnuncioData();
-    if (!okData || !okfav || !ok|| !okAnc) {
+    if (!okData || !okfav || !ok || !okAnc) {
       if (!mounted) return;
+      setState(() {});
       mostrarAlerta(
         context,
         title: "Error",
@@ -106,10 +107,10 @@ class _HomePageState extends State<HomePage> {
     }
     _Validation();
   }
-  
+
   Future<void> _Validation() async {
-  print('empezando contador');
-    Future.delayed(const Duration(seconds: 10), () {
+    print('empezando contador');
+    Future.delayed(const Duration(seconds: 5), () {
       if (isLoading) {
         setState(() {
           timeout = true;
@@ -117,13 +118,13 @@ class _HomePageState extends State<HomePage> {
         print('terminando contador');
       }
     });
+    if (!mounted) return;
     setState(() {
       if (api.servicios.isNotEmpty) {
         isLoading = false;
       }
     });
   }
-  
 
   void obtenerCoordenadas() async {
     try {
@@ -139,155 +140,150 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void getcalle()
-  {
-     GeocodingHelper.obtenerCiudadDesdeCoordenadas(
-        latitud: latitud,
-        longitud: longitud,
-        onResult: (ciudadResult, calleResult,estadoResult) {
-          setState(() {
-            ciudad = ciudadResult;
-            calle = calleResult;
-            estado =estadoResult;
-            print(calle);
-          });
-        },
-      );
-  }
-  
-  
-  @override
-  Widget build(BuildContext context) {
-    return KeyboardDismisser(
-      child: Scaffold(
-        backgroundColor:  Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([
-          ]),
-          builder: (context, snapshot) {
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor:  Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 0,
-                          vertical: 20,
-                        ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            const SizedBox(height: 10),
-                            _buildPromo(),
-                            const SizedBox(height: 10),
-                            _buildCategorias(),
-                            const SizedBox(height: 20),
-                            _buildCategoriaItem(),
-                            _buildTitle(),
-                            _buildServicios(),
-                            if (fav.servicios.isNotEmpty) ...[
-                              _buildTitleFav(),
-                              _buildServiciosFav(),
-                            ],
-                            const SizedBox(height: 100),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
+  void getcalle() {
+    GeocodingHelper.obtenerCiudadDesdeCoordenadas(
+      latitud: latitud,
+      longitud: longitud,
+      onResult: (ciudadResult, calleResult, estadoResult) {
+        setState(() {
+          ciudad = ciudadResult;
+          calle = calleResult;
+          estado = estadoResult;
+          print(calle);
+        });
+      },
     );
   }
 
-  SliverAppBar _buildSliverAppBar() {
-  return SliverAppBar(
-    backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-    expandedHeight: 140,
-    elevation: 0,
+  @override
+Widget build(BuildContext context) {
+  return KeyboardDismisser(
+    child: Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
-    // 👉 Permite que suba y baje con el scroll
-    floating: true,
-    snap: true,
-    pinned: false,
-    automaticallyImplyLeading: false,
-    flexibleSpace: FlexibleSpaceBar(
-      collapseMode: CollapseMode.parallax,
+      body: RefreshIndicator(
+        onRefresh: _onRefresh,
+        child: CustomScrollView(
+          controller: _scrollController,
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
 
-      titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+            _buildSliverAppBar(),
 
-      title: Text(
-        'Hola, ${username ?? ''}',
-        style: GoogleFonts.poppins(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: colorsecundario,
-        ),
-      ),
-
-      background: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor
-        ),
-
-        child: SafeArea(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-
-              // Info usuario
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 4),
-
-                  Row(
-                    children:  [
-                      Icon(Icons.location_on, size: 16, color: Theme.of(context).colorScheme.surface),
-                      SizedBox(width: 4),
-                      Text(
-                        '${ciudad ?? ''} ${estado ?? ''}',
-                        style: TextStyle(fontSize: 15 , color:Theme.of(context).colorScheme.surface ),
-                      )
-                    ],
-                  )
-                ],
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 0,
+                vertical: 20,
               ),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
 
-              const Spacer(),
+                  const SizedBox(height: 10),
 
-              // Notificaciones
-              IconButton(
-                icon: const Icon(Icons.notifications_none),
-                color: Theme.of(context).colorScheme.surface,
-                iconSize: 28,
-                onPressed: () {},
+                  _buildPromo(),
+
+                  const SizedBox(height: 10),
+
+                  _buildCategorias(),
+
+                  _buildCategoriaItem(),
+
+                  _buildTitle(),
+
+                  _buildServicios(),
+
+                  if (fav.servicios.isNotEmpty) ...[
+                    _buildTitleFav(),
+                    _buildServiciosFav(),
+                  ],
+
+                  const SizedBox(height: 100),
+                ]),
               ),
-
-              // Avatar
-              Circleimage(
-                w: 48,
-                h: 48,
-                image_url: img,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     ),
   );
 }
+
+  SliverAppBar _buildSliverAppBar() {
+    return SliverAppBar(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      expandedHeight: 140,
+      elevation: 0,
+      pinned: false,
+      floating: false, // 👈 sin efecto raro
+      snap: false,     // 👈 sin delay
+      automaticallyImplyLeading: false,
+      flexibleSpace: FlexibleSpaceBar(
+        collapseMode: CollapseMode.parallax,
+        titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+        title: Text(
+          'Hola, ${username ?? ''}',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: colorsecundario,
+          ),
+        ),
+        background: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+          ),
+
+          child: SafeArea(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Info usuario
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                        SizedBox(width: 4),
+                        Text(
+                          '${ciudad ?? ''} ${estado ?? ''}',
+                          style: TextStyle(
+                            fontSize: 15,
+                            color: Theme.of(context).colorScheme.surface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+
+                const Spacer(),
+
+                // Notificaciones
+                IconButton(
+                  icon: const Icon(Icons.notifications_none),
+                  color: Theme.of(context).colorScheme.surface,
+                  iconSize: 28,
+                  onPressed: () {},
+                ),
+
+                // Avatar
+                Circleimage(w: 48, h: 48, image_url: img),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _circle(double size, Color color) {
     return Container(
@@ -299,7 +295,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildTitle() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Container(
         alignment: Alignment.topLeft,
         child: Row(
@@ -334,7 +330,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildCategorias() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
       child: Container(
         alignment: Alignment.topLeft,
         child: Row(
@@ -370,15 +366,14 @@ class _HomePageState extends State<HomePage> {
   Widget _buildCategoriaItem() {
     final isLoading = categorias.categorias.isEmpty;
     return SizedBox(
-      height: 150,
+      height: 220,
       child: GridView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20 ,vertical: 20),
         scrollDirection: Axis.horizontal,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 1,
           mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.3,
         ),
         itemCount: isLoading
             ? 3 //  skeletons visibles
@@ -388,7 +383,11 @@ class _HomePageState extends State<HomePage> {
             return const OptionsSkeleton();
           }
           final categoria = categorias.categorias[index];
-          return Options(name: categoria.name, id: categoria.category_id);
+          return Options(
+            name: categoria.name,
+            image_url: categoria.image_url,
+            id: categoria.category_id,
+          );
         },
       ).animate().fade().slideX(begin: -0.2),
     );
@@ -397,13 +396,7 @@ class _HomePageState extends State<HomePage> {
   Widget _buildServicios() {
     final isLoading = api.servicios.isEmpty;
     if (timeout) {
-      return const ListTile(
-        title: Text(
-          "No tienes servicios sercanos",
-          style: TextStyle(color: colorWhite),
-        ),
-        leading: Icon(Icons.location_off),
-      );
+      return CardsSN(img: 'assets/Banner1.png');
     }
     return SizedBox(
       height: 400,
@@ -427,17 +420,17 @@ class _HomePageState extends State<HomePage> {
             final servicio = api.servicios[index];
 
             return CardsServicios(
-                image_url: servicio.image,
-                name: servicio.service_name,
-                worker_image: servicio.userImage,
-                service_id: servicio.service_id,
-                worker: servicio.first_name,
-                category: servicio.category,
-                stars: servicio.rating,
-                price: servicio.price,
-                description: servicio.description,
-                favorito: false,
-              )
+                  image_url: servicio.image,
+                  name: servicio.service_name,
+                  worker_image: servicio.userImage,
+                  service_id: servicio.service_id,
+                  worker: servicio.first_name,
+                  category: servicio.category,
+                  stars: servicio.rating,
+                  price: servicio.price,
+                  description: servicio.description,
+                  favorito: false,
+                )
                 .animate()
                 .fade(duration: 400.ms)
                 .slideY(begin: 0.15)
@@ -494,7 +487,9 @@ class _HomePageState extends State<HomePage> {
                     height: currentIndex == index ? 10 : 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: currentIndex == index ? colorsecundario : Theme.of(context).colorScheme.surface,
+                      color: currentIndex == index
+                          ? colorsecundario
+                          : Theme.of(context).colorScheme.surface,
                     ),
                   ),
                 ),
@@ -565,15 +560,15 @@ class _HomePageState extends State<HomePage> {
             final servicio = fav.servicios[index];
 
             return CardsServicios(
-                image_url: servicio.image,
-                name: servicio.service_name,
-                worker_image: servicio.userImage,
-                service_id: servicio.service_id,
-                worker: servicio.first_name,
-                category: servicio.category,
-                stars: servicio.rating,
-                price: servicio.price,
-                description: servicio.description,
+                  image_url: servicio.image,
+                  name: servicio.service_name,
+                  worker_image: servicio.userImage,
+                  service_id: servicio.service_id,
+                  worker: servicio.first_name,
+                  category: servicio.category,
+                  stars: servicio.rating,
+                  price: servicio.price,
+                  description: servicio.description,
                   favorito: true,
                 )
                 .animate()

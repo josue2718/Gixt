@@ -66,6 +66,7 @@ class LocationsOptions extends StatelessWidget {
                   ),
                   Text(
                     '${neighborhood} ${state} ${city}',
+                    maxLines: 1,
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

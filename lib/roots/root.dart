@@ -26,7 +26,7 @@ class _RootPageState extends State<RootPage> {
         if (_backPressedCount == 1) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Presione nuevamente para salir'),
+              content: Text('Presione nuevamente para salir', style: TextStyle(color: colorWhite),),
               backgroundColor: colorprimario,
             ),
           );

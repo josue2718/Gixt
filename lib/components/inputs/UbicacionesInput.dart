@@ -62,6 +62,7 @@ class UbicacionesInput extends StatelessWidget {
                   ),
                   Text(
                     '${colonia} ${estado} ${ciudad}',
+                    maxLines: 1,
                     style:  TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,

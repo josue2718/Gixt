@@ -234,7 +234,7 @@ class _LoginState extends State<LoginPage> {
             TextButton(
               onPressed: _handleNavigateToRegister,
               style: TextButton.styleFrom(
-                foregroundColor: theme.colorScheme.surface,
+                foregroundColor: Theme.of(context).colorScheme.surface,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               child: Text(

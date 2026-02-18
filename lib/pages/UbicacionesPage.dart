@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/components/LocationsOptions.dart';
+import 'package:gixt/components/SinDatos/cardsServicios.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/sketor/LocationsOptions.dart';
@@ -23,7 +24,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
   bool isLoading = false;
   bool hasMore = true;
   bool timeout = false;
-  
+
   Future<void> _onRefresh() async {
     setState(() {
       print('Actualizando datos...');
@@ -35,10 +36,9 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
     super.initState();
     print("Entré a Mis ubicaciones");
     _initial();
-    
   }
 
-  Future<void> _initial () async {
+  Future<void> _initial() async {
     setState(() {
       isLoading = true;
       timeout = false;
@@ -47,6 +47,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
     isLoading = true;
     if (!ok) {
       if (!mounted) return;
+      setState(() {});
       Future.microtask(() async {
         await mostrarAlerta(
           context,
@@ -61,9 +62,9 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
     _Validation();
   }
 
-   Future<void> _Validation() async {
-  print('empezando contador');
-    Future.delayed(const Duration(seconds: 10), () {
+  Future<void> _Validation() async {
+    print('empezando contador');
+    Future.delayed(const Duration(seconds: 5), () {
       if (isLoading) {
         setState(() {
           timeout = true;
@@ -83,31 +84,21 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([]),
-          builder: (context, snapshot) {
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      const SliverToBoxAdapter(child: SizedBox(height: 50)),
-                      SliverToBoxAdapter(child: _buildTitle()),
-                      SliverToBoxAdapter(child: _buildUbicaciones()),
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                      SliverToBoxAdapter(child: _buildAdd()),
-                      const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        body: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              SliverToBoxAdapter(child: _buildTitle()),
+              SliverToBoxAdapter(child: _buildUbicaciones()),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              SliverToBoxAdapter(child: _buildAdd()),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          ),
         ),
       ),
     );
@@ -115,14 +106,14 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
-      backgroundColor: colorprimario,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       expandedHeight: 80,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
       toolbarHeight: 80,
-      iconTheme: const IconThemeData(color: Colors.white),
+      iconTheme: IconThemeData(color: Theme.of(context).colorScheme.surface),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
@@ -133,7 +124,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
           style: GoogleFonts.poppins(
             fontSize: 30,
             fontWeight: FontWeight.w600,
-            color: colorsecundario,
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
@@ -163,11 +154,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
                 //   MaterialPageRoute(builder: (context) => CategoriasPage()),
                 // );
               },
-              child: Icon(
-                Icons.location_on,
-                size: 20,
-                color: colortitulo,
-              ),
+              child: Icon(Icons.location_on, size: 20, color: colortitulo),
             ),
           ],
         ),
@@ -178,13 +165,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
   Widget _buildUbicaciones() {
     final isLoading = ubicaciones.ubicacion.isEmpty;
     if (timeout) {
-      return const ListTile(
-        title: Text(
-          "No tienes ubicaciones registradas",
-          style: TextStyle(color: colorWhite),
-        ),
-        leading: Icon(Icons.location_off),
-      );
+      return CardsSN(img: 'assets/Banner4.png');
     }
     return Padding(
       padding: const EdgeInsets.all(15),
@@ -236,7 +217,10 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text('Añadir', style: TextStyle(fontSize: 18, color: colorWhite)),
+            child: const Text(
+              'Añadir',
+              style: TextStyle(fontSize: 18, color: colorWhite),
+            ),
           ),
         ],
       ),

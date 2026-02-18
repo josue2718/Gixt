@@ -37,31 +37,36 @@ class CardsAgenda extends StatelessWidget {
 
   Color _getStatusColor() {
     switch (status.toLowerCase()) {
-      case 'en_proceso':
+      case 'in_progress':
         return Colors.orange;
-      case 'pendiente':
+      case 'pending':
+        return Colors.purple;
+      case 'accepted':
         return Colors.blue;
-      case 'aceptado':
-      case 'finalizado':
+      case 'completed':
         return Colors.green;
-      case 'cancelado':
+      case 'canceled':
         return Colors.red;
       default:
         return Colors.grey;
     }
   }
 
-  String _getStatusText() {
-    switch (status.toLowerCase()) {
-      case 'en_proceso':
-        return 'En Proceso';
-      case 'pendiente':
-        return 'Pendiente';
-      case 'aceptado':
-        return 'Finalizado';
-      default:
-        return status;
-    }
+ String _getStatusText() {
+      switch (status.toLowerCase()) {
+        case 'in_progress':
+          return 'En Proceso';
+        case 'accepted':
+          return 'Aceptado';
+        case 'pending':
+          return 'Pendiente';
+        case 'completed':
+          return 'Completado';
+        case 'canceled':
+          return 'Cancelado';
+        default:
+          return status;
+      }
   }
 
   @override

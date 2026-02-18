@@ -44,6 +44,7 @@ class _PerfilPageState extends State<PerfilPage> {
   bool hasMore = true;
   final User_service user = User_service();
   final ScrollController _scrollController = ScrollController();
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _first_nameController = TextEditingController();
   final _last_nameController = TextEditingController();
@@ -115,6 +116,7 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   void _Crear() async {
+     if (!(_formKey.currentState?.validate() ?? false)) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -163,56 +165,61 @@ class _PerfilPageState extends State<PerfilPage> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
+    if (user.user.isEmpty) {
+      return const Scaffold(
+        body: Center(child: Indicador()),
+      );
+    }
+
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([]),
-          builder: (context, snapshot) {
-            if (user.user.isEmpty) {
-              return Indicador();
-            }
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 5,
-                          vertical: 30,
-                        ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            const SizedBox(height: 1),
-                            _buildIMGPerfil().animate().fade().slideX(
-                              begin: -0.2,
-                            ),
-                            const SizedBox(height: 30),
-                            _buildopcions().animate().fade().slideX(
-                              begin: -0.2,
-                            ),
-                            const SizedBox(height: 10),
-                            _buidFormularioInfo().animate().fade().slideX(
-                              begin: -0.2,
-                            ),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  ),
+
+        body: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+
+              _buildSliverAppBar(),
+
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5,
+                  vertical: 30,
+                ),
+
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+
+                    const SizedBox(height: 1),
+
+                    _buildIMGPerfil()
+                        .animate()
+                        .fade()
+                        .slideX(begin: -0.2),
+
+                    const SizedBox(height: 30),
+
+                    _buildopcions()
+                        .animate()
+                        .fade()
+                        .slideX(begin: -0.2),
+
+                    const SizedBox(height: 10),
+
+                    _buidFormularioInfo()
+                        .animate()
+                        .fade()
+                        .slideX(begin: -0.2),
+                  ]),
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );
@@ -496,6 +503,7 @@ class _PerfilPageState extends State<PerfilPage> {
     return Padding(
       padding: const EdgeInsets.all(15),
       child: Form(
+        key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [

@@ -8,13 +8,15 @@ import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/components/inputs/Nacimientoformatter.dart';
-import 'package:gixt/components/inputs/Input.dart';
+import 'package:gixt/components/inputs/Input.dart' hide OtpBoxclass;
 import 'package:gixt/components/inputs/Input_Fecha.dart';
 import 'package:gixt/components/inputs/Input_Password.dart';
 import 'package:gixt/components/inputs/Input_Phone.dart';
+import 'package:gixt/components/inputs/OtpBox.dart';
 import 'package:gixt/components/inputs/Pick_Image.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/cuenta_service.dart';
+import 'package:gixt/services/Auth/validar.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
 import 'package:gixt/services/ubicaciones/location_service.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -41,7 +43,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
   final _first_nameController = TextEditingController();
   final _last_nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final  _birth_dateControlle = TextEditingController();
+  final _birth_dateControlle = TextEditingController();
   bool _isObscured = true;
   bool _isObscured1 = true;
   final PageController _controller = PageController();
@@ -57,6 +59,14 @@ class _CrearcuentaState extends State<Crearcuenta> {
   bool? terms;
   GoogleMapController? mapController;
   LatLng? posicionActual = LatLng(20.9674, -89.5926);
+  String codigo = '';
+  String codigovalidation = '';
+  bool errorCodigo = false;
+  bool enviado = false;
+  Timer? _timer;
+int segundosRestantes = 180; // 3 minutos
+bool timeout = false;
+
 
   Future<void> _saveToken(
     String token,
@@ -109,9 +119,8 @@ class _CrearcuentaState extends State<Crearcuenta> {
       image: _image ?? File(''),
       phone: _phoneController.text,
       gender: _gender ?? "",
-      birth_date:  _birth_dateControlle.text,
-      terms: terms!
-
+      birth_date: _birth_dateControlle.text,
+      terms: terms!,
     );
 
     Navigator.pop(context);
@@ -147,12 +156,80 @@ class _CrearcuentaState extends State<Crearcuenta> {
           type: alert_type.error,
         );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => LoginPage()),
-        );
+       
       });
     }
+  }
+
+ void _Validar() async {
+    
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Indicador(),
+    );
+
+    final result = await ValidarService.Crear(
+      email: _emailController.text,
+
+    );
+
+    Navigator.pop(context);
+
+    if (result['success'] == true) {
+      final data = result['data'];
+      setState(() {
+        codigovalidation = data;
+        enviado = true;
+        iniciarContador();
+
+      });
+      
+    } else {
+      Future.microtask(() async {
+        await mostrarAlerta(
+          context,
+          title: "Error",
+          message: result['message'],
+          type: alert_type.error,
+        );
+
+       
+      });
+    }
+  }
+
+  void iniciarContador() {
+  _timer?.cancel();
+
+  setState(() {
+    segundosRestantes = 120;
+    timeout = false;
+  });
+
+  _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+    if (segundosRestantes <= 0) {
+      timer.cancel();
+if (!mounted) return;
+      setState(() {
+        timeout = true; 
+      });
+
+    } else {
+      if (!mounted) return;
+      setState(() {
+        segundosRestantes--;
+      });
+    }
+  });
+}
+
+  String get tiempoTexto {
+    int min = segundosRestantes ~/ 60;
+    int sec = segundosRestantes % 60;
+
+    return "${min.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}";
   }
 
   Future<void> _pickImage() async {
@@ -200,16 +277,15 @@ class _CrearcuentaState extends State<Crearcuenta> {
                 child: Column(
                   children: [
                     if (_paginaActual == 0) _buidFormulario(),
-                    if (_paginaActual == 1) _buidFormularioInfo(),
-                    
-                    if (_paginaActual == 2) _buidFormularioImg(),
-                    
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(4, (i) => _dot(i)),
-                      ),
-                    
+                    if (_paginaActual == 1) _buildverificacion(),
+                    if (_paginaActual == 2) _buidFormularioInfo(),
+                    if (_paginaActual == 3) _buidFormularioImg(),
+
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(4, (i) => _dot(i)),
+                    ),
                   ],
                 ),
               ),
@@ -344,11 +420,136 @@ class _CrearcuentaState extends State<Crearcuenta> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                'Siguiente',
-                style: TextStyle(fontSize: 18),
+              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+
+  Widget _buildverificacion() {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            Text(
+              'Código de verificación',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.surface,
               ),
             ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              'Te enviamos un código de verificación a: ${_emailController.text}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.surface,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              'Antes de continuar, debemos confirmar tu correo electrónico. Revisa tu bandeja de entrada, te enviamos un código para validar que eres el dueño de esta cuenta. ${codigovalidation}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Theme.of(context).colorScheme.surface,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+            Text(
+              'Valido por: ${tiempoTexto}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 15,
+                color: Theme.of(context).colorScheme.surface,
+              ),
+            ),
+
+
+            const SizedBox(height: 20),
+            OtpBoxclass(
+              isError: errorCodigo,
+              onChanged: (value) {
+                setState(() {
+                  codigo = value;
+                  if (codigo.length == 5) {
+                    if (codigo == codigovalidation  && timeout == false) {
+                      errorCodigo = false;
+                      print("Código correcto");
+                    } else {
+                      errorCodigo = true;
+                      print("Código incorrecto");
+                    }
+                  } else {
+                    print("Código incompleto");
+                    errorCodigo = true; // mientras escribe no marcar error
+                  }
+                });
+              },
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: () {
+                _Validar();
+              },
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text(
+                enviado ? 'reenviar' : 'enviar',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+            if (errorCodigo == false  && timeout == false)...[
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                    _paginaActual++;
+                });
+              },
+              style: ElevatedButton.styleFrom(
+                fixedSize: const Size(300, 50),
+                backgroundColor: colorsecundario,
+                foregroundColor: colorWhite,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+            ),
+            const SizedBox(height: 20),
+             TextButton(
+              onPressed: () {
+                salir();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.surface,
+              ),
+              child: const Text('Regresar'),
+            ),
+            ]
           ],
         ),
       ),
@@ -422,7 +623,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
             ),
 
             const SizedBox(height: 20),
-            CustomTextFormFieldfecha(controller:  _birth_dateControlle),
+            CustomTextFormFieldfecha(controller: _birth_dateControlle),
 
             const SizedBox(height: 20),
             Column(
@@ -460,7 +661,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            _gender= value;
+                            _gender = value;
                           });
                         },
                       ),
@@ -520,10 +721,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                'Siguiente',
-                style: TextStyle(fontSize: 18),
-              ),
+              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
             ),
             TextButton(
               onPressed: () {
@@ -672,10 +870,7 @@ class _CrearcuentaState extends State<Crearcuenta> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
-                'Crear Cuenta',
-                style: TextStyle(fontSize: 18),
-              ),
+              child: const Text('Crear Cuenta', style: TextStyle(fontSize: 18)),
             ),
             TextButton(
               onPressed: () {
@@ -691,5 +886,4 @@ class _CrearcuentaState extends State<Crearcuenta> {
       ),
     );
   }
-
 }

@@ -67,7 +67,7 @@ class Servicios_service {
     final prefs = await SharedPreferences.getInstance();
 
     // config cache
-    const cacheDuration = Duration(seconds: 1);
+    const cacheDuration = Duration(days: 1);
 
     // leer cache
     final cachedData = prefs.getString(_cacheKey);

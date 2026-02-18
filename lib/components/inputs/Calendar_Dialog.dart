@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gixt/components/colors.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
@@ -15,6 +16,8 @@ Future<void> showCalendarDialog({
       CalendarFormat calendarFormat = CalendarFormat.month;
 
       return AlertDialog(
+        backgroundColor: colorcuartario,
+        
         content: SizedBox(
           width: 300,
           height: 400,
@@ -32,7 +35,7 @@ Future<void> showCalendarDialog({
 
             calendarStyle: const CalendarStyle(
               todayDecoration: BoxDecoration(
-                color: Color(0xFF670A0A),
+                color: colorsecundario,
                 shape: BoxShape.circle,
               ),
               selectedDecoration: BoxDecoration(

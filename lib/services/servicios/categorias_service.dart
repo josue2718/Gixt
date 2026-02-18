@@ -9,12 +9,14 @@ import 'dart:convert'; // Para trabajar con JSON
 class Categorias {
   String name;
   int category_id;
+  String image_url;
 
-  Categorias({required this.name, required this.category_id});
+  Categorias({required this.name, required this.category_id, required this.image_url});
 
   factory Categorias.fromJson(Map<String, dynamic> json) {
     return Categorias(
       name: json['name'],
+      image_url: json['image'],
       category_id: json['category_id'],
     );
   }

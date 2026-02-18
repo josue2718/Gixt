@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:gixt/components/colors.dart';
 
 class Barstatus extends StatelessWidget {
@@ -9,17 +8,35 @@ class Barstatus extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final estados = ['pending', 'in_progress', 'completed', 'canceled'];
+    Color color = colorWhite;
+    IconData icon = Icons.info;
+    String label = estadoTrabajo;
 
-    // Determinar el índice del estado actual
-    int currentIndex = 0;
-    if (estadoTrabajo.toLowerCase().contains('pending')) {
-      currentIndex = 1;
-    } else if (estadoTrabajo.toLowerCase().contains('completed') ||
-        estadoTrabajo.toLowerCase().contains('completed')) {
-      currentIndex = 2;
-    } else if (estadoTrabajo.toLowerCase().contains('canceled')) {
-      currentIndex = 3;
+    // Usando switch para determinar color e ícono
+    switch (estadoTrabajo.toLowerCase()) {
+      case 'pending':
+        color = Colors.purple;
+        icon = Icons.schedule;
+        break;
+      case 'accepted':
+        color = Colors.blue;
+        icon = Icons.check;
+        break;
+      case 'in_progress':
+        color = Colors.orange;
+        icon = Icons.autorenew;
+        break;
+      case 'completed':
+        color = Colors.green;
+        icon = Icons.check_circle;
+        break;
+      case 'canceled':
+        color = Colors.red;
+        icon = Icons.cancel;
+        break;
+      default:
+        color = Colors.grey;
+        icon = Icons.info;
     }
 
     return Container(
@@ -27,141 +44,54 @@ class Barstatus extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.25),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             'Estado del servicio',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.surface,
-            ),
+            style: TextStyle(fontSize: 23, fontWeight: FontWeight.bold, color:  Theme.of(context).colorScheme.surface),
           ),
           const SizedBox(height: 20),
 
-          // Barra de progreso
+          // Barra simple
           Row(
-            children: List.generate(estados.length * 2 - 1, (index) {
-              if (index.isEven) {
-                // Es un círculo de estado
-                final stateIndex = index ~/ 2;
-                final isActive = stateIndex <= currentIndex;
-                final isCanceled = currentIndex == 3;
-
-                return _buildStatusCircle(
-                  isActive: isActive,
-                  isCurrent: stateIndex == currentIndex,
-                  isCanceled: isCanceled && stateIndex == 3,
-                );
-              } else {
-                // Es una línea conectora
-                final lineIndex = index ~/ 2;
-                final isActive = lineIndex < currentIndex;
-
-                return Expanded(
-                  child: Container(
-                    height: 3,
-                    color: isActive
-                        ? (currentIndex == 3
-                              ? Colors.red
-                              : Theme.of(context).colorScheme.primary)
-                        : Colors.grey[300],
-                  ),
-                );
-              }
-            }),
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _statusCircle('pending', estadoTrabajo),
+              _line(estadoTrabajo),
+              _statusCircle('accepted', estadoTrabajo),
+              _line(estadoTrabajo),
+              _statusCircle('in_progress', estadoTrabajo),
+              _line(estadoTrabajo),
+              _statusCircle('completed', estadoTrabajo),
+              if (estadoTrabajo.toLowerCase() == 'canceled') ...[
+                _line(estadoTrabajo),
+                _statusCircle('canceled', estadoTrabajo),
+              ]
+            ],
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
 
-          // Etiquetas de estados
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: List.generate(estados.length, (index) {
-              if (index < 3) {
-                return Expanded(
-                  child: Text(
-                    estados[index],
-                    textAlign: index == 0
-                        ? TextAlign.start
-                        : index == 1
-                        ? TextAlign.center
-                        : TextAlign.end,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: index == currentIndex
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      color: index <= currentIndex
-                          ? Theme.of(context).colorScheme.surface
-                          : Colors.grey[400],
-                    ),
-                  ),
-                );
-              } else {
-                // Estado cancelado en línea separada si está activo
-                return const SizedBox.shrink();
-              }
-            }),
-          ),
-
-          // Mostrar cancelado si aplica
-          if (currentIndex == 3) ...[
-            const SizedBox(height: 8),
-            Center(
-              child: Text(
-                'Cancelado',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red,
-                ),
-              ),
+          // Chip con estado
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: color, width: 1.5),
             ),
-          ],
-
-          const SizedBox(height: 16),
-
-          // Chip con el estado actual
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: _getStatusColor(currentIndex).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: _getStatusColor(currentIndex),
-                  width: 1.5,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 18, color: color),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: color),
                 ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _getStatusIcon(currentIndex),
-                    size: 18,
-                    color: _getStatusColor(currentIndex),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    estadoTrabajo,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: _getStatusColor(currentIndex),
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
           ),
         ],
@@ -169,67 +99,50 @@ class Barstatus extends StatelessWidget {
     );
   }
 
-  Color _getStatusColor(int statusIndex) {
-    switch (statusIndex) {
-      case 0:
-        return Colors.orange;
-      case 1:
-        return Colors.blue;
-      case 2:
-        return Colors.green;
-      case 3:
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
+  Widget _statusCircle(String circleState, String currentState) {
+    Color color = Colors.grey;
+    IconData icon = Icons.info;
 
-  IconData _getStatusIcon(int statusIndex) {
-    switch (statusIndex) {
-      case 0:
-        return Icons.schedule;
-      case 1:
-        return Icons.autorenew;
-      case 2:
-        return Icons.check_circle;
-      case 3:
-        return Icons.cancel;
-      default:
-        return Icons.info;
+    switch (circleState) {
+      case 'pending':
+        color = currentState.toLowerCase() == 'pending' ? Colors.purple : Colors.grey[700]!;
+        icon = currentState.toLowerCase() == 'pending' ? Icons.schedule : Icons.info;
+        break;
+      case 'accepted':
+        color = currentState.toLowerCase() == 'accepted' ? Colors.blue : Colors.grey[700]!;
+        icon = currentState.toLowerCase() == 'accepted' ? Icons.check : Icons.info;
+        break;
+      case 'in_progress':
+        color = currentState.toLowerCase() == 'in_progress' ? Colors.orange : Colors.grey[700]!;
+        icon = currentState.toLowerCase() == 'in_progress' ? Icons.autorenew : Icons.info;
+        break;
+      case 'completed':
+        color = currentState.toLowerCase() == 'completed' ? Colors.green : Colors.grey[700]!;
+        icon = currentState.toLowerCase() == 'completed' ? Icons.check : Icons.info;
+        break;
+      case 'canceled':
+        color = Colors.red;
+        icon = Icons.cancel;
+        break;
     }
-  }
 
-  Widget _buildStatusCircle({
-    required bool isActive,
-    required bool isCurrent,
-    required bool isCanceled,
-  }) {
     return Container(
       width: 28,
       height: 28,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: isCanceled
-            ? Colors.red
-            : isActive
-            ? colorsecundario
-            : Colors.grey[300],
-        border: Border.all(
-          color: isCanceled
-              ? Colors.red
-              : isActive
-              ? colorsecundario
-              : Colors.grey[300]!,
-          width: isCurrent ? 3 : 2,
-        ),
-      ),
-      child: isActive
-          ? Icon(
-              isCanceled ? Icons.close : Icons.check,
-              size: 16,
-              color: colorWhite,
-            )
-          : null,
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+      child: Icon(icon, size: 16, color: Colors.white),
+    );
+  }
+
+  Widget _line(String currentState) {
+    Color lineColor = (currentState.toLowerCase() == 'completed' || currentState.toLowerCase() == 'in_progress'|| currentState.toLowerCase() == 'accepted')
+        ? Colors.green
+        : Colors.grey[300]!;
+
+    if (currentState.toLowerCase() == 'canceled') lineColor = Colors.red;
+
+    return Expanded(
+      child: Container(height: 3, color: lineColor),
     );
   }
 }

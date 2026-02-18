@@ -1,77 +1,107 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/pages/CategoriaPage.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class Options extends StatelessWidget {
   final String name;
   final int id;
+  final String image_url;
   final VoidCallback? onTap; // Añadido para manejar el clic
 
   const Options({
     super.key,
     required this.name,
     required this.id,
+    required this.image_url,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 1),
-        // color: colorWhite,
-        width: 15, // Ancho fijo para mantener simetría en listas horizontales
-        child:  InkWell(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+      child: SizedBox(
+        width: 150,
+        height: 180,
+        child: Card(
+          elevation: 0,
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          color: Theme.of(context).colorScheme.primary,
+          child: InkWell(
             onTap: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>CategoriaPage(category_id: id , name : name),
+                  builder: (context) =>
+                      CategoriaPage(category_id: id, name: name),
                 ),
               );
             },
-            child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Contenedor Circular (Estilo Rappi)
-            Container(
-              height: 65,
-              width: 65,
-              decoration: BoxDecoration(
-                color:  colorsecundario, // Fondo suave del mismo color
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.home_repair_service, // Tu icono original
-                  size: 30,
-                  color: colorWhite,
+            child: Stack(
+              clipBehavior: Clip.none,
+              fit: StackFit.expand,
+              children: [
+                CachedNetworkImage(
+                  imageUrl: image_url,
+                  fit: BoxFit.cover,
+                  placeholder: (context, url) => Center(child: Indicador()),
+                  errorWidget: (context, url, error) =>
+                      const Icon(Icons.broken_image),
                 ),
-              ),
+
+                Positioned(
+                  bottom: 12,
+                  left: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorWhite.withOpacity(0.95),
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+
+                    child: Expanded(
+                      child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            name,
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: colorfondo,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            // Texto descriptivo
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style:  TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.surface, // Cambiado a oscuro para contraste sobre fondo claro
-              ),
-            ),
-          ],
+          ),
         ),
-        )
       ),
-    )
-    .animate()
-    .fade(duration: 400.ms)
-    .scale(begin: const Offset(0.9, 0.9),);
+    ).animate().fade(duration: 400.ms).scale(begin: const Offset(0.9, 0.9));
   }
 }

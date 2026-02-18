@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:math';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -133,22 +134,16 @@ class _ServicioPageState extends State<ServicioPage> {
                         ),
                         sliver: SliverList(
                           delegate: SliverChildListDelegate([
-                            _buildTitle().animate().fade().slideX(begin: -0.2),
-                            const SizedBox(height: 20),
-                            _buildTrabajador()
-                                .animate()
-                                .fade(duration: 400.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
-                            const SizedBox(height: 20),
-                            _buildopcions()
-                                .animate()
-                                .fade(duration: 400.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
                             const SizedBox(height: 20),
                             _buildServicio().animate().fade().slideX(
                               begin: -0.2,
                             ),
                             const SizedBox(height: 10),
+                            _buildTrabajador()
+                                .animate()
+                                .fade(duration: 400.ms)
+                                .scale(begin: const Offset(0.9, 0.9)),
+                            const SizedBox(height: 20),
                             _buildImgServicios(),
                           ]),
                         ),
@@ -167,29 +162,90 @@ class _ServicioPageState extends State<ServicioPage> {
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      expandedHeight: 90,
+      backgroundColor: const Color.fromRGBO(0, 0, 0, 0),
+      expandedHeight: 200,
       pinned: false,
-      floating: true,
-      snap: true,
+      floating: false, //  sin efecto raro
+      snap: false, //  sin delay
       elevation: 0,
       toolbarHeight: 90,
 
-      iconTheme: IconThemeData(
-        color: Theme.of(context).colorScheme.surface, // 👈 color del ícono
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
-      ),
+      iconTheme: IconThemeData(color: colorWhite),
+
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
-        title: Text(
-          'Mi Servicio',
-          style: GoogleFonts.poppins(
-            fontSize: 30,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.surface,
-          ),
+        title: const SizedBox(), //  quitamos title para evitar desplazamientos
+
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            ///  IMAGEN
+            CachedNetworkImage(
+              imageUrl: serviciosById.servicios[0].image,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => const Center(child: Indicador()),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.broken_image),
+            ),
+
+            /// GRADIENTE
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+                ),
+              ),
+            ),
+
+            ///  NOMBRE + BOTONES
+            Positioned(
+              bottom: 5,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// NOMBRE
+                  Text(
+                    serviciosById.servicios[0].service_name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+
+                  const SizedBox(height: 0),
+
+                  /// BOTONES PEGADOS A LA DERECHA
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      IconButton(
+                        onPressed: _fav,
+                        icon: Icon(
+                          Icons.favorite,
+                          size: 32,
+                          color: !fav ? colorWhite : colorError,
+                        ),
+                      ),
+
+                      const SizedBox(width: 10), // separación
+
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.share, size: 32, color: colorWhite),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -265,16 +321,16 @@ class _ServicioPageState extends State<ServicioPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Flexible(
-                        child: Text(
-                          serviciosById.servicios[0].worker_name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.surface,
+                          child: Text(
+                            serviciosById.servicios[0].worker_name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).colorScheme.surface,
+                            ),
                           ),
-                        ),
                         ),
                         const SizedBox(width: 8),
                         Container(
@@ -639,93 +695,199 @@ class _ServicioPageState extends State<ServicioPage> {
             ),
           ),
         ),
-        const SizedBox(height: 10),
+
+        SizedBox(height: 20),
+        Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primary,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 50,
+                      width: 50,
+                      
+                      child: Center(
+                        child: Icon(
+                          Icons.attach_money, // Tu icono original
+                          size: 35,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Precio',
+                      style: TextStyle(
+                         fontSize: 13,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.6),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      '\$ ${serviciosById.servicios[0].price}',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                width: 1,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+              ),
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 50,
+                      width: 50,
+                     
+                      child: Center(
+                        child: Icon(
+                          Icons.timer_outlined, // Tu icono original
+                          size: 35,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Duración',
+                      style: TextStyle(
+                        fontSize: 13,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.6),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      '${serviciosById.servicios[0].price}',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                height: 40,
+                width: 1,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+              ),
+              Container(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      height: 50,
+                      width: 50,
+                     
+                      child: Center(
+                        child: Icon(
+                          Icons.star_rounded, // Tu icono original
+                          size: 35,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      'Estrellas',
+                      style: TextStyle(
+                        fontSize: 13,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w500,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.6),
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      '${serviciosById.servicios[0].rating}',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.surface,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
   Widget _bottomBar(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(0, 0, 0, 0), // Margen para que flote
+    return SizedBox(
       height: 90,
-      decoration: BoxDecoration(
-        color: colorprimario,
-        borderRadius: BorderRadius.circular(0),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            ElevatedButton(
-              onPressed: _fav,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                elevation: 0,
-              ),
-              child: Icon(
-                Icons.favorite, // Tu icono original
-                size: 40,
-                color: !fav ? colorWhite : colorError,
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Navigator.push(
-                //     context,
-                //     MaterialPageRoute(
-                //       builder: (context) =>
-                //           MenuSelectPage(id_empresa: widget.id_empresa),
-                //     ));
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                elevation: 0,
-              ),
-              child: Icon(
-                Icons.share, // Tu icono original
-                size: 40,
-                color: colorsecundario,
-              ),
-            ),
-            Spacer(),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ReservaPage(
-                      service_id: serviciosById.servicios[0].service_id,
-                      name: serviciosById.servicios[0].service_name,
-                      description: serviciosById.servicios[0].description,
-                    ),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(150, 45),
-                backgroundColor: colorsecundario,
-                foregroundColor: colorWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
+      child: Center(
+        child: ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ReservaPage(
+                  service_id: serviciosById.servicios[0].service_id,
+                  name: serviciosById.servicios[0].service_name,
+                  description: serviciosById.servicios[0].description,
                 ),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [Text('Reserva')],
-              ),
+            );
+          },
+
+          /// 🔥 ESTILO
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            backgroundColor: colorsecundario,
+            foregroundColor: colorWhite,
+            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
             ),
-          ],
+          ),
+
+          icon: const Icon(Icons.calendar_month, size: 22),
+          label: const Text(
+            'Reservar',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          ),
         ),
       ),
     );

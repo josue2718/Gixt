@@ -4,7 +4,7 @@ class GeocodingHelper {
   static Future<void> obtenerCiudadDesdeCoordenadas({
     required double latitud,
     required double longitud,
-    required Function(String ciudad, String calle , String estado) onResult,
+    required Function(String ciudad, String calle , String estado, String colonia, String pais) onResult,
   }) async {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(
@@ -14,15 +14,17 @@ class GeocodingHelper {
 
       Placemark p = placemarks.first;
 
-      String ciudad =
-          p.locality ?? p.subAdministrativeArea ?? p.administrativeArea ?? '';
 
       String calle = p.street ?? p.thoroughfare ?? p.name ?? '';
+      String colonia = p.subAdministrativeArea?? '';
+      String ciudad = p.locality ?? '';
       String estado = p.administrativeArea ?? '';
-      onResult(ciudad, calle,estado);
+      String pais = p.country ?? '';
+
+      onResult(ciudad, calle,estado,colonia,pais);
     } catch (e) {
       print("Geocoding error: $e");
-      onResult('', '','');
+      onResult('', '','','','');
     }
   }
 }

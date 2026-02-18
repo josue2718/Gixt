@@ -6,6 +6,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/components/Indicador.dart';
+import 'package:gixt/components/SinDatos/cardsServicios.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/cards/cardsCategoria.dart';
 import 'package:gixt/components/colors.dart';
@@ -87,11 +88,11 @@ class _CategoriaPageState extends State<CategoriaPage> {
     isLoading = true;
     pageNumber++;
     bool ok = await api.fetchServicioCatData(widget.category_id, pageNumber);
+    if (!mounted) return;
     setState(() => isLoading = false);
   }
 
   Future<void> _onRefresh() async {
-
     setState(() {
       isLoading = true;
       timeout = false;
@@ -120,7 +121,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
 
   Future<void> _Validation() async {
     print('empezando contador');
-    Future.delayed(const Duration(seconds: 10), () {
+    Future.delayed(const Duration(seconds: 5), () {
       if (isLoading) {
         setState(() {
           timeout = true;
@@ -128,6 +129,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
         print('terminando contador');
       }
     });
+    if (!mounted) return;
     setState(() {
       if (api.servicios.isNotEmpty) {
         isLoading = false;
@@ -140,29 +142,19 @@ class _CategoriaPageState extends State<CategoriaPage> {
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([]),
-          builder: (context, snapshot) {
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      const SliverToBoxAdapter(child: SizedBox(height: 20)),
-                      SliverToBoxAdapter(child: _buildTitle()),
-                      SliverToBoxAdapter(child: _buildServicios()),
-                      const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
+        body: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(),
+              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              SliverToBoxAdapter(child: _buildTitle()),
+              SliverToBoxAdapter(child: _buildServicios()),
+              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+            ],
+          ),
         ),
       ),
     );
@@ -170,15 +162,15 @@ class _CategoriaPageState extends State<CategoriaPage> {
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
-      backgroundColor: colorprimario,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       expandedHeight: 80,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
       toolbarHeight: 80,
-      iconTheme: const IconThemeData(
-        color: Colors.white, // 👈 color del ícono
+      iconTheme: IconThemeData(
+        color: Theme.of(context).colorScheme.surface, // 👈 color del ícono
       ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
@@ -190,7 +182,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
           style: GoogleFonts.poppins(
             fontSize: 30,
             fontWeight: FontWeight.w600,
-            color: colorsecundario,
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
@@ -235,13 +227,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
   Widget _buildServicios() {
     final isLoading1 = api.servicios.isEmpty;
     if (timeout) {
-      return const ListTile(
-        title: Text(
-          "No tienes servicios sercanos",
-          style: TextStyle(color: colorWhite),
-        ),
-        leading: Icon(Icons.location_off),
-      );
+      return CardsSN(img: 'assets/Banner1.png');
     }
     return GridView.builder(
       scrollDirection: Axis.vertical,
@@ -267,17 +253,16 @@ class _CategoriaPageState extends State<CategoriaPage> {
           final servicio = api.servicios[index];
 
           return CardsServiciosCategoria(
-                image_url: servicio.image,
-                name: servicio.service_name,
-                worker_image: servicio.userImage,
-                service_id: servicio.service_id,
-                worker: servicio.first_name,
-                category: servicio.category,
-                stars: servicio.rating,
-                price: servicio.price,
-                description: servicio.description,
-              );
-               
+            image_url: servicio.image,
+            name: servicio.service_name,
+            worker_image: servicio.userImage,
+            service_id: servicio.service_id,
+            worker: servicio.first_name,
+            category: servicio.category,
+            stars: servicio.rating,
+            price: servicio.price,
+            description: servicio.description,
+          );
         } catch (e) {
           return const SizedBox(); // widget vacío
         }
