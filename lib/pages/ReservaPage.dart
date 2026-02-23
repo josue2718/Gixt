@@ -62,13 +62,7 @@ class _ReservaPageState extends State<ReservaPage> {
   int _paginaActual = 0;
   List<File?> _images = List.generate(2, (_) => null);
   String? _payment;
-  String? _token;
-  String? _inicio;
-  String? _id;
-  String? _img;
-  String? _user;
   String? ubicaciontext;
-  bool terms = false;
 
   void _Crear() async {
     if (_payment == null) {
@@ -80,15 +74,7 @@ class _ReservaPageState extends State<ReservaPage> {
       );
       return;
     }
-    if (!terms!) {
-      mostrarAlerta(
-        context,
-        title: 'Se requieren aceptar',
-        message: 'Acepta los terminos y condiciones',
-        type: alert_type.advertencia,
-      );
-      return;
-    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -105,9 +91,8 @@ class _ReservaPageState extends State<ReservaPage> {
       image_1: _images[0]!,
       image_2: _images[1]!,
       payment_method: _payment!,
-      terms: terms!,
+      terms: true,
     );
-
 
     Navigator.pop(context);
 
@@ -204,7 +189,7 @@ class _ReservaPageState extends State<ReservaPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(3, (i) => _dot(i)),
                       ),
-                      const SizedBox(height: 150),
+                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
@@ -218,7 +203,7 @@ class _ReservaPageState extends State<ReservaPage> {
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
-      backgroundColor: colorprimario,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       expandedHeight: 90,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
@@ -228,17 +213,27 @@ class _ReservaPageState extends State<ReservaPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
+
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         onPressed: () {
           salir();
         },
       ),
+
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
-          'Mi reserva',
+          'Nueva reserva',
           style: GoogleFonts.poppins(
             fontSize: 30,
             fontWeight: FontWeight.w600,
@@ -295,10 +290,20 @@ class _ReservaPageState extends State<ReservaPage> {
             Text(
               'Informacion del servicio',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.surface,
+                letterSpacing: -0.2,
+              ),
+            ),
+            Text(
+              'describenos tu problema, la fecha y hora que deseas el servicio, y sube fotos de evidencia para que el trabajador pueda entender mejor tu situación',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                height: 1.6,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
               ),
             ),
 
@@ -448,14 +453,26 @@ class _ReservaPageState extends State<ReservaPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  'Ubicacion del servicio Express',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                  'Ubicacion del servicio',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
                     color: Theme.of(context).colorScheme.surface,
+                    letterSpacing: -0.2,
                   ),
                 ),
-                SizedBox(height: 10),
+                Text(
+                  'selecciona la ubicacion donde deseas el servicio, puedes elegir entre tus ubicaciones guardadas o agregar una nueva desde tu perfil',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    height: 1.6,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.45),
+                  ),
+                ),
                 _buildUbicacionItem(),
               ],
             ),
@@ -532,14 +549,13 @@ class _ReservaPageState extends State<ReservaPage> {
             });
           },
         );
-
       },
     ).animate().fade().slideX(begin: -0.2);
   }
 
   Widget _buildFormularioImg() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
@@ -555,56 +571,49 @@ class _ReservaPageState extends State<ReservaPage> {
   }
 
   Widget imageBox(int index) {
-    return SizedBox(
-      width: 150,
-      height: 150,
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          _images[index] == null
-              ? Container(
-                  width: 130,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 177, 177, 177),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Icon(
-                    Icons.person,
-                    color: Colors.white,
-                    size: 65,
-                  ),
-                )
-              : ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.file(
-                    _images[index]!,
+    return GestureDetector(
+      onTap: () => _pickImage(index),
+      child: SizedBox(
+        width: 150,
+        height: 150,
+        child: Stack(
+          alignment: Alignment.center,
+          clipBehavior: Clip.none,
+          children: [
+            _images[index] == null
+                ? Container(
                     width: 130,
                     height: 130,
-                    fit: BoxFit.cover,
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.05),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.12),
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Icon(
+                      Icons.add_photo_alternate_outlined,
+                      size: 28,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.25),
+                    ),
+                  )
+                : ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.file(
+                      _images[index]!,
+                      width: 130,
+                      height: 130,
+                      fit: BoxFit.cover,
+                    ),
                   ),
-                ),
-
-          Positioned(
-            bottom: 0,
-            right: 0,
-            child: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: colorsecundario,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: IconButton(
-                onPressed: () => _pickImage(index),
-                icon: const Icon(Icons.add_a_photo_outlined),
-                color: colorWhite,
-                iconSize: 25,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -656,38 +665,19 @@ class _ReservaPageState extends State<ReservaPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                '¡Informacion de la reserva!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(height: 20),
-                  _buildServicio(),
-                  SizedBox(height: 20),
-                  _buildTrabajo(),
-                  SizedBox(height: 20),
-                  _buildUbicacion(),
-                  SizedBox(height: 20),
-                  _buildImg(),
-                  SizedBox(height: 20),
-                  _buildPrecio(),
-                  SizedBox(height: 20),
-                  _buildterms(),
-                  SizedBox(height: 20),
-                ],
-              ),
-
-              SizedBox(height: 10),
+              _buildUbicacion(),
+              SizedBox(height: 20),
+              _buildServicio(),
+              SizedBox(height: 20),
+              _buildTrabajo(),
+              SizedBox(height: 20),
+              _buildPrecio(),
+              SizedBox(height: 20),
+              _buildImg(),
+              SizedBox(height: 20),
             ],
           ),
+
           const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
@@ -710,44 +700,28 @@ class _ReservaPageState extends State<ReservaPage> {
 
   Widget _buildImg() {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             SizedBox(height: 20),
             Text(
-              'Imagenes',
+              'Imagenes de evidencia',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.surface,
+                letterSpacing: -0.2,
               ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.photo,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
             ),
           ],
         ),
         SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
               imageBox1(0),
               const SizedBox(width: 10),
@@ -755,7 +729,6 @@ class _ReservaPageState extends State<ReservaPage> {
               const SizedBox(width: 10),
             ],
           ),
-          )
         ),
       ],
     );
@@ -766,58 +739,22 @@ class _ReservaPageState extends State<ReservaPage> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Servicio',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
-        ),
-        SizedBox(height: 30),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        Text(
+          'Servicio solicitado:  ${widget.name}',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
           ),
-          child: Column(
-            children: [
-              Text(
-                '${widget.name}',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '${widget.description}',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
-                ),
-              ),
-            ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '${widget.description}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
           ),
         ),
       ],
@@ -829,161 +766,151 @@ class _ReservaPageState extends State<ReservaPage> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Trabajo',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
+        Text(
+          'Problema',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '${_problemController.text}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Text(
+          'Descripcion ',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Text(
+          '${_descriptionController.text}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
         ),
         SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Descripcion ',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-
-              Text(
-                '${_descriptionController.text}',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-              SizedBox(height: 20),
-
-              Text(
-                'Fecha del servicio',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-
-              SizedBox(height: 20),
-              Row(
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.event,
-                    color: Theme.of(context).colorScheme.surface,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
                   Text(
-                    '${_dateController.text}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.surface,
+                    'Fecha del servicio',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.access_time,
-                    color: Theme.of(context).colorScheme.surface,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${_timeController.text}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.event_outlined,
+                        size: 15,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.35),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _dateController.text,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            Container(
+              width: 1,
+              height: 40,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'hora del servicio',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.access_time_outlined,
+                        size: 15,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.35),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _timeController.text,
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context).colorScheme.surface,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
   Widget _buildUbicacion() {
-    return Column(
+    return Row(
       children: [
-        Row(
-          children: [
-            SizedBox(height: 20),
-            Text(
-              'Ubicacion',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.location_on,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
+        Icon(
+          Icons.location_on_outlined,
+          size: 18,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.4),
         ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                '${ubicaciontext}',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-            ],
+        const SizedBox(width: 4),
+        Text(
+          '${ubicaciontext}',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
           ),
         ),
       ],
@@ -992,258 +919,106 @@ class _ReservaPageState extends State<ReservaPage> {
 
   Widget _buildPrecio() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Precio
+        Text(
+          'Precio',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Pendiente',
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.surface,
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        // Tipo de pago
+        Text(
+          'Método de pago',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
+        ),
+        const SizedBox(height: 12),
+
+        // Opciones de pago como chips
         Row(
           children: [
-            SizedBox(height: 20),
-            Text(
-              'Pago y Metodo',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
+            _paymentChip(
+              value: 'cash',
+              label: 'Efectivo',
+              icon: Icons.payments_outlined,
             ),
-            Spacer(),
-            Icon(
-              Icons.payment,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
+            const SizedBox(width: 10),
+            _paymentChip(
+              value: 'card',
+              label: 'Tarjeta',
+              icon: Icons.credit_card_outlined,
             ),
           ],
-        ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Precio',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    Spacer(),
-                    Icon(
-                      Icons.credit_card,
-                      size: 25,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ],
-                ),
-
-                SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: colorsecundario,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    'Pendiente',
-                    style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      color: colorWhite,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  children: [
-                    Text(
-                      'Tipó de pago',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    Spacer(),
-                    Icon(
-                      Icons.credit_card,
-                      size: 25,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ],
-                ),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        value: 'cash',
-                        groupValue: _payment,
-                        fillColor: MaterialStateProperty.resolveWith<Color>((
-                          states,
-                        ) {
-                          if (states.contains(MaterialState.selected)) {
-                            return colorsecundario;
-                          }
-                          return Theme.of(context).colorScheme.surface;
-                        }),
-                        title: Text(
-                          'Efectivo',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() => _payment = value);
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        value: 'card',
-                        groupValue: _payment,
-                        fillColor: MaterialStateProperty.resolveWith<Color>((
-                          states,
-                        ) {
-                          if (states.contains(MaterialState.selected)) {
-                            return colorsecundario;
-                          }
-                          return Theme.of(context).colorScheme.surface;
-                        }),
-                        title: Text(
-                          'Tarjeta',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() => _payment = value);
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
         ),
       ],
     );
   }
 
-  Widget _buildterms() {
-    return Column(
-      children: [
-        Row(
+  Widget _paymentChip({
+    required String value,
+    required String label,
+    required IconData icon,
+  }) {
+    final isSelected = _payment == value;
+
+    return GestureDetector(
+      onTap: () => setState(() => _payment = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorsecundario.withOpacity(0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? colorsecundario
+                : Theme.of(context).colorScheme.surface.withOpacity(0.12),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(height: 20),
-            Text(
-              'Terminos y condiciones',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
             Icon(
-              Icons.description,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
+              icon,
+              size: 16,
+              color: isSelected
+                  ? colorsecundario
+                  : Theme.of(context).colorScheme.surface.withOpacity(0.4),
+            ),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? colorsecundario
+                    : Theme.of(context).colorScheme.surface.withOpacity(0.55),
+              ),
             ),
           ],
         ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<bool>(
-                        value: true,
-                        fillColor: MaterialStateProperty.resolveWith<Color>((
-                          states,
-                        ) {
-                          if (states.contains(MaterialState.selected)) {
-                            return colorsecundario;
-                          }
-                          return Theme.of(context).colorScheme.surface;
-                        }),
-                        groupValue: terms,
-                        activeColor: Theme.of(context).colorScheme.surface,
-                        title: Text(
-                          'Acepto los terminos y condiciones',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            terms = value!;
-                          });
-                        },
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.surface,
-                      ),
-                      child: const Text('Leer'),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

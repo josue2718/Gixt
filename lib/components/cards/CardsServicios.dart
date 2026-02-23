@@ -153,8 +153,9 @@ class CardsServicios extends StatelessWidget {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: colorsecundario,
-                            borderRadius: BorderRadius.circular(20),
+                             color: colorsecundario.withOpacity(0.6),
+                            border: Border.all(color: colorsecundario, width: 1),
+                            borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
                                 color: Colors.black.withOpacity(0.2),

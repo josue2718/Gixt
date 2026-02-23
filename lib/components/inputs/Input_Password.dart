@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 
 class CustomPasswordFormField extends StatefulWidget {
   final TextEditingController controller;
@@ -19,7 +21,24 @@ class CustomPasswordFormField extends StatefulWidget {
 }
 
 class _CustomPasswordFormFieldState extends State<CustomPasswordFormField> {
+  
   bool _isObscured = true;
+   final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,38 +52,59 @@ class _CustomPasswordFormFieldState extends State<CustomPasswordFormField> {
         labelText: widget.label,
 
         // 🔹 Label normal
-        labelStyle: TextStyle(color: Theme.of(context).colorScheme.surface),
-
-        // 🔹 Label cuando está seleccionado
-        floatingLabelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.surface,
-          fontWeight: FontWeight.bold,
+        labelStyle: GoogleFonts.poppins(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
         ),
 
-        border: const UnderlineInputBorder(),
+        // 🔹 Label cuando está seleccionado
+        floatingLabelStyle: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: _isFocused
+              ? colorsecundario
+              : Theme.of(context).colorScheme.surface.withOpacity(0.45),
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.primary,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
 
         // 🔹 Línea normal
-        enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+            width: 1,
+          ),
         ),
 
         // 🔹 Línea cuando está seleccionado
-        focusedBorder: UnderlineInputBorder(
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.surface,
-            width: 2,
+            color: colorsecundario.withOpacity(0.5),
+            width: 1.5,
           ),
         ),
 
         // 🔹 Línea cuando hay error
-        errorBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
+       errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Colors.red.withOpacity(0.5),
+            width: 1,
+          ),
         ),
 
-        focusedErrorBorder: UnderlineInputBorder(
-          borderSide: BorderSide(
-            color: Theme.of(context).colorScheme.surface,
-            width: 2,
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(
+            color: Colors.red,
+            width: 1.5,
           ),
         ),
 
@@ -72,7 +112,7 @@ class _CustomPasswordFormFieldState extends State<CustomPasswordFormField> {
         suffixIcon: IconButton(
           icon: Icon(
             _isObscured ? Icons.visibility : Icons.visibility_off,
-            color: Theme.of(context).colorScheme.surface,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
           ),
           onPressed: () {
             setState(() {
@@ -80,11 +120,14 @@ class _CustomPasswordFormFieldState extends State<CustomPasswordFormField> {
             });
           },
         ),
+       
 
-        errorStyle: TextStyle(
-          color: Theme.of(context).colorScheme.surface,
-          fontWeight: FontWeight.bold,
+        errorStyle: GoogleFonts.poppins(
+          fontSize: 11,
+          color: Colors.red.withOpacity(0.8),
         ),
+
+        
       ),
 
       validator:

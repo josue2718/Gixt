@@ -16,7 +16,7 @@ class GeocodingHelper {
 
 
       String calle = p.street ?? p.thoroughfare ?? p.name ?? '';
-      String colonia = p.subAdministrativeArea?? '';
+      String colonia = p.administrativeArea ?? '';
       String ciudad = p.locality ?? '';
       String estado = p.administrativeArea ?? '';
       String pais = p.country ?? '';

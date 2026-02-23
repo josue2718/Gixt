@@ -45,7 +45,7 @@ class AddServicioService {
         request.fields['problem'] = problem;
         request.fields['description'] = description;
         request.fields['payment_method'] = payment_method;
-        request.fields['terms'] = terms.toString();
+        request.fields['terms'] = true.toString();
 
 
         // Archivo

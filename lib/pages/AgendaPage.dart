@@ -26,7 +26,7 @@ class _AgendaPageState extends State<AgendaPage> {
   bool timeout = false;
   String? img;
   String? username;
-
+  String _category = 'todos';
   @override
   void initState() {
     super.initState();
@@ -96,14 +96,19 @@ class _AgendaPageState extends State<AgendaPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               _buildSliverAppBar(),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 20),
-              ),
-              SliverToBoxAdapter(
-                child: _buildData(),
-              ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 100),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 10),
+                    _buildFiltros(),
+                    const SizedBox(height: 20),
+                    _buildData(),
+                  ]),
+                ),
               ),
             ],
           ),
@@ -128,6 +133,14 @@ class _AgendaPageState extends State<AgendaPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
@@ -142,82 +155,152 @@ class _AgendaPageState extends State<AgendaPage> {
     );
   }
 
+  Widget _buildFiltros() {
+    return SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _categoryChip(
+              value: 'todos',
+              label: 'Todos',
+              icon: Icons.list_alt_outlined,
+            ),
+            const SizedBox(width: 10),
+            _categoryChip(
+              value: 'pending',
+              label: 'Pendiente',
+              icon: Icons.pending_actions_outlined,
+            ),
+            const SizedBox(width: 10),
+            _categoryChip(
+              value: 'accepted',
+              label: 'Aceptado',
+              icon: Icons.check_circle_outline,
+            ),
+            const SizedBox(width: 10),
+            _categoryChip(
+              value: 'in_progress',
+              label: 'En progreso',
+              icon: Icons.work_outline,
+            ),
+            const SizedBox(width: 10),
+            _categoryChip(
+              value: 'finalized',
+              label: 'Finalizado',
+              icon: Icons.done_outline,
+            ),
+            const SizedBox(width: 10),
+            _categoryChip(
+              value: 'completed',
+              label: 'Completado',
+              icon: Icons.thumb_up_outlined,
+            ),
+          ],
+        ),
+      
+    );
+  }
+
+  Widget _categoryChip({
+    required String value,
+    required String label,
+    required IconData icon,
+  }) {
+    final isSelected = _category == value;
+
+    return GestureDetector(
+      onTap: () => setState(() => _category = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorsecundario.withOpacity(0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? colorsecundario
+                : Theme.of(context).colorScheme.surface.withOpacity(0.12),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected
+                  ? colorsecundario
+                  : Theme.of(context).colorScheme.surface.withOpacity(0.4),
+            ),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? colorsecundario
+                    : Theme.of(context).colorScheme.surface.withOpacity(0.55),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildData() {
     return Column(
       children: [
         if (timeout) ...[CardsSN(img: 'assets/Banner2.png')],
-        if (!timeout) ...[
-        _buildServicios("pending"),
-        _buildServicios("accepted"),
-        _buildServicios("in_progress"),
-        _buildServicios("completed"),
-        _buildServicios("canceled"),
-        ]
+        if (!timeout) ...[_buildServicios(_category)],
       ],
     );
   }
 
   Widget _buildServicios(String tipo) {
     // Filtrar por estado
-    final List<Agenda> filtrados = api.agenda
-        .where((a) => a.job_status == tipo)
-        .toList();
-
-
-    String _getStatusText() {
-      switch (tipo.toLowerCase()) {
-        case 'in_progress':
-          return 'En Proceso';
-        case 'accepted':
-          return 'Aceptado';
-        case 'pending':
-          return 'Pendiente';
-        case 'completed':
-          return 'Completado';
-        case 'canceled':
-          return 'Cancelado';
-        default:
-          return tipo;
+    final List<Agenda> filtrados = api.agenda.where((a) {
+      if (tipo.toLowerCase() == 'in_progress') {
+        // cuando llamas "in_progress" incluimos los 3 estados
+        return a.job_status == 'in_progress' ||
+            a.job_status == 'going' ||
+            a.job_status == 'arrived';
+      } else if (tipo.toLowerCase() == 'todos') {
+        return true; // incluye todos los estados
+      } else {
+        return a.job_status == tipo;
       }
-    }
+    }).toList();
 
-    if (filtrados.isEmpty && !isLoading ) {
+    if (filtrados.isEmpty && !isLoading) {
       return Container();
     }
     return Container(
       alignment: Alignment.topLeft,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-            child: Row(
-              children: [
-                Text(
-                  'Trabajos ${_getStatusText()}',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.surface,
-                  ),
+          Row(
+            children: [
+              Text(
+                'Tienes ${_category}: (${filtrados.length})',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.surface,
                 ),
-                Spacer(),
-                InkWell(
-                  onTap: () {},
-                  child: Icon(
-                    Icons.arrow_forward_ios,
-                    size: 20,
-                    color: Theme.of(context).colorScheme.surface,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-
+          SizedBox(height: 20),
           GridView.builder(
             scrollDirection: Axis.vertical,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 20),
+            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 1,
               mainAxisSpacing: 20,
@@ -230,8 +313,9 @@ class _AgendaPageState extends State<AgendaPage> {
               }
 
               final agenda = filtrados[index];
-
-              return CardsAgenda(
+              return 
+              // CardsCategoriaSkeleton();
+              CardsAgenda(
                     image_url: agenda.service_image,
                     name: agenda.service_name,
                     worker_image: agenda.worker_image,
@@ -248,6 +332,8 @@ class _AgendaPageState extends State<AgendaPage> {
                   .fade(duration: 400.ms)
                   .slideY(begin: 0.15)
                   .scale(begin: const Offset(0.96, 0.96));
+                
+              
             },
           ),
         ],

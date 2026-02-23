@@ -42,7 +42,6 @@ class _ServicioPageState extends State<ServicioPage> {
   @override
   void initState() {
     super.initState();
-    print("Entré a Mi Servicio");
     _initial();
   }
 
@@ -57,21 +56,16 @@ class _ServicioPageState extends State<ServicioPage> {
           message: "No se pudo obtener la información",
           type: alert_type.error,
         );
-
         Navigator.pop(context);
       });
     }
-
     setState(() {
       fav = serviciosById.servicios[0].favorite;
     });
   }
 
   Future<void> _onRefresh() async {
-    setState(() {
-      print('Actualizando datos...');
-      hasMore = true;
-    });
+    setState(() => hasMore = true);
     bool ok = await serviciosById.fetchServicioData(widget.service_id);
     if (!ok) {
       if (!mounted) return;
@@ -82,7 +76,6 @@ class _ServicioPageState extends State<ServicioPage> {
           message: "No se pudo obtener la información",
           type: alert_type.error,
         );
-
         Navigator.pop(context);
       });
     }
@@ -90,96 +83,85 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   void _fav() async {
-    setState(() {
-      fav = !fav;
-    });
-    final result = await FavoritoService.Crear(service_id: widget.service_id);
-    print(result);
-    if (result['success'] == true) {
-      setState(() {
-        fav = fav;
-      });
-    } else {
-      setState(() {
-        fav = fav;
-      });
-    }
+    setState(() => fav = !fav);
+    await FavoritoService.Crear(service_id: widget.service_id);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (serviciosById.servicios.isEmpty) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Indicador(),
+      );
+    }
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([]),
-          builder: (context, snapshot) {
-            if (serviciosById.servicios.isEmpty) {
-              return Indicador();
-            }
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            const SizedBox(height: 20),
-                            _buildServicio().animate().fade().slideX(
-                              begin: -0.2,
-                            ),
-                            const SizedBox(height: 10),
-                            _buildTrabajador()
-                                .animate()
-                                .fade(duration: 400.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
-                            const SizedBox(height: 20),
-                            _buildImgServicios(),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  ),
+        body: RefreshIndicator(
+          color: colorsecundario,
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 8,
                 ),
-                bottomNavigationBar: _bottomBar(context),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 16),
+                    _buildTitle()
+                        .animate()
+                        .fade(duration: 450.ms, delay: 60.ms)
+                        .slideX(begin: -0.2),
+                    const SizedBox(height: 24),
+                    _buildServicio()
+                        .animate()
+                        .fade(duration: 450.ms, delay: 60.ms)
+                        .slideX(begin: -0.2),
+                    const SizedBox(height: 24),
+                    _buildTrabajador()
+                        .animate()
+                        .fade(duration: 450.ms, delay: 60.ms)
+                        .slideX(begin: -0.2),
+                    const SizedBox(height: 24),
+                    _buildImgServicios()
+                        .animate()
+                        .fade(duration: 450.ms, delay: 60.ms)
+                        .slideX(begin: -0.2),
+                    const SizedBox(height: 24),
+                  ]),
+                ),
               ),
-            );
-          },
+            ],
+          ),
         ),
+        bottomNavigationBar: _bottomBar(context),
       ),
     );
   }
 
   SliverAppBar _buildSliverAppBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SliverAppBar(
       backgroundColor: const Color.fromRGBO(0, 0, 0, 0),
-      expandedHeight: 200,
+      expandedHeight: 320,
       pinned: false,
       floating: false, //  sin efecto raro
       snap: false, //  sin delay
       elevation: 0,
       toolbarHeight: 90,
-
       iconTheme: IconThemeData(color: colorWhite),
-
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: const SizedBox(), //  quitamos title para evitar desplazamientos
-
         background: Stack(
           fit: StackFit.expand,
           children: [
-            ///  IMAGEN
             CachedNetworkImage(
               imageUrl: serviciosById.servicios[0].image,
               fit: BoxFit.cover,
@@ -188,18 +170,8 @@ class _ServicioPageState extends State<ServicioPage> {
                   const Icon(Icons.broken_image),
             ),
 
-            /// GRADIENTE
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
-                ),
-              ),
-            ),
+            Container(color: Colors.black.withOpacity(isDark ? 0.35 : 0.15)),
 
-            ///  NOMBRE + BOTONES
             Positioned(
               bottom: 5,
               left: 16,
@@ -207,15 +179,40 @@ class _ServicioPageState extends State<ServicioPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorsecundario.withOpacity(0.3),
+                      border: Border.all(color: colorsecundario, width: 1),
+                      borderRadius: BorderRadius.circular(8), // opcional
+                    ),
+                    child: Text(
+                      serviciosById.servicios[0].category,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: colorWhite, // mejor contraste con fondo blanco
+                        height: 1.2,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
                   /// NOMBRE
                   Text(
                     serviciosById.servicios[0].service_name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                    style: GoogleFonts.poppins(
+                      fontSize: 23,
+                      fontWeight: FontWeight.w800,
+                      color: colorWhite, // mejor contraste con fondo blanco
+                      height: 1.2,
                     ),
                   ),
 
@@ -252,121 +249,194 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   Widget _buildTitle() {
-    return Expanded(
-      child: Text(
-        serviciosById.servicios[0].service_name,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 25,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.surface,
+    return Row(
+      children: [
+        Icon(Icons.location_on_outlined, size: 15, color: colorsecundario),
+        const SizedBox(width: 4),
+        Text(
+          'Location Name Here',
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+          ),
         ),
-      ),
+        const Spacer(),
+        Icon(Icons.star_rounded, size: 16, color: Colors.amber),
+        const SizedBox(width: 4),
+        Text(
+          '${serviciosById.servicios[0].rating}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildServicio() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Sección descripción
+        Text(
+          'Descripción',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          serviciosById.servicios[0].description,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
+        ),
+
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Precio',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+                  Text(
+                    '${serviciosById.servicios[0].price}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 40,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Duración',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+                  Text(
+                    '1 horas',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildTrabajador() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 20),
-        Row(
-          children: [
-            SizedBox(height: 20),
-            Text(
-              'Trabajador',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
+        Text(
+          'Trabajador',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 14),
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.06),
+              width: 1,
+            ),
           ),
           child: Row(
             children: [
               Circleimage(
-                w: 80,
-                h: 80,
+                w: 56,
+                h: 56,
                 image_url: serviciosById.servicios[0].worker_img,
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Flexible(
                           child: Text(
                             serviciosById.servicios[0].worker_name,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                               color: Theme.of(context).colorScheme.surface,
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorWhite.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                color: Colors.amber,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${serviciosById.servicios[0].worker_rating}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: colorBlack,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                        Icon(Icons.star_rounded, color: Colors.amber, size: 15),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${serviciosById.servicios[0].worker_rating}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -376,180 +446,12 @@ class _ServicioPageState extends State<ServicioPage> {
                       serviciosById.servicios[0].des_trabajador,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildopcions() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              'Descripción',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
-        ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: colorsecundario, // Fondo suave del mismo color
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.attach_money, // Tu icono original
-                          size: 25,
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Precio',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '\$ ${serviciosById.servicios[0].price}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: colorsecundario, // Fondo suave del mismo color
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.schedule, // Tu icono original
-                          size: 25,
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Duración',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '${serviciosById.servicios[0].price}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: colorsecundario, // Fondo suave del mismo color
-                        shape: BoxShape.circle,
-                        // border: Border.all(
-                        //   color: colorprimario.withOpacity(0.2),
-                        //   width: 1,
-                        // ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.star_rounded, // Tu icono original
-                          size: 25,
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Estrellas',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '${serviciosById.servicios[0].rating}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
+                        height: 1.6,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.45),
                       ),
                     ),
                   ],
@@ -564,290 +466,57 @@ class _ServicioPageState extends State<ServicioPage> {
 
   Widget _buildImgServicios() {
     final isLoading1 = serviciosById.servicios[0].images.isEmpty;
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              'Mis Referencias ',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            InkWell(
-              onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
-                // );
-              },
-              child: Icon(
-                Icons.arrow_forward_ios,
-                size: 20,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 200,
-                child: GridView.builder(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.5,
-                  ),
-                  itemCount: isLoading1
-                      ? 3 //  skeletons visibles
-                      : serviciosById.servicios[0].images.length,
-                  itemBuilder: (context, index) {
-                    if (isLoading1) {
-                      return const CardsImgSkeleton();
-                    }
-                    try {
-                      final servicio = serviciosById.servicios[0].images[index];
+    final surfaceColor = Theme.of(context).colorScheme.surface;
 
-                      return CardsImage(url_img: servicio)
-                          .animate()
-                          .fade(duration: 400.ms)
-                          .slideY(begin: 0.15)
-                          .scale(begin: const Offset(0.96, 0.96));
-                    } catch (e) {
-                      return const SizedBox(); // widget vacío
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildServicio() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            SizedBox(height: 20),
             Text(
-              'Descripción',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
+              'Más Fotos',
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: surfaceColor,
+                letterSpacing: -0.2,
               ),
             ),
-            Spacer(),
+            const Spacer(),
             Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
+              Icons.arrow_forward_ios_rounded,
+              size: 15,
+              color: surfaceColor.withOpacity(0.4),
             ),
           ],
         ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Text(
-            serviciosById.servicios[0].description,
-            style: TextStyle(
-              fontSize: 15,
-              color: Theme.of(context).colorScheme.surface,
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 180,
+          child: GridView.builder(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 1,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.4,
             ),
-          ),
-        ),
-
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      
-                      child: Center(
-                        child: Icon(
-                          Icons.attach_money, // Tu icono original
-                          size: 35,
-                          color: Theme.of(context).colorScheme.surface,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Precio',
-                      style: TextStyle(
-                         fontSize: 13,
-                        letterSpacing: 0.8,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surface.withOpacity(0.6),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '\$ ${serviciosById.servicios[0].price}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                height: 40,
-                width: 1,
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
-              ),
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                     
-                      child: Center(
-                        child: Icon(
-                          Icons.timer_outlined, // Tu icono original
-                          size: 35,
-                          color: Theme.of(context).colorScheme.surface,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Duración',
-                      style: TextStyle(
-                        fontSize: 13,
-                        letterSpacing: 0.8,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surface.withOpacity(0.6),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '${serviciosById.servicios[0].price}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                height: 40,
-                width: 1,
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
-              ),
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                     
-                      child: Center(
-                        child: Icon(
-                          Icons.star_rounded, // Tu icono original
-                          size: 35,
-                          color: Theme.of(context).colorScheme.surface,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Estrellas',
-                      style: TextStyle(
-                        fontSize: 13,
-                        letterSpacing: 0.8,
-                        fontWeight: FontWeight.w500,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surface.withOpacity(0.6),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '${serviciosById.servicios[0].rating}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            itemCount: isLoading1
+                ? 3
+                : serviciosById.servicios[0].images.length,
+            itemBuilder: (context, index) {
+              if (isLoading1) return const CardsImgSkeleton();
+              try {
+                return CardsImage(
+                      url_img: serviciosById.servicios[0].images[index],
+                    )
+                    .animate()
+                    .fade(duration: 350.ms)
+                    .scale(begin: const Offset(0.97, 0.97));
+              } catch (e) {
+                return const SizedBox();
+              }
+            },
           ),
         ),
       ],
@@ -855,9 +524,20 @@ class _ServicioPageState extends State<ServicioPage> {
   }
 
   Widget _bottomBar(BuildContext context) {
-    return SizedBox(
-      height: 90,
-      child: Center(
+    return Container(
+      height: 86,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: SizedBox(
+        width: double.infinity,
         child: ElevatedButton.icon(
           onPressed: () {
             Navigator.push(
@@ -871,22 +551,22 @@ class _ServicioPageState extends State<ServicioPage> {
               ),
             );
           },
-
-          /// 🔥 ESTILO
           style: ElevatedButton.styleFrom(
             elevation: 0,
             backgroundColor: colorsecundario,
             foregroundColor: colorWhite,
-            padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 14),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
-
-          icon: const Icon(Icons.calendar_month, size: 22),
-          label: const Text(
+          icon: const Icon(Icons.calendar_month_rounded, size: 20),
+          label: Text(
             'Reservar',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),

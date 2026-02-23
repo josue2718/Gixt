@@ -1,118 +1,271 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 
-// Definimos los tipos de alerta para mayor control
 enum alert_type { exito, error, advertencia }
 
-Future mostrarAlerta(BuildContext context, {
-required String title,
-required String message,
-required alert_type type
-}) {
-  
-  // Configuración dinámica según el tipo
-  String assetPath;
-  Color colorIcono;
+Future<bool?> mostrarAlerta(
+  BuildContext context, {
+  required String title,
+  required String message,
+  required alert_type type,
+}) async {
+  // Config por tipo
+  IconData icon;
+  Color color;
 
   switch (type) {
     case alert_type.exito:
-      assetPath = 'assets/correcto.png'; // Aquí usas la palomita
-      colorIcono = const Color.fromARGB(255, 48, 255, 75);
+      icon = Icons.check_circle_rounded;
+      color = const Color(0xFF30C45E);
       break;
     case alert_type.error:
-      assetPath = 'assets/error.png';      // Aquí usas la X
-      colorIcono = Colors.redAccent;
+      icon = Icons.cancel_rounded;
+      color = Colors.redAccent;
       break;
     case alert_type.advertencia:
-      assetPath = 'assets/alerta.png'; // Aquí usas el signo !
-      colorIcono = Colors.orangeAccent;
+      icon = Icons.warning_amber_rounded;
+      color = Colors.orangeAccent;
       break;
   }
 
-  return showDialog(
-    barrierDismissible: false, 
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        child: Container(
-          padding: EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            // border: Border.all(color: colorWhite.withOpacity(0.5), width: 1),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Icono con efecto de elevación suave
-              Container(
-                padding: EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: colorIcono.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Image.asset(
-                  assetPath,
-                  width: 80, // Tamaño más equilibrado
-                  height: 80,
-                  // Si tus SVGs ya tienen color, quita la línea de abajo
-                  // colorFilter: ColorFilter.mode(colorIcono, BlendMode.srcIn),
-                ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.surface,
-                  fontSize: 20,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
-                  fontSize: 15,
-                ),
-              ),
-              SizedBox(height: 25),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorsecundario,
-                    foregroundColor: colorWhite,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+  final completer = Completer<bool?>();
+
+  late OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (_) => _AlertBanner(
+      title: title,
+      message: message,
+      icon: icon,
+      color: color,
+      type: type,
+      onResult: (result) {
+        if (!completer.isCompleted) completer.complete(result);
+        entry.remove();
+      },
+    ),
+  );
+
+  Overlay.of(context).insert(entry);
+  return completer.future;
+}
+
+// ── Widget del banner ──────────────────────────────────────────────────────
+
+class _AlertBanner extends StatefulWidget {
+  final String title;
+  final String message;
+  final IconData icon;
+  final Color color;
+  final alert_type type;
+  final ValueChanged<bool?> onResult;
+
+  const _AlertBanner({
+    required this.title,
+    required this.message,
+    required this.icon,
+    required this.color,
+    required this.type,
+    required this.onResult,
+  });
+
+  @override
+  State<_AlertBanner> createState() => _AlertBannerState();
+}
+
+class _AlertBannerState extends State<_AlertBanner>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Offset> _slide;
+  late Animation<double> _fade;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 380),
+    );
+    _slide = Tween<Offset>(begin: const Offset(0, -1), end: Offset.zero)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+    _fade = Tween<double>(begin: 0, end: 1)
+        .animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+    _controller.forward();
+  }
+
+  Future<void> _dismiss(bool? result) async {
+    await _controller.reverse();
+    widget.onResult(result);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isAdvert = widget.type == alert_type.advertencia;
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: SlideTransition(
+        position: _slide,
+        child: FadeTransition(
+          opacity: _fade,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: widget.color.withOpacity(0.22),
+                      width: 1,
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.18),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
-                  child: Text(
-                    "CONTINUAR",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+
+                      // ── Header ──────────────────────────────
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Ícono con fondo tenue
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: widget.color.withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(widget.icon, color: widget.color, size: 22),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.title,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).colorScheme.surface,
+                                    letterSpacing: -0.1,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  widget.message,
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    height: 1.5,
+                                    color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // X para cerrar
+                          GestureDetector(
+                            onTap: () => _dismiss(true),
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 8),
+                              child: Icon(
+                                Icons.close_rounded,
+                                size: 18,
+                                color: Theme.of(context).colorScheme.surface.withOpacity(0.3),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      // ── Botones ─────────────────────────────
+                      Row(
+                        children: [
+                          if (isAdvert) ...[
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => _dismiss(false),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  side: BorderSide(
+                                    color: Theme.of(context).colorScheme.surface.withOpacity(0.12),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Cancelar',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () => _dismiss(true),
+                              style: ElevatedButton.styleFrom(
+                                elevation: 0,
+                                backgroundColor: widget.color.withOpacity(0.12),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  side: BorderSide(
+                                    color: widget.color.withOpacity(0.3),
+                                    width: 0.8,
+                                  ),
+                                ),
+                              ),
+                              child: Text(
+                                isAdvert ? 'Continuar' : 'Entendido',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: widget.color,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  
-                  onPressed: () =>  Navigator.pop(context, true),
                 ),
-                
               ),
-              if (type == alert_type.advertencia)...[
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context, false); 
-                },
-                child:  Text('Cancelar',
-                style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.surface),),
-              ),
-              ]
-            ],
+            ),
           ),
         ),
-      );
-    },
-  );
+      ),
+    );
+  }
 }

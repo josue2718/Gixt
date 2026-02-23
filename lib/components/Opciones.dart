@@ -66,15 +66,9 @@ class Options extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: colorWhite.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(15),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
+                      color: colorsecundario,
+                      borderRadius: BorderRadius.circular(10),
+                      
                     ),
 
                     child: Expanded(
@@ -87,7 +81,7 @@ class Options extends StatelessWidget {
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: colorfondo,
+                              color: colorWhite,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

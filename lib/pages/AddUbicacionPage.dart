@@ -73,16 +73,17 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
     GeocodingHelper.obtenerCiudadDesdeCoordenadas(
       latitud: latitude,
       longitud: longitude,
-      onResult: (ciudadResult, calleResult, estadoResult,paisResult, coloniaResult) {
-        setState(() {
-          ciudad = ciudadResult;
-          calle = calleResult;
-          estado = estadoResult;
-          colonia = coloniaResult;
-          pais = paisResult;
-          print(calle);
-        });
-      },
+      onResult:
+          (ciudadResult, calleResult, estadoResult, paisResult, coloniaResult) {
+            setState(() {
+              ciudad = ciudadResult;
+              calle = calleResult;
+              estado = estadoResult;
+              colonia = coloniaResult;
+              pais = paisResult;
+              print(calle);
+            });
+          },
     );
   }
 
@@ -93,6 +94,11 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
       longitude = pos.longitude;
       setState(() {
         posicionActual = LatLng(pos.latitude, pos.longitude);
+        _mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: posicionActual!, zoom: 17),
+          ),
+        );
       });
       getcalle();
     } catch (e) {
@@ -224,7 +230,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
-      backgroundColor: colorprimario,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       expandedHeight: 90,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
@@ -233,10 +239,18 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
       toolbarHeight: 90,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         onPressed: () {
           salir();
         },
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
       ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
@@ -246,9 +260,9 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
         title: Text(
           'Añadir Ubicación',
           style: GoogleFonts.poppins(
-            fontSize: 30,
+            fontSize: 27,
             fontWeight: FontWeight.w600,
-            color: colorsecundario,
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
@@ -266,24 +280,28 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
         child: Form(
           key: _formKey,
           child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    'Informacion del domicilio',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                ],
+              Text(
+                'Informacion de la ubicacion',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.surface,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              Text(
+                'Asegurate de que la información sea correcta',
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  height: 1.6,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.45),
+                ),
               ),
               const SizedBox(height: 20),
               CustomTextFormField(
@@ -367,45 +385,74 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                 },
               ),
               const SizedBox(height: 20),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Archivos adjuntos',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.surface,
+               Text(
+                'Imagen de la ubicación',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.surface,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              Text(
+                'Asegurate de subir una imagen clara de la ubicación, puede ser la fachada de tu casa o un punto de referencia cercano',
+                 textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  height: 1.6,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.45),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buidFormularioImg(),
+              SizedBox(height: 20,),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    if (!(_formKey.currentState?.validate() ?? false)) return;
+                    if (_image == null) {
+                      mostrarAlerta(
+                        context,
+                        title: 'Imagen requerida',
+                        message: 'Por favor llena los 3 campos de imagen',
+                        type: alert_type.advertencia,
+                      );
+                      return;
+                    }
+                    _Crear();
+                  },
+
+                  /// 🔥 ESTILO
+                  style: ElevatedButton.styleFrom(
+                    elevation: 0,
+                    backgroundColor: colorsecundario,
+                    foregroundColor: colorWhite,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 14,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                ],
-              ),
-              _buidFormularioImg(),
-              ElevatedButton(
-                onPressed: () {
-                  if (!(_formKey.currentState?.validate() ?? false)) return;
-                  if (_image == null) {
-                    mostrarAlerta(
-                      context,
-                      title: 'Imagen requerida',
-                      message: 'Por favor llena los 3 campos de imagen',
-                      type: alert_type.advertencia,
-                    );
-                    return;
-                  }
-                  _Crear();
-                },
-                style: ElevatedButton.styleFrom(
-                  fixedSize: const Size(300, 50),
-                  backgroundColor: colorsecundario,
-                  foregroundColor: colorWhite,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+
+                  icon: const Icon(Icons.save_outlined, size: 22),
+                  label: Text(
+                    'Guardar',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      height: 1.6,
+                      color: colorWhite,
+                    ),
                   ),
                 ),
-                child: const Text('Guardar', style: TextStyle(fontSize: 18)),
               ),
+              SizedBox(height: 30,)
             ],
           ),
         ),
@@ -486,7 +533,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                   ),
                   Text("$calle", style: TextStyle(color: Colors.white)),
                   Text("$ciudad", style: TextStyle(color: Colors.white)),
-                  Text("$colonia", style: TextStyle(color: Colors.white))
+                  Text("$colonia", style: TextStyle(color: Colors.white)),
                 ],
               ),
             ),
@@ -497,7 +544,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
             bottom: 90,
             left: 20,
             right: 20,
-            child: ElevatedButton(
+            child: ElevatedButton.icon(
               onPressed: () {
                 if (calle == null) {
                   mostrarAlerta(
@@ -512,17 +559,30 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                   _paginaActual++;
                 });
               },
+
+              /// 🔥 ESTILO
               style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
+                elevation: 0,
                 backgroundColor: colorsecundario,
-                foregroundColor: colorprimario,
+                foregroundColor: colorWhite,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
+
+              icon: const Icon(Icons.arrow_forward, size: 22),
+              label: Text(
                 'Siguiente',
-                style: TextStyle(fontSize: 18, color: colorWhite),
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  height: 1.6,
+                  color: colorWhite,
+                ),
               ),
             ),
           ),
@@ -534,65 +594,49 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
   Widget _buidFormularioImg() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Column(
-          children: [
-            _image == null
-                ? Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 177, 177, 177),
+      child: GestureDetector(
+        onTap: () => _pickImage(),
+        child: SizedBox(
+          width: double.infinity,
+          height: 150,
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              _image == null
+                  ? Container(
+                      width: double.infinity,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.05),
+                        border: Border.all(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surface.withOpacity(0.12),
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Icon(
+                        Icons.add_photo_alternate_outlined,
+                        size: 28,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.25),
+                      ),
+                    )
+                  : ClipRRect(
                       borderRadius: BorderRadius.circular(20),
+                      child: Image.file(
+                        _image!,
+                        width: double.infinity,
+                        height: 150,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                    width: 200,
-                    height: 200,
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.person,
-                      ), // Usa un icono de calendario
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                      iconSize: 65,
-                    ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(0, 103, 10, 10),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    width: 200,
-                    height: 200,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.file(_image!, fit: BoxFit.cover),
-                    ),
-                  ),
-            SizedBox(height: 25),
-            Transform.translate(
-              offset: Offset(
-                80,
-                -80,
-              ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorsecundario,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                width: 60,
-                height: 60,
-                child: IconButton(
-                  onPressed: () {
-                    _pickImage();
-                  },
-                  icon: const Icon(
-                    Icons.add_a_photo_outlined,
-                  ), // Usa un icono de calendario
-                  color: const Color.fromARGB(255, 255, 255, 255),
-                  iconSize: 25,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

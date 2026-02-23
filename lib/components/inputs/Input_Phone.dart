@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-class CustomTextFormFieldPhone extends StatelessWidget {
+class CustomTextFormFieldPhone extends StatefulWidget {
   final TextEditingController controller;
   final String label;
   final bool readOnly;
@@ -19,13 +20,35 @@ class CustomTextFormFieldPhone extends StatelessWidget {
   });
 
   @override
+  State<CustomTextFormFieldPhone> createState() => _CustomTextFormFieldState();
+}
+
+class _CustomTextFormFieldState extends State<CustomTextFormFieldPhone> {
+  final FocusNode _focusNode = FocusNode();
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() {
+      setState(() => _isFocused = _focusNode.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorBase = Theme.of(context).colorScheme.surface;
 
     return TextFormField(
-      controller: controller,
-      readOnly: readOnly,
-      keyboardType: keyboardType,
+      controller: widget.controller,
+      readOnly: widget.readOnly,
+      keyboardType: widget.keyboardType,
       maxLength: 10,
       style: TextStyle(color: colorBase),
       cursorColor: colorBase,
@@ -34,51 +57,82 @@ class CustomTextFormFieldPhone extends StatelessWidget {
         LengthLimitingTextInputFormatter(10),
       ],
       decoration: InputDecoration(
-        labelText: label,
+        labelText: widget.label,
 
-        labelStyle: TextStyle(color: Theme.of(context).colorScheme.surface),
-
+        // 🔹 Label normal
+        labelStyle: GoogleFonts.poppins(
+          fontSize: 13,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+        ),
         // 🔹 Label cuando está seleccionado
-        floatingLabelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.surface,
-          fontWeight: FontWeight.bold,
+        floatingLabelStyle: GoogleFonts.poppins(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: _isFocused
+              ? colorsecundario
+              : Theme.of(context).colorScheme.surface.withOpacity(0.45),
+        ),
+        filled: true,
+        fillColor: Theme.of(context).colorScheme.primary,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
 
-        border: const UnderlineInputBorder(),
-
         // 🔹 Línea normal
-        enabledBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+            width: 1,
+          ),
         ),
 
         // 🔹 Línea cuando está seleccionado
-        focusedBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface, width: 2),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(
+            color: colorsecundario.withOpacity(0.5),
+            width: 1.5,
+          ),
         ),
 
         // 🔹 Línea cuando hay error
-        errorBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide(color: Colors.red.withOpacity(0.5), width: 1),
         ),
 
-        focusedErrorBorder: UnderlineInputBorder(
-          borderSide: BorderSide(color: Theme.of(context).colorScheme.surface, width: 2),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
 
         // 🔹 Ícono
-        suffixIcon: Icon(Icons.phone, color: colorBase),
+        suffixIcon: Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: Icon(
+            Icons.phone,
+            size: 18,
+            color: _isFocused
+                ? colorsecundario
+                : Theme.of(context).colorScheme.surface.withOpacity(0.3),
+          ),
+        ),
 
-        errorStyle: TextStyle(
-          color: Theme.of(context).colorScheme.surface,
-          fontWeight: FontWeight.bold,
+        errorStyle: GoogleFonts.poppins(
+          fontSize: 11,
+          color: Colors.red.withOpacity(0.8),
         ),
       ),
-      validator: validator,
+      validator: widget.validator,
     );
   }
 }
-
-
 
 class PhoneDashFormatter extends TextInputFormatter {
   @override

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class UbicacionesInput extends StatelessWidget {
   final String calle;
@@ -26,15 +27,25 @@ class UbicacionesInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isSelected = id == selectedId;
     return InkWell(
       onTap: () => onSelected(id),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary,
+           color: isSelected
+              ? colorsecundario.withOpacity(0.08)
+              : Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? colorsecundario
+                : Theme.of(context).colorScheme.surface.withOpacity(0.07),
+            width: isSelected ? 1.5 : 1,
+          ),
         ),
+        
         child: Row(
           children: [
             Container(
@@ -44,7 +55,7 @@ class UbicacionesInput extends StatelessWidget {
                 color: colorsecundario,
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.location_on,size: 30, color: colorWhite),
+              child: Icon(Icons.location_on, size: 30, color: colorWhite),
             ),
 
             const SizedBox(width: 20),
@@ -53,52 +64,57 @@ class UbicacionesInput extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    calle,
-                    style: TextStyle(
+                    descripcion,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: Theme.of(context).colorScheme.surface,
+                      letterSpacing: -0.2,
                     ),
                   ),
+
                   Text(
                     '${colonia} ${estado} ${ciudad}',
                     maxLines: 1,
-                    style:  TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.surface,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      height: 1.6,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.45),
                     ),
                   ),
                   Text(
-                    descripcion,
-                     maxLines: 1,
-                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.surface,
+                    calle,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      height: 1.6,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.45),
                     ),
                   ),
                 ],
               ),
             ),
-           
+
             Radio<String>(
-            value: id,
-            groupValue: selectedId,
-            fillColor: MaterialStateProperty.resolveWith<Color>(
-              (states) {
+              value: id,
+              groupValue: selectedId,
+              fillColor: MaterialStateProperty.resolveWith<Color>((states) {
                 if (states.contains(MaterialState.selected)) {
                   return colorsecundario; // color cuando está seleccionado
                 }
-                return Theme.of(context).colorScheme.surface; // color cuando NO está seleccionado
+                return Theme.of(
+                  context,
+                ).colorScheme.surface; // color cuando NO está seleccionado
+              }),
+              onChanged: (value) {
+                if (value != null) onSelected(value);
               },
             ),
-            onChanged: (value) {
-              if (value != null) onSelected(value);
-            },
-          ),
-
           ],
         ),
       ),

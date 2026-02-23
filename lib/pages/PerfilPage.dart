@@ -57,7 +57,6 @@ class _PerfilPageState extends State<PerfilPage> {
   String? _img;
   String? _user;
 
-
   Future<void> _updateUser(String user, String img) async {
     await _preferencesService.clearPreferencesUser();
     await _preferencesService.savePreferencesUser(img, user);
@@ -100,13 +99,13 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   void _logout() async {
-    bool continuar = await mostrarAlerta(
+    bool? continuar = await mostrarAlerta(
       context,
       title: "Logout",
       message: 'Seguro que deseas cerrar sesión?',
       type: alert_type.advertencia,
     );
-    if (!continuar) return;
+    if (!continuar!) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
     Navigator.pushReplacement(
@@ -116,7 +115,7 @@ class _PerfilPageState extends State<PerfilPage> {
   }
 
   void _Crear() async {
-     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -130,7 +129,6 @@ class _PerfilPageState extends State<PerfilPage> {
       phone: _phoneController.text,
       gender: _gender ?? "",
       birth_date: _birth_dateController.text,
-
     );
 
     Navigator.pop(context);
@@ -168,7 +166,8 @@ class _PerfilPageState extends State<PerfilPage> {
   @override
   Widget build(BuildContext context) {
     if (user.user.isEmpty) {
-      return const Scaffold(
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         body: Center(child: Indicador()),
       );
     }
@@ -176,45 +175,31 @@ class _PerfilPageState extends State<PerfilPage> {
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
         body: RefreshIndicator(
           onRefresh: _onRefresh,
           child: CustomScrollView(
             controller: _scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
-
               _buildSliverAppBar(),
-
               SliverPadding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 5,
-                  vertical: 30,
+                  horizontal: 20,
+                  vertical: 10,
                 ),
-
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
+                    const SizedBox(height: 30),
 
-                    const SizedBox(height: 1),
-
-                    _buildIMGPerfil()
-                        .animate()
-                        .fade()
-                        .slideX(begin: -0.2),
+                    _buildIMGPerfil().animate().fade().slideX(begin: -0.2),
 
                     const SizedBox(height: 30),
 
-                    _buildopcions()
-                        .animate()
-                        .fade()
-                        .slideX(begin: -0.2),
+                    _buildopcions().animate().fade().slideX(begin: -0.2),
 
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 40),
 
-                    _buidFormularioInfo()
-                        .animate()
-                        .fade()
-                        .slideX(begin: -0.2),
+                    _buidFormularioInfo().animate().fade().slideX(begin: -0.2),
                   ]),
                 ),
               ),
@@ -227,64 +212,105 @@ class _PerfilPageState extends State<PerfilPage> {
 
   Widget _buildopcions() {
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            InkWell(
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              hoverColor: Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const UbicacionesPage(),
-                  ),
-                );
-              },
-              child: Container(
-                width: 80,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: colorsecundario,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.add_location_alt, // Tu icono original
-                          size: 25,
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Mis Ubicaciones',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          InkWell(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const UbicacionesPage(),
                 ),
+              );
+            },
+            child: Container(
+              width: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 50,
+                    width: 50,
+                    decoration: BoxDecoration(
+                      color: colorsecundario,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.add_location_alt, // Tu icono original
+                        size: 25,
+                        color: colorWhite,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Mis Ubicaciones',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                  ),
+                ],
               ),
             ),
-            Container(
-              width: 90,
+          ),
+          Container(
+            width: 90,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Container(
+                  height: 55,
+                  width: 55,
+                  decoration: BoxDecoration(
+                    color: colorsecundario,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.lock_reset, // Tu icono original
+                      size: 25,
+                      color: colorWhite,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Cambiar Contraseña',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.surface,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          InkWell(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              _logout();
+            },
+            child: Container(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -298,7 +324,7 @@ class _PerfilPageState extends State<PerfilPage> {
                     ),
                     child: Center(
                       child: Icon(
-                        Icons.lock_reset, // Tu icono original
+                        Icons.logout, // Tu icono original
                         size: 25,
                         color: colorWhite,
                       ),
@@ -306,33 +332,31 @@ class _PerfilPageState extends State<PerfilPage> {
                   ),
                   SizedBox(height: 10),
                   Text(
-                    'Cambiar Contraseña',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
+                    'Logout',
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                       color: Theme.of(context).colorScheme.surface,
                     ),
                   ),
+                  SizedBox(height: 10),
                 ],
               ),
             ),
-            InkWell(
-              splashColor: Colors.transparent,
-              highlightColor: Colors.transparent,
-              hoverColor: Colors.transparent,
-              borderRadius: BorderRadius.circular(12),
-              onTap: () {
-                _logout();
-              },
-              child: Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
+          ),
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              final isDark = themeProvider.themeMode == ThemeMode.dark;
+
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      themeProvider.toggleTheme();
+                    },
+                    child: Container(
                       height: 55,
                       width: 55,
                       decoration: BoxDecoration(
@@ -341,73 +365,31 @@ class _PerfilPageState extends State<PerfilPage> {
                       ),
                       child: Center(
                         child: Icon(
-                          Icons.logout, // Tu icono original
+                          !isDark ? Icons.light_mode : Icons.dark_mode,
                           size: 25,
                           color: colorWhite,
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Logout',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    !isDark ? 'Light' : 'Dark',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.surface,
                     ),
-                    SizedBox(height: 10),
-                  ],
-                ),
-              ),
-            ),
-            Consumer<ThemeProvider>(
-              builder: (context, themeProvider, child) {
-                final isDark = themeProvider.themeMode == ThemeMode.dark;
+                  ),
 
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        themeProvider.toggleTheme();
-                      },
-                      child: Container(
-                        height: 55,
-                        width: 55,
-                        decoration: BoxDecoration(
-                          color: colorsecundario,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Center(
-                          child: Icon(
-                            !isDark ? Icons.light_mode : Icons.dark_mode,
-                            size: 25,
-                            color: colorWhite,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    Text(
-                      !isDark ? 'Light' : 'Dark',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-                  ],
-                );
-              },
-            ),
-          ],
-        ),
+                  const SizedBox(height: 10),
+                ],
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -425,6 +407,14 @@ class _PerfilPageState extends State<PerfilPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
@@ -432,7 +422,7 @@ class _PerfilPageState extends State<PerfilPage> {
           style: GoogleFonts.poppins(
             fontSize: 30,
             fontWeight: FontWeight.w600,
-            color: colorsecundario,
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
@@ -451,10 +441,7 @@ class _PerfilPageState extends State<PerfilPage> {
               Container(
                 width: 150,
                 height: 150,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: colorsecundario, width: 3),
-                ),
+                decoration: BoxDecoration(shape: BoxShape.circle),
                 child: CircleAvatar(
                   backgroundColor: Colors.transparent,
                   backgroundImage: _image != null
@@ -500,179 +487,202 @@ class _PerfilPageState extends State<PerfilPage> {
     _birth_dateController.text = user.user[0].birth_date;
     _gender = user.user[0].gender;
 
-    return Padding(
-      padding: const EdgeInsets.all(15),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Informacion de la cuenta',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            'Informacion del Perfil',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.surface,
+              letterSpacing: -0.2,
             ),
-
-            const SizedBox(height: 30),
-
-            /// NOMBRE
-            CustomTextFormField(
-              controller: _first_nameController,
-              label: 'Nombre',
-              readOnly: false,
-              icon: Icons.person,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un nombre';
-                }
-                return null;
-              },
+          ),
+          Text(
+            'Asegurate de que la información sea correcta, puedes actualizar tu foto de perfil, nombre, apellido, teléfono, fecha de nacimiento y género.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              height: 1.6,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
             ),
+          ),
+          const SizedBox(height: 20),
 
-            const SizedBox(height: 20),
+          const SizedBox(height: 30),
 
-            /// APELLIDO
-            CustomTextFormField(
-              controller: _last_nameController,
-              label: 'Apellido',
-              readOnly: false,
-              icon: Icons.person,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un apellido';
-                }
-                return null;
-              },
+          /// NOMBRE
+          CustomTextFormField(
+            controller: _first_nameController,
+            label: 'Nombre',
+            readOnly: false,
+            icon: Icons.person,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un nombre';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          /// APELLIDO
+          CustomTextFormField(
+            controller: _last_nameController,
+            label: 'Apellido',
+            readOnly: false,
+            icon: Icons.person,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un apellido';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          /// CORREO
+          CustomTextFormField(
+            controller: _emailController,
+            label: 'Correo',
+            icon: Icons.email,
+            keyboardType: TextInputType.emailAddress,
+            readOnly: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un correo';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          /// TELÉFONO
+          CustomTextFormFieldPhone(
+            controller: _phoneController,
+            label: 'Telefono',
+            readOnly: false,
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un telefono';
+              }
+              return null;
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          /// FECHA NACIMIENTO (se queda como TextFormField por formatter)
+          CustomTextFormFieldfecha(controller: _birth_dateController),
+
+          const SizedBox(height: 20),
+
+          /// GÉNERO
+          Text(
+            'Género',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.surface,
+              fontSize: 15,
             ),
-
-            const SizedBox(height: 20),
-
-            /// CORREO
-            CustomTextFormField(
-              controller: _emailController,
-              label: 'Correo',
-              icon: Icons.email,
-              keyboardType: TextInputType.emailAddress,
-              readOnly: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un correo';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            /// TELÉFONO
-            CustomTextFormFieldPhone(
-              controller: _phoneController,
-              label: 'Telefono',
-              readOnly: false,
-              keyboardType: TextInputType.phone,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un telefono';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            /// FECHA NACIMIENTO (se queda como TextFormField por formatter)
-            CustomTextFormFieldfecha(controller:_birth_dateController),
-
-            const SizedBox(height: 20),
-
-            /// GÉNERO
-            Text(
-              'Género',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.surface,
-                fontSize: 15,
-              ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<String>(
-                    value: 'H',
-                    groupValue: _gender,
-                    fillColor: MaterialStateProperty.resolveWith<Color>((
-                      states,
-                    ) {
-                      if (states.contains(MaterialState.selected)) {
-                        return colorsecundario;
-                      }
-                      return Theme.of(context).colorScheme.surface;
-                    }),
-                    title: Text(
-                      'Hombre',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
+          ),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<String>(
+                  value: 'H',
+                  groupValue: _gender,
+                  fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return colorsecundario;
+                    }
+                    return Theme.of(context).colorScheme.surface;
+                  }),
+                  title: Text(
+                    'Hombre',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.surface,
                     ),
-                    onChanged: (value) {
-                      setState(() => _gender = value);
-                    },
                   ),
+                  onChanged: (value) {
+                    setState(() => _gender = value);
+                  },
                 ),
-                Expanded(
-                  child: RadioListTile<String>(
-                    value: 'M',
-                    groupValue: _gender,
-                    fillColor: MaterialStateProperty.resolveWith<Color>((
-                      states,
-                    ) {
-                      if (states.contains(MaterialState.selected)) {
-                        return colorsecundario;
-                      }
-                      return Theme.of(context).colorScheme.surface;
-                    }),
-                    title: Text(
-                      'Mujer',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
+              ),
+              Expanded(
+                child: RadioListTile<String>(
+                  value: 'M',
+                  groupValue: _gender,
+                  fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return colorsecundario;
+                    }
+                    return Theme.of(context).colorScheme.surface;
+                  }),
+                  title: Text(
+                    'Mujer',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.surface,
                     ),
-                    onChanged: (value) {
-                      setState(() => _gender = value);
-                    },
                   ),
+                  onChanged: (value) {
+                    setState(() => _gender = value);
+                  },
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 40),
-
-            ElevatedButton(
+          const SizedBox(height: 40),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
               onPressed: _Crear,
+
+              /// 🔥 ESTILO
               style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
+                elevation: 0,
                 backgroundColor: colorsecundario,
                 foregroundColor: colorWhite,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 14,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: Text('Actualizar', style: TextStyle(fontSize: 18)),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                'Eliminar Cuenta',
-                style: TextStyle(color: Theme.of(context).colorScheme.surface),
+
+              icon: const Icon(Icons.update, size: 22),
+              label: Text(
+                'Actuzalizar',
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  height: 1.6,
+                  color: colorWhite,
+                ),
               ),
             ),
-            const SizedBox(height: 70),
-          ],
-        ),
+          ),
+          const SizedBox(height: 20),
+          TextButton(
+            onPressed: () {},
+            child: Text(
+              'Eliminar Cuenta',
+              style: TextStyle(color: Theme.of(context).colorScheme.surface),
+            ),
+          ),
+          const SizedBox(height: 100),
+        ],
       ),
     );
   }

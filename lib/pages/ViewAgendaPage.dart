@@ -10,6 +10,7 @@ import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/circleimage.dart';
 import 'package:gixt/components/colors.dart';
+import 'package:gixt/pages/ViewLocation.dart';
 import 'package:gixt/services/reservas/Agenda_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -94,137 +95,202 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (agenda.agenda.isEmpty) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Indicador(),
+      );
+    }
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([]),
-          builder: (context, snapshot) {
-            if (agenda.agenda.isEmpty) {
-              return Indicador();
-            }
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            _buildInformacion(),
-                               
-                            const SizedBox(height: 40),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  ),
+        body: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _buildInformacion(),
+                    const SizedBox(height: 40),
+                  ]),
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
+        bottomNavigationBar: _bottomBar(context),
       ),
+      
     );
   }
 
   SliverAppBar _buildSliverAppBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return SliverAppBar(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      expandedHeight: 90,
+      backgroundColor: const Color.fromRGBO(0, 0, 0, 0),
+      expandedHeight: 320,
       pinned: false,
-      floating: true,
-      snap: true,
+      floating: false, //  sin efecto raro
+      snap: false, //  sin delay
       elevation: 0,
       toolbarHeight: 90,
-
-      iconTheme: IconThemeData(
-        color: Theme.of(context).colorScheme.surface, // 👈 color del ícono
-      ),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
-      ),
+      iconTheme: IconThemeData(color: colorWhite),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
-        title: Text(
-          'Agenda',
-          style: GoogleFonts.poppins(
-            fontSize: 30,
-            fontWeight: FontWeight.w600,
-            color: Theme.of(context).colorScheme.surface,
-          ),
+        title: const SizedBox(), //  quitamos title para evitar desplazamientos
+        background: Stack(
+          fit: StackFit.expand,
+          children: [
+            ///  IMAGEN
+            CachedNetworkImage(
+              imageUrl: agenda.agenda[0].service_image,
+              fit: BoxFit.cover,
+              placeholder: (context, url) => const Center(child: Indicador()),
+              errorWidget: (context, url, error) =>
+                  const Icon(Icons.broken_image),
+            ),
+
+            Container(color: Colors.black.withOpacity(isDark ? 0.35 : 0.15)),
+
+            Positioned(
+              bottom: 5,
+              left: 16,
+              right: 16,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  /// NOMBRE
+                  Text(
+                    agenda.agenda[0].service_name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w800,
+                      color: colorWhite,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildInformacion() {
-    return Padding(
-      padding: const EdgeInsets.all(0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                '¡Informacion de la reserva!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 25,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-              SizedBox(height: 20),
-              Barstatus(estadoTrabajo: agenda.agenda[0].job_status).animate().fade().slideX(begin: -0.2,),
-              SizedBox(height: 20),
-              _buildTrabajador() .animate().fade().slideX(begin: -0.2,),
-              SizedBox(height: 20),
-              _buildServicio().animate().fade().slideX(begin: -0.2,),
-              SizedBox(height: 20),
-              _buildTrabajo() .animate().fade().slideX(begin: -0.2,),
-              SizedBox(height: 20),
-              _buildImg().animate().fade().slideX(begin: -0.2,),
-              SizedBox(height: 20),
-              _buildUbicacion() .animate().fade().slideX(begin: -0.2,),
-              SizedBox(height: 20),
-              _buildPrecio().animate().fade().slideX(begin: -0.2,),
-            ],
-          ),
-          const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {},
-            style: ElevatedButton.styleFrom(
-              fixedSize: const Size(300, 50),
-              backgroundColor: colorsecundario,
-              foregroundColor: colorWhite,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(height: 20),
+        _buildTitle()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+        Barstatus(
+              estadoTrabajo: agenda.agenda[0].job_status.isEmpty
+                  ? ''
+                  : agenda.agenda[0].job_status,
+            )
+            .animate()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+        _buildTrabajo()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+        _buildWorker()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+        _buildServicio()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+        _buildImg()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+        _buildUbicacion()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+      ],
+    );
+  }
+
+  Widget _buildTitle() {
+    return Row(
+      children: [
+        Icon(Icons.location_on_outlined, size: 13, color: colorsecundario),
+        const SizedBox(width: 4),
+        Expanded(
+          child: Text(
+            agenda.agenda[0].maps_address,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: GoogleFonts.poppins(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.4),
             ),
-            child: const Text('Eliminar', style: TextStyle(fontSize: 18)),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(width: 10),
+        Icon(
+          Icons.event_outlined,
+          size: 13,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.35),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          agenda.agenda[0].job_date,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Icon(
+          Icons.access_time_outlined,
+          size: 13,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.35),
+        ),
+        const SizedBox(width: 3),
+        Text(
+          agenda.agenda[0].job_time,
+          style: GoogleFonts.poppins(
+            fontSize: 11,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
+          ),
+        ),
+      ],
     );
   }
 
   Widget imageBox(String? imagen) {
     return SizedBox(
-      width: 150,
-      height: 150,
+      width: 100,
+      height: 130,
       child: Stack(
         alignment: Alignment.center,
         clipBehavior: Clip.none,
@@ -270,107 +336,67 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
     );
   }
 
-  Widget _buildTrabajador() {
+  Widget _buildWorker() {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 20),
-        Row(
-          children: [
-            SizedBox(height: 20),
-            Text(
-              'Trabajador',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
+        Text(
+          'Trabajador',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
         ),
-        SizedBox(height: 20),
+        const SizedBox(height: 14),
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.06),
+              width: 1,
+            ),
           ),
           child: Row(
             children: [
               Circleimage(
-                w: 80,
-                h: 80,
+                w: 56,
+                h: 56,
                 image_url: agenda.agenda[0].worker_image,
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Flexible(
-                        child: Text(
-                          agenda.agenda[0].worker_username,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Theme.of(context).colorScheme.surface,
+                          child: Text(
+                            agenda.agenda[0].worker_username,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.surface,
+                            ),
                           ),
-                        ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorWhite.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                color: Colors.amber,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${agenda.agenda[0].worker_rating}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: colorBlack,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                        Icon(Icons.star_rounded, color: Colors.amber, size: 15),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${agenda.agenda[0].worker_rating}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withOpacity(0.7),
                           ),
                         ),
                       ],
@@ -380,9 +406,12 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                       agenda.agenda[0].worker_description,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.surface,
+                        height: 1.6,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.45),
                       ),
                     ),
                   ],
@@ -399,59 +428,25 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
+
       children: [
-        Row(
-          children: [
-            Text(
-              'Servicio',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
-        ),
-        SizedBox(height: 30),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        Text(
+          'Servicio solicitado:   ${agenda.agenda[0].service_name}',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
           ),
-          child: Column(
-            children: [
-              Text(
-                '${agenda.agenda[0].service_name}',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                '${agenda.agenda[0].service_description}',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Theme.of(context).colorScheme.surface.withOpacity(0.8),
-                ),
-              ),
-            ],
+        ),
+
+        const SizedBox(height: 10),
+        Text(
+          '${agenda.agenda[0].service_description}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
           ),
         ),
       ],
@@ -463,106 +458,129 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Text(
-              'Trabajo',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
+        Text(
+          'Problema a resolver',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '${agenda.agenda[0].problem}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
+        ),
+
+        SizedBox(height: 20),
+        Text(
+          'Descripción',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '${agenda.agenda[0].description}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
         ),
         SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+
+        Text(
+          'Pago y Metodo',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Descripcion ',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
+        ),
 
-              Text(
-                '${agenda.agenda[0].description}',
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-              SizedBox(height: 20),
-
-              Text(
-                'Fecha del servicio',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-
-              SizedBox(height: 20),
-              Row(
+        SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.event,
-                    color: Theme.of(context).colorScheme.surface,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
                   Text(
-                    '${agenda.agenda[0].job_date}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Theme.of(context).colorScheme.surface,
+                    'Precio',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.access_time,
-                    color: Theme.of(context).colorScheme.surface,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
+
+                  SizedBox(height: 10),
                   Text(
-                    '${agenda.agenda[0].job_time}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                    '${agenda.agenda[0].price == 0 ? "Pendiente" : agenda.agenda[0].price}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+
                       color: Theme.of(context).colorScheme.surface,
                     ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
-            ],
-          ),
+            ),
+            Container(
+              width: 1,
+              height: 40,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Metodo',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+                  Text(
+                    '${agenda.agenda[0].payment_method}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 20),
+          ],
         ),
       ],
     );
@@ -576,35 +594,18 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
             SizedBox(height: 20),
             Text(
               'Ubicacion',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.surface,
+                letterSpacing: -0.2,
               ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.location_on,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
             ),
           ],
         ),
         SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
+        SizedBox(
+          width: double.infinity,
           child: Row(
             children: [
               imageBox(agenda.agenda[0].location_image),
@@ -616,174 +617,52 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
                   children: [
                     Text(
                       '${agenda.agenda[0].maps_address}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Theme.of(context).colorScheme.surface,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        height: 1.75,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.9),
                       ),
                     ),
                     Text(
                       '${agenda.agenda[0].state} ${agenda.agenda[0].neighborhood} ',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Theme.of(context).colorScheme.surface,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        height: 1.75,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.55),
                       ),
                     ),
                     SizedBox(height: 20),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        abrirGoogleMaps(agenda.agenda[0].latitude, agenda.agenda[0].longitude);
-                      },
-                      icon: const Icon(Icons.map, color: colorWhite),
-                      label: const Text(
-                        'Ver',
-                        style: TextStyle(fontSize: 15, color: colorWhite),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        fixedSize: const Size(300, 50),
-                        backgroundColor: colorsecundario,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 20),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPrecio() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            SizedBox(height: 20),
-            Text(
-              'Pago y Metodo',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.payment,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
-        ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Precio',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-
-                    SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorsecundario,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        '${agenda.agenda[0].price}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          abrirGoogleMaps(agenda.agenda[0].latitude, agenda.agenda[0].longitude);
+                        },
+                        icon: const Icon(
+                          Icons.directions_rounded,
                           color: colorWhite,
+                          size: 20,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Metodo',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-
-                    SizedBox(height: 20),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorsecundario,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            blurRadius: 4,
-                            offset: const Offset(0, 2),
+                        label: Text(
+                          'Cómo llegar',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: colorWhite,
                           ),
-                        ],
-                      ),
-                      child: Text(
-                        '${agenda.agenda[0].payment_method}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: colorWhite,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: colorsecundario,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -799,44 +678,27 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
 
   Widget _buildImg() {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             SizedBox(height: 20),
             Text(
               'Imagenes',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: Theme.of(context).colorScheme.surface,
+                letterSpacing: -0.2,
               ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.photo,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
             ),
           ],
         ),
         SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
               imageBox(agenda.agenda[0].image_1),
               const SizedBox(width: 20),
@@ -844,10 +706,179 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
               const SizedBox(width: 10),
             ],
           ),
-          )
         ),
       ],
     );
   }
 
+  Widget _bottomBar(BuildContext context) {
+    final jobStatus = agenda.agenda[0].job_status.toLowerCase();
+
+    IconData icon = Icons.info;
+    String text = '';
+    VoidCallback? action;
+    Color bgColor = colorsecundario;
+
+    switch (jobStatus) {
+      case 'pending':
+        icon = Icons.hourglass_empty;
+        text = 'Pendiente';
+        action = null;
+        bgColor = Theme.of(context).colorScheme.surface.withOpacity(0.6);
+        break;
+
+      case 'accepted':
+        icon = Icons.check_circle;
+        text = 'Aceptado';
+        action = null;
+        break;
+
+      case 'going':
+      case 'arrived':
+      case 'in_progress':
+        icon = Icons.map;
+        text = 'Ver ubicación';
+        action = () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ViewLocationTimePage(
+                job_id: widget.id_trabajo,
+                latitude: agenda.agenda[0].latitude,
+                longitude: agenda.agenda[0].longitude,
+              ),
+            ),
+          );
+        };
+        break;
+
+      case 'finalized':
+        icon = Icons.payment;
+        text = 'Pagar';
+        action = () {
+          print('pagar');
+        };
+        break;
+      case 'completed':
+        icon = Icons.payment;
+        text = 'ver registro de pago';
+        action = () {
+          print('pagar');
+        };
+        break;
+      default:
+        icon = Icons.help;
+        text = jobStatus;
+        action = null;
+        bgColor = Theme.of(context).colorScheme.surface.withOpacity(0.6);
+    }
+
+    return Container(
+      height: 86,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        border: Border(
+          top: BorderSide(
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+            width: 1,
+          ),
+        ),
+      ),
+      child: ElevatedButton.icon(
+        onPressed: action,
+        icon: Icon(icon, color: colorWhite),
+        label: Text(
+          text,
+          style: const TextStyle(fontSize: 18, color: colorWhite),
+        ),
+        style: ElevatedButton.styleFrom(
+          fixedSize: const Size(300, 50),
+          backgroundColor: bgColor,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildButton() {
+    final jobStatus = agenda.agenda[0].job_status.toLowerCase();
+
+    IconData icon = Icons.info;
+    String text = '';
+    VoidCallback? action;
+    Color bgColor = colorsecundario;
+
+    switch (jobStatus) {
+      case 'pending':
+        icon = Icons.hourglass_empty;
+        text = 'Pendiente';
+        action = null;
+        bgColor = Theme.of(context).colorScheme.surface.withOpacity(0.6);
+        break;
+
+      case 'accepted':
+        icon = Icons.check_circle;
+        text = 'Aceptado';
+        action = null;
+        break;
+
+      case 'going':
+      case 'arrived':
+      case 'in_progress':
+        icon = Icons.map;
+        text = 'Ver ubicación';
+        action = () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ViewLocationTimePage(
+                job_id: widget.id_trabajo,
+                latitude: agenda.agenda[0].latitude,
+                longitude: agenda.agenda[0].longitude,
+              ),
+            ),
+          );
+        };
+        break;
+
+      case 'finalized':
+        icon = Icons.payment;
+        text = 'Pagar';
+        action = () {
+          print('pagar');
+        };
+        break;
+      case 'completed':
+        icon = Icons.payment;
+        text = 'ver registro de pago';
+        action = () {
+          print('pagar');
+        };
+        break;
+      default:
+        icon = Icons.help;
+        text = jobStatus;
+        action = null;
+        bgColor = Theme.of(context).colorScheme.surface.withOpacity(0.6);
+    }
+
+    return ElevatedButton.icon(
+      onPressed: action,
+      icon: Icon(icon, color: colorWhite),
+      label: Text(
+        text,
+        style: const TextStyle(fontSize: 18, color: colorWhite),
+      ),
+      style: ElevatedButton.styleFrom(
+        fixedSize: const Size(300, 50),
+        backgroundColor: bgColor,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
 }

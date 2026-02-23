@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/pages/ViewLocationpage.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class LocationsOptions extends StatelessWidget {
   final String street;
@@ -50,37 +51,41 @@ class LocationsOptions extends StatelessWidget {
               ),
               child: Icon(Icons.location_on, size: 30, color: colorWhite),
             ),
-
             const SizedBox(width: 20),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    street,
-                    style: TextStyle(
-                      fontSize: 17,
+                    references,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: colorsecundario,
+                      color: Theme.of(context).colorScheme.surface,
+                      letterSpacing: -0.2,
+                    ),
+                  ),
+                  Text(
+                    street,
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      height: 1.6,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.45),
                     ),
                   ),
                   Text(
                     '${neighborhood} ${state} ${city}',
                     maxLines: 1,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  Text(
-                    references,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.surface,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      height: 1.6,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.45),
                     ),
                   ),
                 ],

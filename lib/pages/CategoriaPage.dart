@@ -149,10 +149,20 @@ class _CategoriaPageState extends State<CategoriaPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               _buildSliverAppBar(),
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-              SliverToBoxAdapter(child: _buildTitle()),
-              SliverToBoxAdapter(child: _buildServicios()),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 10),
+                    _buildTitle(),
+                    const SizedBox(height: 20),
+                    _buildServicios(),
+                  ]),
+                ),
+              ),
             ],
           ),
         ),
@@ -175,6 +185,14 @@ class _CategoriaPageState extends State<CategoriaPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
@@ -190,9 +208,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
   }
 
   Widget _buildTitle() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-      child: Container(
+    return  Container(
         alignment: Alignment.topLeft,
         child: Row(
           children: [
@@ -220,8 +236,8 @@ class _CategoriaPageState extends State<CategoriaPage> {
             ),
           ],
         ),
-      ).animate().fade().slideX(begin: -0.2),
-    );
+      ).animate().fade().slideX(begin: -0.2);
+    
   }
 
   Widget _buildServicios() {
@@ -232,7 +248,7 @@ class _CategoriaPageState extends State<CategoriaPage> {
     return GridView.builder(
       scrollDirection: Axis.vertical,
       shrinkWrap: true,
-      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 1,

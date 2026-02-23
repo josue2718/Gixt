@@ -117,6 +117,14 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
@@ -136,8 +144,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       child: Container(
         alignment: Alignment.topLeft,
-        child: Row(
-          children: [
+        child: 
             Text(
               'Ubicaciones Disponibles',
               style: GoogleFonts.poppins(
@@ -146,18 +153,9 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
                 color: Theme.of(context).colorScheme.surface,
               ),
             ),
-            Spacer(),
-            InkWell(
-              onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
-                // );
-              },
-              child: Icon(Icons.location_on, size: 20, color: colortitulo),
-            ),
-          ],
-        ),
+
+          
+        
       ).animate().fade().slideX(begin: -0.2),
     );
   }

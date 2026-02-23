@@ -115,48 +115,37 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (ubicacion.ubicacion.isEmpty) {
+      return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        body: Indicador(),
+      );
+    }
     return KeyboardDismisser(
       child: Scaffold(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([]),
-          builder: (context, snapshot) {
-            if (ubicacion.ubicacion.isEmpty) {
-              return Indicador();
-            }
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 20,
-                        ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            const SizedBox(height: 10),
-                            _buidFormularioInfo().animate().fade().slideX(
-                              begin: -0.2,
-                            ),
-                            const SizedBox(height: 30),
-                            // _bu().animate().fade().slideX(begin: -0.2),
-                            //  const SizedBox(height: 10),
-                            // _buidFormularioInfo().animate().fade().slideX(begin: -0.2),
-                          ]),
-                        ),
-                      ),
-                    ],
-                  ),
+        floatingActionButton: _buttonDelete(context),
+        body: RefreshIndicator(
+          onRefresh: _onRefresh,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              _buildSliverAppBar(),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: 10),
+                    _buidFormularioInfo().animate().fade().slideX(begin: -0.2),
+                    const SizedBox(height: 30),
+                  ]),
                 ),
               ),
-            );
-          },
+            ],
+          ),
         ),
       ),
     );
@@ -164,7 +153,7 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
-      backgroundColor: colorprimario,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       expandedHeight: 90,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
@@ -173,13 +162,21 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
       toolbarHeight: 90,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         onPressed: () {
           Navigator.pop(context); // sale de la pantalla
         },
       ),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
       ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
@@ -188,7 +185,7 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
           style: GoogleFonts.poppins(
             fontSize: 30,
             fontWeight: FontWeight.w600,
-            color: colorsecundario,
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
@@ -196,190 +193,202 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
   }
 
   Widget _buidFormularioInfo() {
-    _streetController.text = ubicacion.ubicacion[0].street;
-    _neighborhoodController.text = ubicacion.ubicacion[0].neighborhood;
-    _house_numberController.text = ubicacion.ubicacion[0].house_number;
-    _stateController.text = ubicacion.ubicacion[0].state;
-    _cityController.text = ubicacion.ubicacion[0].city;
-    _referenceController.text = ubicacion.ubicacion[0].reference;
-    _maps_addressController.text = ubicacion.ubicacion[0].maps_address;
-
     latitud = ubicacion.ubicacion[0].latitude;
     longitud = ubicacion.ubicacion[0].longitude;
     imagen = ubicacion.ubicacion[0].image;
 
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Título principal ──────────────────────────────
+        Text(
+          'Información del domicilio',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 19,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ).animate().fade(duration: 350.ms).slideY(begin: 0.1),
+
+        const SizedBox(height: 24),
+
+        // ── Dirección ─────────────────────────────────────
+        Text(
+          'Dirección',
+          style: GoogleFonts.poppins(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ).animate().fade(duration: 350.ms, delay: 60.ms).slideX(begin: -0.08),
+
+        const SizedBox(height: 8),
+
+        _buidText(
+          label: 'CALLE',
+          value: ubicacion.ubicacion[0].street,
+          icon: Icons.signpost_outlined,
+        ).animate().fade(duration: 300.ms, delay: 80.ms).slideX(begin: -0.06),
+
+        _buidText(
+          label: 'COLONIA / FRACCIONAMIENTO',
+          value: ubicacion.ubicacion[0].neighborhood,
+          icon: Icons.holiday_village_outlined,
+        ).animate().fade(duration: 300.ms, delay: 110.ms).slideX(begin: -0.06),
+
+        _buidText(
+          label: 'NÚMERO EXT / INT',
+          value: ubicacion.ubicacion[0].house_number,
+          icon: Icons.tag_outlined,
+        ).animate().fade(duration: 300.ms, delay: 140.ms).slideX(begin: -0.06),
+
+        _buidText(
+          label: 'ESTADO',
+          value: ubicacion.ubicacion[0].state,
+          icon: Icons.map_outlined,
+        ).animate().fade(duration: 300.ms, delay: 170.ms).slideX(begin: -0.06),
+
+        _buidText(
+          label: 'CIUDAD / MUNICIPIO',
+          value: ubicacion.ubicacion[0].city,
+          icon: Icons.location_city_outlined,
+        ).animate().fade(duration: 300.ms, delay: 200.ms).slideX(begin: -0.06),
+
+        const SizedBox(height: 20),
+
+        // ── Referencias ───────────────────────────────────
+        Text(
+          'Referencias',
+          style: GoogleFonts.poppins(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ).animate().fade(duration: 350.ms, delay: 230.ms).slideX(begin: -0.08),
+
+        const SizedBox(height: 8),
+
+        _buidText(
+          label: 'REFERENCIAS ADICIONALES',
+          value: ubicacion.ubicacion[0].reference,
+          icon: Icons.info_outline_rounded,
+        ).animate().fade(duration: 300.ms, delay: 250.ms).slideX(begin: -0.06),
+
+        _buidText(
+          label: 'DIRECCIÓN EN MAPS',
+          value: ubicacion.ubicacion[0].maps_address,
+          icon: Icons.place_outlined,
+        ).animate().fade(duration: 300.ms, delay: 280.ms).slideX(begin: -0.06),
+
+        const SizedBox(height: 20),
+
+        // ── Foto ──────────────────────────────────────────
+        Text(
+          'Foto del domicilio',
+          style: GoogleFonts.poppins(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ).animate().fade(duration: 350.ms, delay: 310.ms).slideX(begin: -0.08),
+
+        const SizedBox(height: 14),
+
+        _buidFormularioImg()
+            .animate()
+            .fade(duration: 400.ms, delay: 340.ms)
+            .scale(begin: const Offset(0.97, 0.97), curve: Curves.easeOut),
+
+        const SizedBox(height: 24),
+
+        // ── Botón ─────────────────────────────────────────
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => abrirGoogleMaps(latitud, longitud),
+            icon: const Icon(
+              Icons.directions_rounded,
+              color: colorWhite,
+              size: 20,
+            ),
+            label: Text(
+              'Cómo llegar',
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: colorWhite,
+              ),
+            ),
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              backgroundColor: colorsecundario,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ).animate().fade(duration: 400.ms, delay: 380.ms).slideY(begin: 0.1),
+      ],
+    );
+  }
+
+  Widget _buidText({
+    required String value,
+    required String label,
+    required IconData icon,
+  }) {
     return Padding(
-      padding: const EdgeInsets.all(0),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              'Informacion del domicilio',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 25,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 16,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.28),
               ),
-            ),
-
-            const SizedBox(height: 30),
-
-            /// CALLE
-            CustomTextFormField(
-              controller: _streetController,
-              label: 'Calle e intersecciónes',
-              icon: Icons.home,
-              readOnly: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese una calle';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            /// COLONIA
-            CustomTextFormField(
-              controller: _neighborhoodController,
-              label: 'Colonia o Fraccionamiento',
-              icon: Icons.apartment,
-              readOnly: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese una colonia o fraccionamiento';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            /// NUMERO CASA
-            CustomTextFormField(
-              controller: _house_numberController,
-              label: 'Numero Exterior y/o Interior',
-              icon: Icons.apartment,
-              readOnly: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese el número de casa';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            /// ESTADO
-            CustomTextFormField(
-              controller: _stateController,
-              label: 'Estado',
-              icon: Icons.apartment,
-              readOnly: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese su estado';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            /// CIUDAD
-            CustomTextFormField(
-              controller: _cityController,
-              label: 'Ciudad o Municipio',
-              icon: Icons.apartment,
-              readOnly: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese su ciudad';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 30),
-
-            CustomDescriptionFormField(
-              controller: _referenceController,
-              minLines: 2,
-              maxLines: 4,
-              label: 'Referencias adicionales',
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor descripcion';
-                }
-                return null;
-              },
-            ),
-
-            const SizedBox(height: 20),
-
-            /// MAPS
-            TextFormField(
-              controller: _maps_addressController,
-              readOnly: true,
-              minLines: 2,
-              maxLines: 2,
-              style: TextStyle(color: Theme.of(context).colorScheme.surface),
-              decoration: InputDecoration(
-                labelText: 'Direccion maps',
-                labelStyle: TextStyle(
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-                enabledBorder: UnderlineInputBorder(
-                  borderSide: BorderSide(
-                    color: Theme.of(context).colorScheme.surface,
-                  ),
-                ),
-                suffixIcon: Icon(
-                  Icons.map,
-                  color: Theme.of(context).colorScheme.surface,
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  letterSpacing: 0.5,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.35),
                 ),
               ),
-            ),
-
-            const SizedBox(height: 30),
-
-            Text(
-              'Archivos adjuntos',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
+            ],
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 21),
+            child: Text(
+              value.isEmpty ? '—' : value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                height: 1.55,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.75),
               ),
             ),
-
-            const SizedBox(height: 20),
-            _buidFormularioImg(),
-            const SizedBox(height: 20),
-
-            ElevatedButton.icon(
-              onPressed: () {
-                abrirGoogleMaps(latitud, longitud);
-              },
-              icon: const Icon(Icons.map, color: colorWhite),
-              label: const Text(
-                'Ver en Google Maps',
-                style: TextStyle(fontSize: 18, color: colorWhite),
-              ),
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorsecundario,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          Divider(
+            height: 1,
+            thickness: 0.5,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.08),
+          ),
+        ],
       ),
     );
   }
@@ -387,48 +396,59 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
   Widget _buidFormularioImg() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Column(
-          children: [
-            imagen == null
-                ? Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 177, 177, 177),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    width: 200,
-                    height: 200,
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.person,
-                      ), // Usa un icono de calendario
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                      iconSize: 65,
-                    ),
-                  )
-                : Container(
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(0, 103, 10, 10),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    width: 200,
-                    height: 200,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: CachedNetworkImage(
-                        imageUrl: imagen!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) =>
-                            Center(child: Indicador()),
-                        errorWidget: (context, url, error) =>
-                            const Icon(Icons.broken_image),
-                      ),
+      child: Column(
+        children: [
+          imagen == null
+              ? Container(
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 177, 177, 177),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  height: 180,
+                  width: double.infinity,
+                  child: IconButton(
+                    onPressed: () {},
+                    icon: const Icon(
+                      Icons.person,
+                    ), // Usa un icono de calendario
+                    color: const Color.fromARGB(255, 255, 255, 255),
+                    iconSize: 65,
+                  ),
+                )
+              : Container(
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(0, 103, 10, 10),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  height: 200,
+                  width: double.infinity,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: CachedNetworkImage(
+                      imageUrl: imagen!,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Center(child: Indicador()),
+                      errorWidget: (context, url, error) =>
+                          const Icon(Icons.broken_image),
                     ),
                   ),
-          ],
-        ),
+                ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buttonDelete(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () {
+        print("Botón presionado");
+      },
+      backgroundColor: colorError,
+      elevation: 6,
+      child: const Icon(
+        Icons.delete_outline_rounded,
+        color: Colors.white,
+        size: 28,
       ),
     );
   }

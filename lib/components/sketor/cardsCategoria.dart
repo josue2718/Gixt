@@ -8,16 +8,15 @@ class CardsCategoriaSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 0),
       child: Card(
-        elevation: 1,
+        elevation: 0,
         color: colorprimario,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        margin: const EdgeInsets.symmetric(vertical: 20),
         child: SizedBox(
-          height: 170,
+          height: 110,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -28,7 +27,7 @@ class CardsCategoriaSkeleton extends StatelessWidget {
                   bottomLeft: Radius.circular(20),
                 ),
                 child: Container(
-                  width: 150,
+                  width: 110,
                   height: double.infinity,
                   color: Colors.white24,
                 ),

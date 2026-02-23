@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/roots/BottomNavigationBar.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shimmer/shimmer.dart';
@@ -25,9 +26,16 @@ class _RootPageState extends State<RootPage> {
         _backPressedCount++;
         if (_backPressedCount == 1) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Presione nuevamente para salir', style: TextStyle(color: colorWhite),),
+            SnackBar(
               backgroundColor: colorprimario,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              content: Text(
+                'Presiona atrás de nuevo para salir',
+                style: GoogleFonts.poppins(fontSize: 13, color: colorWhite),
+              ),
             ),
           );
 
