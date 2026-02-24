@@ -3,6 +3,7 @@ import 'package:gixt/components/colors.dart';
 import 'package:gixt/pages/AgendaPage.dart';
 import 'package:gixt/pages/HomePage.dart';
 import 'package:gixt/pages/PerfilPage.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppBottomNavigation extends StatefulWidget {
   const AppBottomNavigation({Key? key}) : super(key: key);
@@ -66,7 +67,7 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           _buildNavItem(Icons.home_rounded, Icons.home_rounded, 0, "Home"),
-          _buildNavItem(Icons.search_rounded, Icons.search, 1, "Buscar"),
+          _buildNavItem(Icons.message_outlined, Icons.search, 1, "Ayuda"),
           // BOTÓN CENTRAL ESTILO "CHIC"
           _buildMiddleItem(Icons.flash_on, 2),
           _buildNavItem(
@@ -101,18 +102,16 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
         children: [
           Icon(
             isSelected ? activeIcon : icon,
-            color: isSelected ? colorsecundario : colorWhite,
+            color: isSelected ? colorsecundario : colorWhite.withOpacity(0.6),
             size: 28,
           ),
           Text(
             label,
-            style: TextStyle(
-              color: isSelected
-                  ? colorsecundario
-                  : colorWhite,
-              fontSize: 10,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
+           style: GoogleFonts.poppins(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? colorsecundario : colorWhite.withOpacity(0.4),
+              ),
           ),
         ],
       ),
@@ -150,40 +149,74 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
     );
   }
 
-  Future<bool> _confirmarSalirExpress() async {
-    return await showDialog<bool>(
+   Future<bool> _confirmarSalirExpress() async {
+    return await showModalBottomSheet<bool>(
           context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: colorprimario,
-            title: const Text(
-              'Alerta',
-              style: TextStyle(
-                color: colorWhite,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            content: const Text(
-              'Estás a punto de salir de la creación del servicio express. '
-              '¿Deseas continuar?',
-              style: TextStyle(color: colorWhite, fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text(
-                  'Cancelar',
-                  style: TextStyle(color: colorWhite, fontSize: 14),
+          backgroundColor: colorprimario,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          builder: (_) => Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 36),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36, height: 4,
+                    decoration: BoxDecoration(
+                      color: colorWhite.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
                 ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Salir',
-                  style: TextStyle(color: colorError, fontSize: 14),
+                const SizedBox(height: 20),
+                Text('¿Salir de Express?',
+                    style: GoogleFonts.poppins(
+                        fontSize: 16, fontWeight: FontWeight.w600, color: colorWhite)),
+                const SizedBox(height: 6),
+                Text('Perderás el progreso de tu servicio express.',
+                    style: GoogleFonts.poppins(
+                        fontSize: 13, height: 1.5,
+                        color: colorWhite.withOpacity(0.45))),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          side: BorderSide(color: colorWhite.withOpacity(0.12)),
+                        ),
+                        child: Text('Cancelar',
+                            style: GoogleFonts.poppins(fontSize: 14, color: colorWhite.withOpacity(0.55))),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          backgroundColor: Colors.red.withOpacity(0.1),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: Colors.red.withOpacity(0.3)),
+                          ),
+                        ),
+                        child: Text('Salir',
+                            style: GoogleFonts.poppins(
+                                fontSize: 14, fontWeight: FontWeight.w600, color: Colors.red)),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ) ??
         false;

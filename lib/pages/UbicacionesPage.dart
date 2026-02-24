@@ -91,12 +91,22 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
             physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               _buildSliverAppBar(),
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-              SliverToBoxAdapter(child: _buildTitle()),
-              SliverToBoxAdapter(child: _buildUbicaciones()),
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
-              SliverToBoxAdapter(child: _buildAdd()),
-              const SliverToBoxAdapter(child: SizedBox(height: 100)),
+               SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 20),
+                  child: Column(
+                    children: [
+                      _buildTitle(),
+                       SizedBox(height: 20),
+                       _buildUbicaciones(),
+                        SizedBox(height: 20),
+                        _buildAdd(),
+                         SizedBox(height: 40),
+                    ],
+                  )
+                ),
+              ),
+            
             ],
           ),
         ),
@@ -107,12 +117,12 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      expandedHeight: 80,
+      expandedHeight: 70,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
-      toolbarHeight: 80,
+      toolbarHeight: 70,
       iconTheme: IconThemeData(color: Theme.of(context).colorScheme.surface),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
@@ -130,7 +140,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
         title: Text(
           'Mis Ubicaciones',
           style: GoogleFonts.poppins(
-            fontSize: 30,
+            fontSize: 25,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.surface,
           ),
@@ -141,7 +151,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
 
   Widget _buildTitle() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+      padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Container(
         alignment: Alignment.topLeft,
         child: 
@@ -166,7 +176,7 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
       return CardsSN(img: 'assets/Banner4.png');
     }
     return Padding(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.all(0),
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
@@ -196,32 +206,35 @@ class _UbicacionesPageState extends State<UbicacionesPage> {
   }
 
   Widget _buildAdd() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        children: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
+    return SizedBox(
+      width: double.infinity,
+      child: 
+          ElevatedButton.icon(
+          onPressed: () {
+            Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AddUbicacionPage()),
               );
-            },
-            style: ElevatedButton.styleFrom(
-              fixedSize: const Size(300, 50),
-              backgroundColor: colorsecundario,
-              foregroundColor: colorprimario,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text(
-              'Añadir',
-              style: TextStyle(fontSize: 18, color: colorWhite),
+          },
+          style: ElevatedButton.styleFrom(
+            elevation: 0,
+            backgroundColor: colorsecundario,
+            foregroundColor: colorWhite,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
             ),
           ),
-        ],
-      ),
+          icon: const Icon(Icons.add_location, size: 20),
+          label: Text(
+            'Nuevo',
+            style: GoogleFonts.poppins(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+
     );
   }
 }

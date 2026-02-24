@@ -231,12 +231,12 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      expandedHeight: 90,
+      expandedHeight: 70,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
-      toolbarHeight: 90,
+      toolbarHeight: 70,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         color: Theme.of(context).colorScheme.surface,
@@ -260,12 +260,80 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
         title: Text(
           'Añadir Ubicación',
           style: GoogleFonts.poppins(
-            fontSize: 27,
+            fontSize: 25,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
+    );
+  }
+
+  Widget _PageHeader(String title, String subtitle) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _nextButton(String label, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.save_outlined, size: 20),
+        label: Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colorWhite,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: colorsecundario,
+          foregroundColor: colorWhite,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _backButton() {
+    return TextButton(
+      onPressed: salir,
+      style: TextButton.styleFrom(
+        foregroundColor: Theme.of(
+          context,
+        ).colorScheme.surface.withOpacity(0.45),
+      ),
+      child: Text('Regresar', style: GoogleFonts.poppins(fontSize: 13)),
     );
   }
 
@@ -283,26 +351,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Informacion de la ubicacion',
-                textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Theme.of(context).colorScheme.surface,
-                  letterSpacing: -0.2,
-                ),
-              ),
-              Text(
-                'Asegurate de que la información sea correcta',
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  height: 1.6,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.surface.withOpacity(0.45),
-                ),
-              ),
+              _PageHeader('Informacion de la ubicacion','Asegurate de que la información sea correcta') ,
               const SizedBox(height: 20),
               CustomTextFormField(
                 controller: _streetController,
@@ -316,6 +365,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                   return null;
                 },
               ),
+              const SizedBox(height: 20),
               CustomTextFormField(
                 controller: _house_numberController,
                 label: 'Numero de casa o edificio',
@@ -371,7 +421,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                 },
               ),
 
-              const SizedBox(height: 40),
+              const SizedBox(height: 20),
               CustomDescriptionFormField(
                 controller: _referenceController,
                 minLines: 2,
@@ -409,10 +459,7 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
               const SizedBox(height: 20),
               _buidFormularioImg(),
               SizedBox(height: 20,),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () {
+              _nextButton('Guardar',() {
                     if (!(_formKey.currentState?.validate() ?? false)) return;
                     if (_image == null) {
                       mostrarAlerta(
@@ -424,34 +471,10 @@ class _AddUbicacionPageState extends State<AddUbicacionPage> {
                       return;
                     }
                     _Crear();
-                  },
-
-                  /// 🔥 ESTILO
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    backgroundColor: colorsecundario,
-                    foregroundColor: colorWhite,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 14,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-
-                  icon: const Icon(Icons.save_outlined, size: 22),
-                  label: Text(
-                    'Guardar',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      height: 1.6,
-                      color: colorWhite,
-                    ),
-                  ),
-                ),
+                  }
               ),
+              SizedBox(height: 20,),
+              _backButton(),
               SizedBox(height: 30,)
             ],
           ),

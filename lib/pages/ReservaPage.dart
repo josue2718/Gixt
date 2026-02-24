@@ -184,12 +184,8 @@ class _ReservaPageState extends State<ReservaPage> {
                       if (_paginaActual == 1) _buildFormularioUbicacion(),
                       if (_paginaActual == 2) _buildConfirmacion(),
 
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(3, (i) => _dot(i)),
-                      ),
-                      const SizedBox(height: 30),
+                      _buildDots(),
+                      const SizedBox(height: 50),
                     ],
                   ),
                 ),
@@ -204,12 +200,12 @@ class _ReservaPageState extends State<ReservaPage> {
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      expandedHeight: 90,
+      expandedHeight: 70,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
-      toolbarHeight: 90,
+      toolbarHeight: 70,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(0)),
       ),
@@ -235,49 +231,105 @@ class _ReservaPageState extends State<ReservaPage> {
         title: Text(
           'Nueva reserva',
           style: GoogleFonts.poppins(
-            fontSize: 30,
+            fontSize: 25,
             fontWeight: FontWeight.w600,
-            color: colorsecundario,
+            color: Theme.of(context).colorScheme.surface,
           ),
         ),
       ),
     );
   }
 
-  Widget _dot(int index) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: _paginaActual == index ? 12 : 8,
-      height: _paginaActual == index ? 12 : 8,
-      decoration: BoxDecoration(
-        color: _paginaActual == index
-            ? colorsecundario
-            : Theme.of(context).colorScheme.surface.withOpacity(0.4),
-        shape: BoxShape.circle,
+  Widget _buildDots() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(3, (i) {
+        final isActive = _paginaActual == i;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isActive ? 24 : 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: isActive
+                ? colorsecundario
+                : Theme.of(context).colorScheme.surface.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _PageHeader(String title, String subtitle) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _nextButton(String label, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+        label: Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colorWhite,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: colorsecundario,
+          foregroundColor: colorWhite,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
       ),
     );
   }
 
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    VoidCallback? onIconTap,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: const TextStyle(color: colorWhite),
-      focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: colorWhite),
+  Widget _backButton() {
+    return TextButton(
+      onPressed: salir,
+      style: TextButton.styleFrom(
+        foregroundColor: Theme.of(
+          context,
+        ).colorScheme.surface.withOpacity(0.45),
       ),
-      suffixIcon: onIconTap == null
-          ? Icon(icon, color: colorWhite)
-          : IconButton(
-              icon: Icon(icon, color: colorWhite),
-              onPressed: onIconTap,
-            ),
+      child: Text('Regresar', style: GoogleFonts.poppins(fontSize: 13)),
     );
   }
+
 
   Widget _buildFormularioInfo() {
     return Padding(
@@ -287,25 +339,8 @@ class _ReservaPageState extends State<ReservaPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Informacion del servicio',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.surface,
-                letterSpacing: -0.2,
-              ),
-            ),
-            Text(
-              'describenos tu problema, la fecha y hora que deseas el servicio, y sube fotos de evidencia para que el trabajador pueda entender mejor tu situación',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                height: 1.6,
-                color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
-              ),
-            ),
+            _PageHeader('Informacion del servicio',  'describenos tu problema, la fecha y hora que deseas el servicio, y sube fotos de evidencia para que el trabajador pueda entender mejor tu situación'),
+            
 
             const SizedBox(height: 30),
 
@@ -400,9 +435,7 @@ class _ReservaPageState extends State<ReservaPage> {
             const SizedBox(height: 20),
             _buildFormularioImg(),
             const SizedBox(height: 20),
-
-            ElevatedButton(
-              onPressed: () {
+            _nextButton('Siguiente',  () {
                 if (!(_formKey.currentState?.validate() ?? false)) return;
                 print(_images.length);
                 final imagenesValidas = _images
@@ -423,16 +456,8 @@ class _ReservaPageState extends State<ReservaPage> {
                   _paginaActual++;
                 });
               },
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorsecundario,
-                foregroundColor: colorWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
             ),
+             
           ],
         ),
       ),
@@ -452,33 +477,15 @@ class _ReservaPageState extends State<ReservaPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
+                _PageHeader(
                   'Ubicacion del servicio',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.surface,
-                    letterSpacing: -0.2,
-                  ),
-                ),
-                Text(
                   'selecciona la ubicacion donde deseas el servicio, puedes elegir entre tus ubicaciones guardadas o agregar una nueva desde tu perfil',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    height: 1.6,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surface.withOpacity(0.45),
-                  ),
                 ),
                 _buildUbicacionItem(),
               ],
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
+            _nextButton('Siguiente', () {
                 if (_ubicacionSeleccionada == null) {
                   mostrarAlerta(
                     context,
@@ -492,26 +499,12 @@ class _ReservaPageState extends State<ReservaPage> {
                   _paginaActual++;
                 });
               },
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorsecundario,
-                foregroundColor: colorWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
+              
             ),
 
             const SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                salir();
-              },
-              style: TextButton.styleFrom(foregroundColor: colorWhite),
-              child: const Text('Regresar'),
-            ),
-            SizedBox(height: 50),
+            _backButton(),
+            SizedBox(height: 20),
           ],
         ),
       ),
@@ -679,20 +672,12 @@ class _ReservaPageState extends State<ReservaPage> {
           ),
 
           const SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: () {
-              _Crear();
-            },
-            style: ElevatedButton.styleFrom(
-              fixedSize: const Size(300, 50),
-              backgroundColor: colorsecundario,
-              foregroundColor: colorWhite,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: const Text('Crear', style: TextStyle(fontSize: 18)),
+          _nextButton('Crear reserva', 
+              _Crear
           ),
+           const SizedBox(height: 20),
+          _backButton(),
+           const SizedBox(height: 20),
         ],
       ),
     );
@@ -945,8 +930,10 @@ class _ReservaPageState extends State<ReservaPage> {
         Text(
           'Método de pago',
           style: GoogleFonts.poppins(
-            fontSize: 13,
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
           ),
         ),
         const SizedBox(height: 12),

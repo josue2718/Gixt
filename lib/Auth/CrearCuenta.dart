@@ -2,13 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:gixt/Auth/Login.dart';
 import 'package:gixt/cache.dart';
 import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/alert.dart';
 import 'package:gixt/components/colors.dart';
-import 'package:gixt/components/inputs/Nacimientoformatter.dart';
-import 'package:gixt/components/inputs/Input.dart' hide OtpBoxclass;
+import 'package:gixt/components/inputs/Input.dart';
 import 'package:gixt/components/inputs/Input_Fecha.dart';
 import 'package:gixt/components/inputs/Input_Password.dart';
 import 'package:gixt/components/inputs/Input_Phone.dart';
@@ -17,8 +15,6 @@ import 'package:gixt/components/inputs/Pick_Image.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/cuenta_service.dart';
 import 'package:gixt/services/Auth/validar.dart';
-import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
-import 'package:gixt/services/ubicaciones/location_service.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -64,9 +60,17 @@ class _CrearcuentaState extends State<Crearcuenta> {
   bool errorCodigo = false;
   bool enviado = false;
   Timer? _timer;
-int segundosRestantes = 180; // 3 minutos
-bool timeout = false;
+  int segundosRestantes = 120;
+  bool timeout = false;
+  String _emailVerificado = '';
+  bool _codigoVerificado = false;
+  bool get _mismoCorroeQueVerificado =>
+      _emailVerificado.isNotEmpty &&
+      _emailController.text.trim() == _emailVerificado;
 
+  /// El código ingresado es correcto y no ha expirado
+  bool get _codigoOk =>
+      codigo.length == 5 && codigo == codigovalidation && !timeout;
 
   Future<void> _saveToken(
     String token,
@@ -155,25 +159,18 @@ bool timeout = false;
           message: result['message'],
           type: alert_type.error,
         );
-
-       
       });
     }
   }
 
- void _Validar() async {
-    
-    
+  void _Validar() async {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) => Indicador(),
     );
 
-    final result = await ValidarService.Crear(
-      email: _emailController.text,
-
-    );
+    final result = await ValidarService.Crear(email: _emailController.text);
 
     Navigator.pop(context);
 
@@ -183,9 +180,7 @@ bool timeout = false;
         codigovalidation = data;
         enviado = true;
         iniciarContador();
-
       });
-      
     } else {
       Future.microtask(() async {
         await mostrarAlerta(
@@ -194,36 +189,33 @@ bool timeout = false;
           message: result['message'],
           type: alert_type.error,
         );
-
-       
       });
     }
   }
 
   void iniciarContador() {
-  _timer?.cancel();
+    _timer?.cancel();
 
-  setState(() {
-    segundosRestantes = 120;
-    timeout = false;
-  });
+    setState(() {
+      segundosRestantes = 120;
+      timeout = false;
+    });
 
-  _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-    if (segundosRestantes <= 0) {
-      timer.cancel();
-if (!mounted) return;
-      setState(() {
-        timeout = true; 
-      });
-
-    } else {
-      if (!mounted) return;
-      setState(() {
-        segundosRestantes--;
-      });
-    }
-  });
-}
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (segundosRestantes <= 0) {
+        timer.cancel();
+        if (!mounted) return;
+        setState(() {
+          timeout = true;
+        });
+      } else {
+        if (!mounted) return;
+        setState(() {
+          segundosRestantes--;
+        });
+      }
+    });
+  }
 
   String get tiempoTexto {
     int min = segundosRestantes ~/ 60;
@@ -274,19 +266,18 @@ if (!mounted) return;
             slivers: [
               _buildSliverAppBar(),
               SliverToBoxAdapter(
-                child: Column(
-                  children: [
-                    if (_paginaActual == 0) _buidFormulario(),
-                    if (_paginaActual == 1) _buildverificacion(),
-                    if (_paginaActual == 2) _buidFormularioInfo(),
-                    if (_paginaActual == 3) _buidFormularioImg(),
-
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(4, (i) => _dot(i)),
-                    ),
-                  ],
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 20),
+                  child: Column(
+                    children: [
+                      if (_paginaActual == 0) _buidFormulario(),
+                      if (_paginaActual == 1) _buildverificacion(),
+                      if (_paginaActual == 2) _buidFormularioInfo(),
+                      if (_paginaActual == 3) _buidFormularioImg(),
+                      const SizedBox(height: 20),
+                      _buildDots(),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -296,30 +287,37 @@ if (!mounted) return;
     );
   }
 
-  Widget _dot(int index) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: _paginaActual == index ? 12 : 8,
-      height: _paginaActual == index ? 12 : 8,
-      decoration: BoxDecoration(
-        color: _paginaActual == index
-            ? colorsecundario
-            : Theme.of(context).colorScheme.surface.withOpacity(0.4),
-        shape: BoxShape.circle,
-      ),
+  Widget _buildDots() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(4, (i) {
+        final isActive = _paginaActual == i;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: isActive ? 24 : 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: isActive
+                ? colorsecundario
+                : Theme.of(context).colorScheme.surface.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(4),
+          ),
+        );
+      }),
     );
   }
 
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      expandedHeight: 120,
+      expandedHeight: 70,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
-      toolbarHeight: 120,
+      toolbarHeight: 70,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(0),
@@ -333,12 +331,20 @@ if (!mounted) return;
           salir();
         },
       ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 0.5,
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.5),
+        ),
+      ),
       flexibleSpace: FlexibleSpaceBar(
         centerTitle: true,
         title: Text(
           'Crear Cuenta',
           style: GoogleFonts.poppins(
-            fontSize: 30,
+            fontSize: 25,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.surface,
           ),
@@ -347,542 +353,571 @@ if (!mounted) return;
     );
   }
 
-  Widget _buidFormulario() {
-    final screenHeight = MediaQuery.of(context).size.height;
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Credenciales de la cuenta',
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: colorsecundario,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
+  Widget _PageHeader(String title, String subtitle) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+          ),
+        ),
+      ],
+    );
+  }
 
-            CustomTextFormField(
-              controller: _emailController,
-              label: 'Correo',
-              readOnly: false,
-              keyboardType: TextInputType.emailAddress,
-              icon: Icons.person,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un correo';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-            CustomPasswordFormField(controller: _passwordController),
-            const SizedBox(height: 20),
-            CustomPasswordFormField(
-              label: 'Confirmar Contraseña',
-              controller: _passwordconfirmarController,
-            ),
-
-            const SizedBox(height: 70),
-            ElevatedButton(
-              onPressed: () {
-                if (_passwordController.text !=
-                    _passwordconfirmarController.text) {
-                  mostrarAlerta(
-                    context,
-                    title: 'Las contraseñas no coinciden',
-                    message: 'Por favor, revisa la contraseña',
-                    type: alert_type.advertencia,
-                  );
-                  return;
-                }
-                if (!(_formKey.currentState?.validate() ?? false)) return;
-                setState(() {
-                  _paginaActual++;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorsecundario,
-                foregroundColor: colorWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
-            ),
-          ],
+  Widget _nextButton(String label, VoidCallback onPressed) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.arrow_forward_rounded, size: 20),
+        label: Text(
+          label,
+          style: GoogleFonts.poppins(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+            color: colorWhite,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          elevation: 0,
+          backgroundColor: colorsecundario,
+          foregroundColor: colorWhite,
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
       ),
     );
   }
 
+  Widget _backButton() {
+    return TextButton(
+      onPressed: salir,
+      style: TextButton.styleFrom(
+        foregroundColor: Theme.of(
+          context,
+        ).colorScheme.surface.withOpacity(0.45),
+      ),
+      child: Text('Regresar', style: GoogleFonts.poppins(fontSize: 13)),
+    );
+  }
+
+  Widget _buidFormulario() {
+    final screenHeight = MediaQuery.of(context).size.height;
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PageHeader(
+            'Credenciales de la cuenta',
+            'Ingresa tu correo electrónico y una contraseña segura para crear tu cuenta.',
+          ),
+
+          const SizedBox(height: 40),
+
+          CustomTextFormField(
+            controller: _emailController,
+            label: 'Correo',
+            readOnly: false,
+            keyboardType: TextInputType.emailAddress,
+            icon: Icons.person,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un correo';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          CustomPasswordFormField(controller: _passwordController),
+          const SizedBox(height: 20),
+          CustomPasswordFormField(
+            label: 'Confirmar Contraseña',
+            controller: _passwordconfirmarController,
+          ),
+
+          const SizedBox(height: 70),
+          _nextButton('Siguiente', () {
+            if (_passwordController.text != _passwordconfirmarController.text) {
+              mostrarAlerta(
+                context,
+                title: 'Las contraseñas no coinciden',
+                message: 'Por favor, revisa la contraseña',
+                type: alert_type.advertencia,
+              );
+              return;
+            }
+            if (!(_formKey.currentState?.validate() ?? false)) return;
+            setState(() {
+              _paginaActual++;
+            });
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _genderChip(String value, String label, IconData icon) {
+    final isSelected = _gender == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _gender = value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colorsecundario.withOpacity(0.08)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? colorsecundario
+                  : Theme.of(context).colorScheme.surface.withOpacity(0.12),
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected
+                    ? colorsecundario
+                    : Theme.of(context).colorScheme.surface.withOpacity(0.4),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected
+                      ? colorsecundario
+                      : Theme.of(context).colorScheme.surface.withOpacity(0.55),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
   Widget _buildverificacion() {
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'Código de verificación',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.surface,
+    final yaVerificado = _codigoVerificado && _mismoCorroeQueVerificado;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _PageHeader(
+          'Verifica tu correo',
+          'Enviaremos un código de 5 dígitos a ${_emailController.text.trim()}',
+        ),
+        const SizedBox(height: 24),
+
+        // ── CASO: ya verificado con el mismo correo ─────────────────────
+        if (yaVerificado) ...[
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: BoxDecoration(
+              color: Colors.green.withOpacity(0.07),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: Colors.green.withOpacity(0.22),
+                width: 1,
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            Text(
-              'Te enviamos un código de verificación a: ${_emailController.text}',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.surface,
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Colors.green,
+                  size: 20,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Correo verificado. Puedes continuar.',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.green,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          _nextButton('Continuar', () => setState(() => _paginaActual++)),
+          const SizedBox(height: 8),
+          _backButton(),
+        ]
+        // ── CASO: flujo normal (nuevo código o correo distinto) ─────────
+        else ...[
+          // Aviso si el correo cambió y había un caché previo
+          if (_codigoVerificado && !_mismoCorroeQueVerificado) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.07),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Colors.orange.withOpacity(0.22),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.orange,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Cambiaste el correo. Debes verificar de nuevo.',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.orange,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
+            const SizedBox(height: 16),
+          ],
 
-            const SizedBox(height: 20),
-
-            Text(
-              'Antes de continuar, debemos confirmar tu correo electrónico. Revisa tu bandeja de entrada, te enviamos un código para validar que eres el dueño de esta cuenta. ${codigovalidation}',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: Theme.of(context).colorScheme.surface,
-              ),
+          // Timer
+          if (enviado) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  timeout ? Icons.timer_off_outlined : Icons.timer_outlined,
+                  size: 14,
+                  color: timeout
+                      ? Colors.red.withOpacity(0.6)
+                      : Theme.of(context).colorScheme.surface.withOpacity(0.35),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  timeout ? 'Código expirado' : 'Válido por $tiempoTexto',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: timeout
+                        ? Colors.red.withOpacity(0.7)
+                        : Theme.of(
+                            context,
+                          ).colorScheme.surface.withOpacity(0.4),
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 16),
 
-            const SizedBox(height: 20),
-            Text(
-              'Valido por: ${tiempoTexto}',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 15,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-
-
-            const SizedBox(height: 20),
+            // OTP boxes
             OtpBoxclass(
               isError: errorCodigo,
               onChanged: (value) {
                 setState(() {
                   codigo = value;
                   if (codigo.length == 5) {
-                    if (codigo == codigovalidation  && timeout == false) {
+                    if (_codigoOk) {
                       errorCodigo = false;
-                      print("Código correcto");
+                      // Guardar caché de verificación
+                      _codigoVerificado = true;
+                      _emailVerificado = _emailController.text.trim();
                     } else {
                       errorCodigo = true;
-                      print("Código incorrecto");
                     }
                   } else {
-                    print("Código incompleto");
-                    errorCodigo = true; // mientras escribe no marcar error
+                    errorCodigo = false;
                   }
                 });
               },
             ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () {
-                _Validar();
-              },
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              child: Text(
-                enviado ? 'reenviar' : 'enviar',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).colorScheme.surface,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-            if (errorCodigo == false  && timeout == false)...[
-            ElevatedButton(
-              onPressed: () {
-                setState(() {
-                    _paginaActual++;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorsecundario,
-                foregroundColor: colorWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
-            ),
-            const SizedBox(height: 20),
-             TextButton(
-              onPressed: () {
-                salir();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.surface,
-              ),
-              child: const Text('Regresar'),
-            ),
-            ]
+            const SizedBox(height: 16),
           ],
-        ),
-      ),
+
+          // Botón enviar / reenviar
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: _Validar,
+              icon: Icon(
+                enviado ? Icons.refresh_rounded : Icons.send_outlined,
+                size: 18,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+              ),
+              label: Text(
+                enviado ? 'Reenviar código' : 'Enviar código',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.55),
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                side: BorderSide(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.12),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // Continuar — solo visible cuando el código es correcto
+          if (enviado && _codigoOk && !errorCodigo) ...[
+            _nextButton('Continuar', () => setState(() => _paginaActual++)),
+            const SizedBox(height: 8),
+          ],
+
+          _backButton(),
+        ],
+      ],
     );
   }
 
   Widget _buidFormularioInfo() {
     final screenHeight = MediaQuery.of(context).size.height;
-    return Padding(
-      padding: const EdgeInsets.all(15),
-      child: Form(
-        key: _formKeyinfo,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Informacion de la cuenta',
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: colorsecundario,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 40),
-            CustomTextFormField(
-              controller: _first_nameController,
-              label: 'Nombre',
-              readOnly: false,
-              icon: Icons.person,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un Nombre';
-                }
-                return null;
-              },
-            ),
+    return Form(
+      key: _formKeyinfo,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PageHeader(
+            'Informacion de Perfil',
+            'Completa tu perfil para conectar con otros usuarios y ofrecer tus servicios de manera efectiva.',
+          ),
+          const SizedBox(height: 40),
+          CustomTextFormField(
+            controller: _first_nameController,
+            label: 'Nombre',
+            readOnly: false,
+            icon: Icons.person,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un Nombre';
+              }
+              return null;
+            },
+          ),
 
-            const SizedBox(height: 20),
-            CustomTextFormField(
-              controller: _last_nameController,
-              label: 'Apellido',
-              readOnly: false,
-              icon: Icons.person,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un Apelldo';
-                }
-                return null;
-              },
-            ),
+          const SizedBox(height: 20),
+          CustomTextFormField(
+            controller: _last_nameController,
+            label: 'Apellido',
+            readOnly: false,
+            icon: Icons.person,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un Apelldo';
+              }
+              return null;
+            },
+          ),
 
-            const SizedBox(height: 20),
-            CustomTextFormFieldPhone(
-              controller: _phoneController,
-              label: 'Telefono',
-              readOnly: false,
-              keyboardType: TextInputType.phone,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Por favor ingrese un telefono';
-                }
-                return null;
-              },
-            ),
+          const SizedBox(height: 20),
+          CustomTextFormFieldPhone(
+            controller: _phoneController,
+            label: 'Telefono',
+            readOnly: false,
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor ingrese un telefono';
+              }
+              return null;
+            },
+          ),
 
-            const SizedBox(height: 20),
-            CustomTextFormFieldfecha(controller: _birth_dateControlle),
+          const SizedBox(height: 20),
+          CustomTextFormFieldfecha(controller: _birth_dateControlle),
 
-            const SizedBox(height: 20),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Género',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.surface,
-                    fontSize: 15,
-                    // fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                Row(
-                  children: [
-                    Expanded(
-                      child: RadioListTile<String>(
-                        value: 'H',
-                        fillColor: MaterialStateProperty.resolveWith<Color>((
-                          states,
-                        ) {
-                          if (states.contains(MaterialState.selected)) {
-                            return Theme.of(context).colorScheme.surface;
-                          }
-                          return Theme.of(context).colorScheme.surface;
-                        }),
-                        groupValue: _gender,
-                        activeColor: Theme.of(context).colorScheme.surface,
-                        title: Text(
-                          'Hombre',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _gender = value;
-                          });
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: RadioListTile<String>(
-                        value: 'M',
-                        groupValue: _gender,
-                        fillColor: MaterialStateProperty.resolveWith<Color>((
-                          states,
-                        ) {
-                          if (states.contains(MaterialState.selected)) {
-                            return Theme.of(context).colorScheme.surface;
-                          }
-                          return Theme.of(context).colorScheme.surface;
-                        }),
-                        activeColor: Theme.of(context).colorScheme.surface,
-                        title: Text(
-                          'Mujer',
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.surface,
-                          ),
-                        ),
-                        onChanged: (value) {
-                          setState(() {
-                            _gender = value;
-                          });
-                        },
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-            const SizedBox(height: 50),
-            ElevatedButton(
-              onPressed: () {
-                if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
-                if (_gender == null) {
-                  mostrarAlerta(
+          const SizedBox(height: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'GÉNERO',
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  letterSpacing: 0.5,
+                  color: Theme.of(
                     context,
-                    title: 'Género requerido',
-                    message: 'Por favor, selecciona tu género',
-                    type: alert_type.advertencia,
-                  );
-                  return;
-                }
-                setState(() {
-                  _paginaActual++;
-                });
-              },
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorsecundario,
-                foregroundColor: colorWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  ).colorScheme.surface.withOpacity(0.38),
                 ),
               ),
-              child: const Text('Siguiente', style: TextStyle(fontSize: 18)),
-            ),
-            TextButton(
-              onPressed: () {
-                salir();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.surface,
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  _genderChip('H', 'Hombre', Icons.male_rounded),
+                  const SizedBox(width: 12),
+                  _genderChip('M', 'Mujer', Icons.female_rounded),
+                ],
               ),
-              child: const Text('Regresar'),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 50),
+          _nextButton('Siguiente', () {
+            if (!(_formKeyinfo.currentState?.validate() ?? false)) return;
+            if (_gender == null) {
+              mostrarAlerta(
+                context,
+                title: 'Género requerido',
+                message: 'Por favor, selecciona tu género',
+                type: alert_type.advertencia,
+              );
+              return;
+            }
+            setState(() {
+              _paginaActual++;
+            });
+          }),
+
+          _backButton(),
+        ],
       ),
     );
   }
 
   Widget _buidFormularioImg() {
     final screenHeight = MediaQuery.of(context).size.height;
-    return Padding(
-      padding: const EdgeInsets.all(20),
-      child: Form(
-        key: _formKeyImg,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  'Foto de perfil',
-                  style: TextStyle(
-                    fontSize: 25,
-                    fontWeight: FontWeight.bold,
-                    color: colorsecundario,
-                  ),
-                ),
-                SizedBox(height: 10),
-              ],
-            ),
-            SizedBox(height: 20),
-            Column(
-              children: [
-                _image == null
-                    ? Container(
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(255, 177, 177, 177),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        width: 200,
-                        height: 200,
-                        child: IconButton(
-                          onPressed: () {},
-                          icon: const Icon(
-                            Icons.person,
-                          ), // Usa un icono de calendario
-                          color: const Color.fromARGB(255, 255, 255, 255),
-                          iconSize: 65,
-                        ),
-                      )
-                    : Container(
-                        decoration: BoxDecoration(
-                          color: Color.fromARGB(0, 103, 10, 10),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        width: 200,
-                        height: 200,
-                        child: CircleAvatar(
-                          backgroundImage: FileImage(_image!),
-                        ),
-                      ),
-                SizedBox(height: 25),
-                Transform.translate(
-                  offset: Offset(
-                    60,
-                    -70,
-                  ), // Desplaza 50 píxeles hacia arriba (ajusta el valor)
-                  child: Container(
+    return Form(
+      key: _formKeyImg,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _PageHeader(
+            'Foto de perfil',
+            'selecciona una foto de perfil para que otros usuarios puedan conocerte mejor. Esta imagen es importante para conectar con otros y ofrecer tus servicios de manera efectiva.',
+          ),
+
+          SizedBox(height: 20),
+          Center(
+            child: GestureDetector(
+              onTap: _pickImage,
+              child: Stack(
+                children: [
+                  Container(
+                    width: 170,
+                    height: 170,
                     decoration: BoxDecoration(
-                      color: colorsecundario,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    width: 50,
-                    height: 50,
-                    child: IconButton(
-                      onPressed: () {
-                        _pickImage();
-                      },
-                      icon: const Icon(
-                        Icons.add_a_photo_outlined,
-                      ), // Usa un icono de calendario
-                      color: const Color.fromARGB(255, 255, 255, 255),
-                      iconSize: 25,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-            Row(
-              children: [
-                Expanded(
-                  child: RadioListTile<bool>(
-                    value: true,
-                    fillColor: MaterialStateProperty.resolveWith<Color>((
-                      states,
-                    ) {
-                      if (states.contains(MaterialState.selected)) {
-                        return Theme.of(context).colorScheme.surface;
-                      }
-                      return Theme.of(context).colorScheme.surface;
-                    }),
-                    groupValue: terms,
-                    activeColor: Theme.of(context).colorScheme.surface,
-                    title: Text(
-                      'Acepto los terminos y condiciones',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.surface,
+                      shape: BoxShape.circle,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.07),
+                      border: Border.all(
+                        color: _image != null
+                            ? colorsecundario.withOpacity(0.4)
+                            : Theme.of(
+                                context,
+                              ).colorScheme.surface.withOpacity(0.1),
+                        width: 1.5,
                       ),
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        terms = value;
-                      });
-                    },
+                    child: _image == null
+                        ? Icon(
+                            Icons.person_outline_rounded,
+                            size: 52,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withOpacity(0.2),
+                          )
+                        : ClipOval(
+                            child: Image.file(_image!, fit: BoxFit.cover),
+                          ),
                   ),
-                ),
-                TextButton(
-                  onPressed: () {},
-                  style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).colorScheme.surface,
-                  ),
-                  child: const Text('Leer'),
-                ),
-              ],
+                ],
+              ),
             ),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              onPressed: _Crear,
-              style: ElevatedButton.styleFrom(
-                fixedSize: const Size(300, 50),
-                backgroundColor: colorsecundario,
-                foregroundColor: colorWhite,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+          ),
+          const SizedBox(height: 30),
+          Row(
+            children: [
+              Expanded(
+                child: RadioListTile<bool>(
+                  value: true,
+                  fillColor: MaterialStateProperty.resolveWith<Color>((states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return Theme.of(context).colorScheme.surface;
+                    }
+                    return Theme.of(context).colorScheme.surface;
+                  }),
+                  groupValue: terms,
+                  activeColor: Theme.of(context).colorScheme.surface,
+                  title: Text(
+                    'Acepto los terminos y condiciones',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.7),
+                    ),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      terms = value;
+                    });
+                  },
                 ),
               ),
-              child: const Text('Crear Cuenta', style: TextStyle(fontSize: 18)),
-            ),
-            TextButton(
-              onPressed: () {
-                salir();
-              },
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.surface,
+              TextButton(
+                onPressed: () {},
+                style: TextButton.styleFrom(
+                  foregroundColor: Theme.of(context).colorScheme.surface,
+                ),
+                child: Text(
+                  'Leer',
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    color: colorsecundario,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-              child: const Text('Regresar'),
-            ),
-          ],
-        ),
+            ],
+          ),
+          const SizedBox(height: 30),
+          _nextButton('crear', _Crear),
+          _backButton(),
+        ],
       ),
     );
   }

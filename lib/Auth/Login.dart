@@ -11,6 +11,7 @@ import 'package:gixt/components/inputs/Input_Password.dart';
 import 'package:gixt/config/device.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:gixt/services/Auth/auth_service.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http; // Importar el paquete http
 import 'dart:convert'; // Para trabajar con JSON
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
@@ -60,7 +61,7 @@ class _LoginState extends State<LoginPage> {
     FocusScope.of(context).unfocus();
 
     var device = await DeviceService.getDeviceData();
-     
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -71,7 +72,7 @@ class _LoginState extends State<LoginPage> {
       email: _emailController.text,
       password: _passwordController.text,
       deviceId: device["deviceId"] ?? '',
-      deviceName: device["deviceName"] ?? '', 
+      deviceName: device["deviceName"] ?? '',
       tokenFcm: device["tokenFcm"] ?? '',
     );
 
@@ -153,12 +154,13 @@ class _LoginState extends State<LoginPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Iniciar Sesión',
-              style: TextStyle(
-                fontSize: 34,
-                fontWeight: FontWeight.bold,
-                color: colorsecundario,
+              style: GoogleFonts.poppins(
+                fontSize: 30,
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.surface,
+                letterSpacing: -0.2,
               ),
               textAlign: TextAlign.center,
             ),
@@ -197,9 +199,12 @@ class _LoginState extends State<LoginPage> {
                 ),
                 child: Text(
                   '¿Olvidaste tu contraseña?',
-                  style: TextStyle(
-                    decoration: TextDecoration.underline,
-                    color: Theme.of(context).colorScheme.surface,
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    height: 1.6,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.45),
                   ),
                 ),
               ),
@@ -219,11 +224,13 @@ class _LoginState extends State<LoginPage> {
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
-              child: const Text(
+              child: Text(
                 'Iniciar sesión',
-                style: TextStyle(
+                style: GoogleFonts.poppins(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.surface,
+                  letterSpacing: -0.2,
                 ),
               ),
             ),
@@ -239,9 +246,12 @@ class _LoginState extends State<LoginPage> {
               ),
               child: Text(
                 '¿No tienes cuenta? Regístrate',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).colorScheme.surface,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  height: 1.6,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.45),
                 ),
               ),
             ),

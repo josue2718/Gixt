@@ -25,8 +25,8 @@ class Options extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: SizedBox(
-        width: 150,
-        height: 180,
+        width: 100,
+        height: 140,
         child: Card(
           elevation: 0,
           clipBehavior: Clip.antiAlias,
@@ -62,24 +62,23 @@ class Options extends StatelessWidget {
                   right: 12,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
+                      horizontal: 8,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       color: colorsecundario,
                       borderRadius: BorderRadius.circular(10),
-                      
                     ),
 
                     child: Expanded(
                       child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             name,
                             style: GoogleFonts.poppins(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: colorWhite,
                             ),

@@ -39,7 +39,7 @@ class CardsServicios extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: SizedBox(
         width: 250,
-        child:  Card(
+        child: Card(
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
@@ -54,300 +54,287 @@ class CardsServicios extends StatelessWidget {
                 ),
               );
             },
-         
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20),
-                        ),
-                        child: SizedBox(
-                          height: 150,
-                          width: double.infinity,
-                          child: CachedNetworkImage(
-                            imageUrl: image_url,
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) =>
-                                Center(child: Indicador()),
-                            errorWidget: (context, url, error) =>
-                                const Icon(Icons.broken_image),
-                          ),
+
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                      child: SizedBox(
+                        height: 120,
+                        width: double.infinity,
+                        child: CachedNetworkImage(
+                          imageUrl: image_url,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) =>
+                              Center(child: Indicador()),
+                          errorWidget: (context, url, error) =>
+                              const Icon(Icons.broken_image),
                         ),
                       ),
-                      if (favorito)
-                        Positioned(
-                          top: 12,
-                          right: 70,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: colorWhite.withOpacity(0.95),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                    ),
+
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 9,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorWhite.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
                             ),
-                            child: const Icon(
-                              Icons.favorite_rounded,
-                              color: colorError,
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.star_rounded,
+                              color: Colors.amber,
                               size: 17,
                             ),
-                          ),
-                        ),
-                      Positioned(
-                        top: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorWhite.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                            const SizedBox(width: 4),
+                            Text(
+                              '$stars',
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: colorBlack,
+                                fontWeight: FontWeight.bold,
                               ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                color: Colors.amber,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '$stars',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color:  colorBlack,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      Positioned(
-                        top: 12,
-                        left: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                             color: colorsecundario.withOpacity(0.6),
-                            border: Border.all(color: colorsecundario, width: 1),
-                            borderRadius: BorderRadius.circular(10),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
+                    ),
+                    Positioned(
+                      top: 12,
+                      left: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 11,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorsecundario.withOpacity(0.6),
+                          border: Border.all(color: colorsecundario, width: 1),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.2),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Expanded(
                           child: Text(
                             category,
                             style: GoogleFonts.poppins(
-                              fontSize: 11,
+                              fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color:  colorWhite,
+                              color: colorWhite,
                             ),
                           ),
                         ),
                       ),
+                    ),
 
-                      Positioned(
-                        bottom: 12,
-                        left: 12,
-                        right: 12,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorWhite.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(15),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 6,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            children: [
-                              Circleimage(
-                                w: 36,
-                                h: 36,
-                                image_url: worker_image,
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Proveedor',
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 9,
-                                        color: colorfondo.withOpacity(0.6),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    Text(
-                                      worker,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: colorfondo,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                    Positioned(
+                      bottom: 12,
+                      left: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 5),
-                  Divider(
-                    color: Theme.of(context).colorScheme.surface,
-                    thickness: 2,
-                    indent: 50,
-                    endIndent: 50,
-                  ),
-                  const SizedBox(height: 5),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                name,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Theme.of(context).colorScheme.surface,
-                                  height: 1.2,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              // Descripción
-                              Text(
-                                description,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  color: Theme.of(context).colorScheme.surface.withOpacity(0.7),
-                                  fontWeight: FontWeight.w400,
-                                  height: 1.3,
-                                ),
-                              ),
-
-                              const SizedBox(height: 2),
-
-                              const SizedBox(height: 12),
-
-                              // Precio y acción
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
+                        decoration: BoxDecoration(
+                          color: colorWhite.withOpacity(0.95),
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          children: [
+                            Circleimage(w: 30, h: 30, image_url: worker_image),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Precio
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: colorsecundario,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          '\$',
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            color: colorWhite,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Text(
-                                          price.toStringAsFixed(2),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            color:colorWhite,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
+                                  Text(
+                                    'Proveedor',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 9,
+                                      color: colorfondo.withOpacity(0.6),
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
-
-                                  // Botón de acción
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
-                                      shape: BoxShape.circle,
+                                  Text(
+                                    worker,
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: colorfondo,
                                     ),
-                                    child: Icon(
-                                      Icons.arrow_forward_rounded,
-                                      color: Theme.of(context).colorScheme.surface,
-                                      size: 20,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                Divider(
+                  color: Theme.of(context).colorScheme.surface,
+                  thickness: 2,
+                  indent: 50,
+                  endIndent: 50,
+                ),
+                const SizedBox(height: 5),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment:
+                          MainAxisAlignment.spaceBetween, // ← clave
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.surface,
+                                height: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            // Descripción
+                            Text(
+                              description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surface.withOpacity(0.7),
+                                fontWeight: FontWeight.w400,
+                                height: 1.3,
+                              ),
+                            ),
+
+                            const SizedBox(height: 2),
+                          ],
+                        ),
+
+                        // Precio y acción
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Precio
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorsecundario,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '\$',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: colorWhite,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    price.toStringAsFixed(2),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      color: colorWhite,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ],
                               ),
-
-                              const SizedBox(height: 10),
-                            ],
-                          ),
+                            ),
+                            if (favorito)
+                              Positioned(
+                                top: 12,
+                                right: 70,
+                                child: Icon(
+                                  Icons.favorite_rounded,
+                                  color: colorError,
+                                  size: 25,
+                                ),
+                              ),
+                            // Botón de acción
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.surface.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.arrow_forward_rounded,
+                                color: Theme.of(context).colorScheme.surface,
+                                size: 20,
+                              ),
+                            ),
+                          ],
                         ),
+
+                        const SizedBox(height: 10),
                       ],
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
     );
   }
 }

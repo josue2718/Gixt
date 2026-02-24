@@ -239,7 +239,12 @@ class _PerfilPageState extends State<PerfilPage> {
                     height: 50,
                     width: 50,
                     decoration: BoxDecoration(
-                      color: colorsecundario,
+                      color: colorsecundario.withOpacity(0.6),
+                      border: Border.all(
+                        color: colorsecundario,
+                        width: 1,
+                      ),
+
                       shape: BoxShape.circle,
                     ),
                     child: Center(
@@ -254,12 +259,14 @@ class _PerfilPageState extends State<PerfilPage> {
                   Text(
                     'Mis Ubicaciones',
                     maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.surface,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.6),
                     ),
                   ),
                 ],
@@ -273,10 +280,14 @@ class _PerfilPageState extends State<PerfilPage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  height: 55,
-                  width: 55,
+                  height: 50,
+                  width: 50,
                   decoration: BoxDecoration(
-                    color: colorsecundario,
+                     color: colorsecundario.withOpacity(0.6),
+                      border: Border.all(
+                        color: colorsecundario,
+                        width: 1,
+                      ),
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -290,60 +301,21 @@ class _PerfilPageState extends State<PerfilPage> {
                 SizedBox(height: 10),
                 Text(
                   'Cambiar Contraseña',
+                  textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.surface,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.6),
                   ),
                 ),
               ],
             ),
           ),
-          InkWell(
-            splashColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            hoverColor: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            onTap: () {
-              _logout();
-            },
-            child: Container(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Container(
-                    height: 55,
-                    width: 55,
-                    decoration: BoxDecoration(
-                      color: colorsecundario,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Icon(
-                        Icons.logout, // Tu icono original
-                        size: 25,
-                        color: colorWhite,
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Logout',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                ],
-              ),
-            ),
-          ),
+          
           Consumer<ThemeProvider>(
             builder: (context, themeProvider, child) {
               final isDark = themeProvider.themeMode == ThemeMode.dark;
@@ -360,7 +332,11 @@ class _PerfilPageState extends State<PerfilPage> {
                       height: 55,
                       width: 55,
                       decoration: BoxDecoration(
+                         color: colorsecundario.withOpacity(0.6),
+                      border: Border.all(
                         color: colorsecundario,
+                        width: 1,
+                      ),
                         shape: BoxShape.circle,
                       ),
                       child: Center(
@@ -377,10 +353,14 @@ class _PerfilPageState extends State<PerfilPage> {
 
                   Text(
                     !isDark ? 'Light' : 'Dark',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.surface,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.6),
                     ),
                   ),
 
@@ -388,6 +368,57 @@ class _PerfilPageState extends State<PerfilPage> {
                 ],
               );
             },
+          ),
+          InkWell(
+            splashColor: Colors.transparent,
+            highlightColor: Colors.transparent,
+            hoverColor: Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              _logout();
+            },
+            child: Container(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Container(
+                    height: 50,
+                    width: 50,
+                    decoration: BoxDecoration(
+                       color: colorError.withOpacity(0.6),
+                   
+                      border: Border.all(
+                        color: colorError,
+                        width: 1,
+                      ),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        Icons.logout, // Tu icono original
+                        size: 25,
+                        color: colorWhite,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Logout',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w500,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.6),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -429,50 +460,125 @@ class _PerfilPageState extends State<PerfilPage> {
     );
   }
 
+  Widget _PageHeader(String title, String subtitle) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          subtitle,
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _genderChip(String value, String label, IconData icon) {
+    _gender = user.user[0].gender;
+    final isSelected = _gender == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _gender = value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? colorsecundario.withOpacity(0.08)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected
+                  ? colorsecundario
+                  : Theme.of(context).colorScheme.surface.withOpacity(0.12),
+              width: isSelected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected
+                    ? colorsecundario
+                    : Theme.of(context).colorScheme.surface.withOpacity(0.4),
+              ),
+              const SizedBox(width: 7),
+              Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  color: isSelected
+                      ? colorsecundario
+                      : Theme.of(context).colorScheme.surface.withOpacity(0.55),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildIMGPerfil() {
     _imageUrl = "${user.user[0].image_url}";
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
       child: Column(
         children: [
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: 150,
-                height: 150,
-                decoration: BoxDecoration(shape: BoxShape.circle),
-                child: CircleAvatar(
-                  backgroundColor: Colors.transparent,
-                  backgroundImage: _image != null
-                      ? FileImage(_image!)
-                      : CachedNetworkImageProvider(_imageUrl!),
-                ),
-              ),
-              SizedBox(height: 25),
-              Positioned(
-                bottom: -5,
-                left: 110,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colorsecundario,
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  width: 50,
-                  height: 50,
-                  child: IconButton(
-                    onPressed: () {
-                      _pickImage();
-                    },
-                    icon: const Icon(
-                      Icons.add_a_photo_outlined,
-                    ), // Usa un icono de calendario
-                    color: colorWhite,
-                    iconSize: 25,
+          Center(
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.07),
+                    ),
+                    child: ClipOval(
+                      child: _image != null
+                          ? Image.file(_image!, fit: BoxFit.cover)
+                          : (_imageUrl != null && _imageUrl!.isNotEmpty)
+                          ? Image(
+                              image: CachedNetworkImageProvider(_imageUrl!),
+                              fit: BoxFit.cover,
+                            )
+                          : Icon(
+                              Icons.person_outline_rounded,
+                              size: 52,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surface.withOpacity(0.2),
+                            ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -485,7 +591,6 @@ class _PerfilPageState extends State<PerfilPage> {
     _emailController.text = user.user[0].email;
     _phoneController.text = user.user[0].phone;
     _birth_dateController.text = user.user[0].birth_date;
-    _gender = user.user[0].gender;
 
     return Form(
       key: _formKey,
@@ -493,25 +598,11 @@ class _PerfilPageState extends State<PerfilPage> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
+          _PageHeader(
             'Informacion del Perfil',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.surface,
-              letterSpacing: -0.2,
-            ),
-          ),
-          Text(
             'Asegurate de que la información sea correcta, puedes actualizar tu foto de perfil, nombre, apellido, teléfono, fecha de nacimiento y género.',
-            textAlign: TextAlign.center,
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              height: 1.6,
-              color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
-            ),
           ),
+
           const SizedBox(height: 20),
 
           const SizedBox(height: 30),
@@ -587,60 +678,29 @@ class _PerfilPageState extends State<PerfilPage> {
           const SizedBox(height: 20),
 
           /// GÉNERO
-          Text(
-            'Género',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.surface,
-              fontSize: 15,
-            ),
-          ),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: RadioListTile<String>(
-                  value: 'H',
-                  groupValue: _gender,
-                  fillColor: MaterialStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(MaterialState.selected)) {
-                      return colorsecundario;
-                    }
-                    return Theme.of(context).colorScheme.surface;
-                  }),
-                  title: Text(
-                    'Hombre',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() => _gender = value);
-                  },
+              Text(
+                'GÉNERO',
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  letterSpacing: 0.5,
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.surface.withOpacity(0.38),
                 ),
               ),
-              Expanded(
-                child: RadioListTile<String>(
-                  value: 'M',
-                  groupValue: _gender,
-                  fillColor: MaterialStateProperty.resolveWith<Color>((states) {
-                    if (states.contains(MaterialState.selected)) {
-                      return colorsecundario;
-                    }
-                    return Theme.of(context).colorScheme.surface;
-                  }),
-                  title: Text(
-                    'Mujer',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() => _gender = value);
-                  },
-                ),
+              const SizedBox(height: 5),
+              Row(
+                children: [
+                  _genderChip('H', 'Hombre', Icons.male_rounded),
+                  const SizedBox(width: 12),
+                  _genderChip('M', 'Mujer', Icons.female_rounded),
+                ],
               ),
             ],
           ),
-
           const SizedBox(height: 40),
           SizedBox(
             width: double.infinity,

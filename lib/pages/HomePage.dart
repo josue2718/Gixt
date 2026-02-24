@@ -274,7 +274,7 @@ Widget build(BuildContext context) {
 
                 // Notificaciones
                 IconButton(
-                  icon: const Icon(Icons.notifications_none),
+                  icon: const Icon(Icons.notifications_on_outlined),
                   color: Theme.of(context).colorScheme.surface,
                   iconSize: 28,
                   onPressed: () {},
@@ -371,7 +371,7 @@ Widget build(BuildContext context) {
   Widget _buildCategoriaItem() {
     final isLoading = categorias.categorias.isEmpty;
     return SizedBox(
-      height: 220,
+      height: 200,
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 20 ,vertical: 20),
         scrollDirection: Axis.horizontal,
@@ -404,7 +404,7 @@ Widget build(BuildContext context) {
       return CardsSN(img: 'assets/Banner1.png');
     }
     return SizedBox(
-      height: 400,
+      height: 360,
       child: GridView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
@@ -412,7 +412,7 @@ Widget build(BuildContext context) {
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 1,
           mainAxisSpacing: 30,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.45,
         ),
         itemCount: isLoading
             ? 3 //  skeletons visibles
@@ -544,7 +544,7 @@ Widget build(BuildContext context) {
   Widget _buildServiciosFav() {
     final isLoading1 = fav.servicios.isEmpty;
     return SizedBox(
-      height: 400,
+      height: 360,
       child: GridView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
@@ -552,7 +552,7 @@ Widget build(BuildContext context) {
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 1,
           mainAxisSpacing: 30,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.45,
         ),
         itemCount: isLoading1
             ? 3 //  skeletons visibles

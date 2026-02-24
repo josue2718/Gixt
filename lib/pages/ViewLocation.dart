@@ -75,45 +75,98 @@ BitmapDescriptor? iconoWorker;
 
 
 
-  Future<void> connectGps() async {
-    hubConnection = HubConnectionBuilder()
-        .withUrl("${dotenv.env['API_URL']}/gpsHub")
-        .withAutomaticReconnect()
-        .build();
+  // Future<void> connectGps() async {
+  //   hubConnection = HubConnectionBuilder()
+  //       .withUrl("${dotenv.env['API_URL']}/gpsHub")
+  //       .withAutomaticReconnect()
+  //       .build();
+  //   try {
+  //     await hubConnection!.start();
+  //     print("SignalR conectado");
+  //   } catch (e) {
+  //     print("Error conectando SignalR: $e");
+  //     return;
+  //   }
+    
+  //   hubConnection!.on("ReceiveLocationId", (data) {
+  //     if (data == null || data.length < 3) return;
+  //     try {
+  //       String userId = data[0].toString();
+
+  //       double lat = (data[1] as num).toDouble();
+  //       double lng = (data[2] as num).toDouble();
+
+  //       posicionworker = LatLng(lat, lng);
+
+  //       print("Trabajador: $userId");
+  //       print("Lat: $lat");
+  //       print("Lng: $lng");
+  //       if (!onlocation) {
+  //         print('genrado');
+  //         _irAMiUbicacion();
+  //         getRoute();
+  //       }
+  //       onlocation = true;
+  //       setState(() {});
+  //     } catch (e) {
+  //       print("Error parsing GPS: $e");
+  //     }
+  //   });
+  // }
+
+Future<void> connectGps() async {
+  hubConnection = HubConnectionBuilder()
+      .withUrl("${dotenv.env['API_URL']}/gpsHub")
+      .withAutomaticReconnect()
+      .build();
+  String workerId = "b77a9a22-1c96-4a36-9e40-910debac224d"; // ID único para el worker
+  /// Escuchar ubicación del worker
+  hubConnection!.on("ReceiveLocationId", (data) {
+    if (data == null || data.length < 3) return;
+
     try {
-      await hubConnection!.start();
-      print("SignalR conectado");
-    } catch (e) {
-      print("Error conectando SignalR: $e");
-      return;
-    }
+      String userId = data[0].toString();
 
-    hubConnection!.on("ReceiveLocation", (data) {
-      if (data == null || data.length < 3) return;
-      try {
-        String userId = data[0].toString();
+      double lat = (data[1] as num).toDouble();
+      double lng = (data[2] as num).toDouble();
 
-        double lat = (data[1] as num).toDouble();
-        double lng = (data[2] as num).toDouble();
+      posicionworker = LatLng(lat, lng);
 
-        posicionworker = LatLng(lat, lng);
+      print("Trabajador: $userId");
+      print("Lat: $lat");
+      print("Lng: $lng");
 
-        print("Trabajador: $userId");
-        print("Lat: $lat");
-        print("Lng: $lng");
-        if (!onlocation) {
-          print('genrado');
-          _irAMiUbicacion();
-          getRoute();
-        }
-        onlocation = true;
-        setState(() {});
-      } catch (e) {
-        print("Error parsing GPS: $e");
+      if (!onlocation) {
+        print('Generando ruta...');
+        _irAMiUbicacion();
+        getRoute();
       }
-    });
-  }
 
+      onlocation = true;
+
+      if (mounted) setState(() {});
+    } catch (e) {
+      print("Error parsing GPS: $e");
+    }
+  });
+
+  try {
+    /// Conectar al Hub
+    await hubConnection!.start();
+    print("✅ SignalR conectado");
+
+    /// Unirse al grupo del worker
+    await hubConnection!.invoke(
+      "JoinGroup",
+      args: [workerId],
+    );
+
+    print("✅ Unido al grupo: $workerId");
+
+  } catch (e) {
+    print("❌ Error conectando SignalR: $e");
+  }
+}
   Future<void> _irAMiUbicacion() async {
     // 🔥 MOVER CÁMARA
     _mapController?.animateCamera(

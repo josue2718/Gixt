@@ -154,12 +154,12 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
   SliverAppBar _buildSliverAppBar() {
     return SliverAppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      expandedHeight: 90,
+      expandedHeight: 70,
       pinned: true, //  deja solo la barra pequeña visible
       floating: false, //  NO aparece al subir
       snap: false, // NO animación automática
       elevation: 0,
-      toolbarHeight: 90,
+      toolbarHeight: 70,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back),
         color: Theme.of(context).colorScheme.surface,
@@ -183,7 +183,7 @@ class _ViewLocationPageState extends State<ViewLocationPage> {
         title: Text(
           'Mi Ubicación',
           style: GoogleFonts.poppins(
-            fontSize: 30,
+            fontSize: 25,
             fontWeight: FontWeight.w600,
             color: Theme.of(context).colorScheme.surface,
           ),
