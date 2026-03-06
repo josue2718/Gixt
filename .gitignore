@@ -7,8 +7,9 @@
 .buildlog/
 .history
 .env
-
-
+/lib/resp.dart
+/lib/resp2.dart
+/lib/reps3.dart
 # Flutter repo-specific
 /bin/cache/
 /bin/internal/bootstrap.bat

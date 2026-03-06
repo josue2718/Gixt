@@ -8,6 +8,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:gixt/Auth/Login.dart';
+import 'package:gixt/components/alertExpress.dart';
+import 'package:gixt/config/Notification.dart';
 import 'package:gixt/pages/SinInternet.dart';
 import 'package:gixt/roots/root.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +21,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 /// 🔔 LOCAL NOTIFICATIONS
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 /// 🔔 BACKGROUND HANDLER
 @pragma('vm:entry-point')
@@ -85,6 +88,7 @@ class MyApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
+          navigatorKey: navigatorKey,
           title: 'Gixt',
           theme: lightTheme,
           darkTheme: darkTheme,
@@ -153,42 +157,53 @@ class _SplashScreenState extends State<SplashScreen> {
 
   /// 🔔 FOREGROUND LISTENER
   void _listenForeground() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-      final notification = message.notification;
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
 
-      if (notification != null) {
-        const AndroidNotificationDetails androidDetails =
-            AndroidNotificationDetails(
-          'canal_pedidos',
-          'Pedidos',
-          channelDescription: 'Notificaciones de pedidos',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        );
+    final notification = message.notification;
+    final data = message.data;
 
-        const DarwinNotificationDetails iosDetails =
-            DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-        );
+  final context = navigatorKey.currentContext;
 
-        const NotificationDetails notificationDetails =
-            NotificationDetails(
-          android: androidDetails,
-          iOS: iosDetails,
-        );
+    if (context != null) {
+      handleNotification(context, data, notification);
+    }
+    
 
-        await flutterLocalNotificationsPlugin.show(
-          notification.hashCode,
-          notification.title,
-          notification.body,
-          notificationDetails,
-        );
-      }
-    });
-  }
+    /// Mostrar notificación local solo si hay contenido
+    if (notification != null) {
+
+      const AndroidNotificationDetails androidDetails =
+          AndroidNotificationDetails(
+        'canal',
+        'Notificaciones',
+        channelDescription: 'Notificaciones',
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      const DarwinNotificationDetails iosDetails =
+          DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const NotificationDetails notificationDetails =
+          NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      await flutterLocalNotificationsPlugin.show(
+        notification.hashCode,
+        notification.title,
+        notification.body,
+        notificationDetails,
+      );
+    }
+  });
+}
 
   void _startAnimation() async {
     await Future.delayed(const Duration(milliseconds: 1000));

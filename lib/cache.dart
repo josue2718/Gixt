@@ -7,6 +7,7 @@ class PreferencesService {
   static const String _idKey = 'id';
   static const String _imgKey = 'img';
   static const String _userKey = 'user';
+  
   // Cargar los valores desde SharedPreferences
   Future<Map<String, dynamic>> loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();

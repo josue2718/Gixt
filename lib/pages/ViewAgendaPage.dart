@@ -36,6 +36,7 @@ class _ViewAgendaPageState extends State<ViewAgendaPage> {
     _initial();
   }
 
+
   Future<void> _initial() async {
     bool ok = await agenda.fetchServicioData(widget.id_trabajo);
     if (!ok) {

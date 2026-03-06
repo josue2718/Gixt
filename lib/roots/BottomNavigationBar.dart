@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:gixt/components/colors.dart';
 import 'package:gixt/pages/AgendaPage.dart';
+import 'package:gixt/pages/ExpressPage.dart';
 import 'package:gixt/pages/HomePage.dart';
 import 'package:gixt/pages/PerfilPage.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -19,16 +20,11 @@ class _AppBottomNavigationState extends State<AppBottomNavigation> {
     HomePage(),
     Center(
       child: Text(
-        'Buscar',
+        'Chat',
         style: TextStyle(fontSize: 24, color: Colors.white),
       ),
     ),
-    Center(
-      child: Text(
-        'Buscar',
-        style: TextStyle(fontSize: 24, color: Colors.white),
-      ),
-    ),
+    ExpressPage(),
     AgendaPage(),
     PerfilPage()
   ];

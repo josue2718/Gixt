@@ -59,7 +59,7 @@ class _ViewLocationTimePageState extends State<ViewLocationTimePage> {
   LatLng? get posicion => LatLng(widget.latitude, widget.longitude);
   LatLng? posicionworker = LatLng(20.9674, -89.5926);
   BitmapDescriptor? iconoUsuario;
-BitmapDescriptor? iconoWorker;
+  BitmapDescriptor? iconoWorker;
   @override
   void initState() {
     super.initState();
@@ -70,10 +70,7 @@ BitmapDescriptor? iconoWorker;
 
   Future<void> _initial() async {
     await connectGps();
-    
   }
-
-
 
   // Future<void> connectGps() async {
   //   hubConnection = HubConnectionBuilder()
@@ -87,7 +84,7 @@ BitmapDescriptor? iconoWorker;
   //     print("Error conectando SignalR: $e");
   //     return;
   //   }
-    
+
   //   hubConnection!.on("ReceiveLocationId", (data) {
   //     if (data == null || data.length < 3) return;
   //     try {
@@ -114,59 +111,57 @@ BitmapDescriptor? iconoWorker;
   //   });
   // }
 
-Future<void> connectGps() async {
-  hubConnection = HubConnectionBuilder()
-      .withUrl("${dotenv.env['API_URL']}/gpsHub")
-      .withAutomaticReconnect()
-      .build();
-  String workerId = "b77a9a22-1c96-4a36-9e40-910debac224d"; // ID único para el worker
-  /// Escuchar ubicación del worker
-  hubConnection!.on("ReceiveLocationId", (data) {
-    if (data == null || data.length < 3) return;
+  Future<void> connectGps() async {
+    hubConnection = HubConnectionBuilder()
+        .withUrl("${dotenv.env['API_URL']}/gpsHub")
+        .withAutomaticReconnect()
+        .build();
+    String workerId =
+        "b77a9a22-1c96-4a36-9e40-910debac224d"; // ID único para el worker
+    /// Escuchar ubicación del worker
+    hubConnection!.on("ReceiveLocationId", (data) {
+      if (data == null || data.length < 3) return;
+
+      try {
+        String userId = data[0].toString();
+
+        double lat = (data[1] as num).toDouble();
+        double lng = (data[2] as num).toDouble();
+
+        posicionworker = LatLng(lat, lng);
+
+        print("Trabajador: $userId");
+        print("Lat: $lat");
+        print("Lng: $lng");
+
+        if (!onlocation) {
+          print('Generando ruta...');
+          _irAMiUbicacion();
+          getRoute();
+        }
+
+        onlocation = true;
+
+        if (mounted) setState(() {});
+      } catch (e) {
+        print("Error parsing GPS: $e");
+      }
+    });
 
     try {
-      String userId = data[0].toString();
+      /// Conectar al Hub
+      await hubConnection!.start();
+      print("✅ SignalR conectado");
 
-      double lat = (data[1] as num).toDouble();
-      double lng = (data[2] as num).toDouble();
+      /// Unirse al grupo del worker
+      await hubConnection!.invoke("JoinGroup", args: [workerId]);
 
-      posicionworker = LatLng(lat, lng);
-
-      print("Trabajador: $userId");
-      print("Lat: $lat");
-      print("Lng: $lng");
-
-      if (!onlocation) {
-        print('Generando ruta...');
-        _irAMiUbicacion();
-        getRoute();
-      }
-
-      onlocation = true;
-
-      if (mounted) setState(() {});
+      print("✅ Unido al grupo: $workerId");
     } catch (e) {
-      print("Error parsing GPS: $e");
+      print("❌ Error conectando SignalR: $e");
     }
-  });
-
-  try {
-    /// Conectar al Hub
-    await hubConnection!.start();
-    print("✅ SignalR conectado");
-
-    /// Unirse al grupo del worker
-    await hubConnection!.invoke(
-      "JoinGroup",
-      args: [workerId],
-    );
-
-    print("✅ Unido al grupo: $workerId");
-
-  } catch (e) {
-    print("❌ Error conectando SignalR: $e");
   }
-}
+
   Future<void> _irAMiUbicacion() async {
     // 🔥 MOVER CÁMARA
     _mapController?.animateCamera(
@@ -199,7 +194,7 @@ Future<void> connectGps() async {
       for (var point in result.points) {
         polylineCoordinates.add(LatLng(point.latitude, point.longitude));
       }
-       if (!mounted) return;
+      if (!mounted) return;
       setState(() {
         createPolyline();
       });
@@ -229,25 +224,24 @@ Future<void> connectGps() async {
   //   setState(() {});
   // }
 
-Future<void> _cargarIconos() async {
-  final prefs = await SharedPreferences.getInstance();
-  String? img = prefs.getString('img');
+  Future<void> _cargarIconos() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? img = prefs.getString('img');
 
-  if (img != null) {
-    final response = await http.get(Uri.parse(img));
-    final bytes = response.bodyBytes;
+    if (img != null) {
+      final response = await http.get(Uri.parse(img));
+      final bytes = response.bodyBytes;
 
-    final codec = await ui.instantiateImageCodec(bytes, targetWidth: 80);
-    final frame = await codec.getNextFrame();
-    final data = await frame.image.toByteData(format: ui.ImageByteFormat.png);
+      final codec = await ui.instantiateImageCodec(bytes, targetWidth: 80);
+      final frame = await codec.getNextFrame();
+      final data = await frame.image.toByteData(format: ui.ImageByteFormat.png);
 
-    iconoUsuario = BitmapDescriptor.fromBytes(data!.buffer.asUint8List());
-    iconoWorker = BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+      iconoUsuario = BitmapDescriptor.fromBytes(data!.buffer.asUint8List());
+      iconoWorker = BitmapDescriptor.fromBytes(data.buffer.asUint8List());
+    }
+
+    setState(() {});
   }
-
-  setState(() {});
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -325,22 +319,21 @@ Future<void> _cargarIconos() async {
             },
 
             markers: {
-            Marker(
-              markerId: MarkerId("ubicacion"),
-              position: posicion!,
-              icon: iconoUsuario ?? BitmapDescriptor.defaultMarker,
-              infoWindow: const InfoWindow(title: "Tú"),
-            ),
-            if(onlocation)...[
-            
-            Marker(
-              markerId: MarkerId("worker"),
-              position: posicionworker!,
-              icon: iconoWorker ?? BitmapDescriptor.defaultMarker,
-              infoWindow: const InfoWindow(title: "Worker"),
-            ),
-            ]
-          },
+              Marker(
+                markerId: MarkerId("ubicacion"),
+                position: posicion!,
+                icon: iconoUsuario ?? BitmapDescriptor.defaultMarker,
+                infoWindow: const InfoWindow(title: "Tú"),
+              ),
+              if (onlocation) ...[
+                Marker(
+                  markerId: MarkerId("worker"),
+                  position: posicionworker!,
+                  icon: iconoWorker ?? BitmapDescriptor.defaultMarker,
+                  infoWindow: const InfoWindow(title: "Worker"),
+                ),
+              ],
+            },
           ),
           Positioned(
             bottom: 150,

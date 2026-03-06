@@ -19,6 +19,7 @@ import 'package:gixt/components/inputs/Input_Phone.dart';
 import 'package:gixt/components/inputs/Pick_Image.dart';
 import 'package:gixt/pages/UbicacionesPage.dart';
 import 'package:gixt/providers/theme_provider.dart';
+import 'package:gixt/services/Express/ExpressCache.dart';
 import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
 import 'package:gixt/services/ubicaciones/location_service.dart';
 import 'package:gixt/services/user/User_service.dart';
@@ -107,7 +108,9 @@ class _PerfilPageState extends State<PerfilPage> {
     );
     if (!continuar!) return;
     final prefs = await SharedPreferences.getInstance();
+    final prefsService = PreferencesExpressService();
     await prefs.clear();
+    await prefsService.clearPreferences();
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),

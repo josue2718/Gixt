@@ -1,78 +1,508 @@
-import 'dart:io';
-import 'dart:math';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart';
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:gixt/cache.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:gixt/components/BarStatus.dart';
+import 'package:gixt/components/CircleImage.dart';
 import 'package:gixt/components/Indicador.dart';
 import 'package:gixt/components/alert.dart';
-import 'package:gixt/components/cards/cardsImage.dart';
-import 'package:gixt/components/circleimage.dart';
+import 'package:gixt/components/alertExpress.dart';
+import 'package:gixt/components/categoriasoption.dart';
 import 'package:gixt/components/colors.dart';
-import 'package:gixt/components/sketor/cardsImg.dart';
-import 'package:gixt/pages/reservapage.dart';
-import 'package:gixt/services/servicios/favorite_service.dart';
-import 'package:gixt/services/servicios/serviciosbyid_service.dart';
-import 'package:gixt/services/user/update_service.dart';
-import 'package:gixt/services/user/User_service.dart';
+import 'package:gixt/components/inputs/Input.dart';
+import 'package:gixt/components/inputs/InputTap.dart';
+import 'package:gixt/components/inputs/Input_Description.dart';
+import 'package:gixt/components/inputs/Input_Price.dart';
+import 'package:gixt/components/inputs/Pick_Image.dart';
+import 'package:gixt/components/sketor/opciones.dart';
+import 'package:gixt/config/Notifiers/express_notifiers.dart' hide expressNotifier;
+import 'package:gixt/services/Express/ExpressCache.dart';
+import 'package:gixt/services/Express/Express_Id_service.dart';
+import 'package:gixt/services/Express/add_express_Service.dart';
+import 'package:gixt/services/servicios/categorias_service.dart';
+import 'package:gixt/services/ubicaciones/geocoding_helper.dart';
+import 'package:gixt/services/ubicaciones/location_service.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:keyboard_dismisser/keyboard_dismisser.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:shimmer/shimmer.dart';
+import 'dart:io';
 
-class ServicioPage extends StatefulWidget {
-  const ServicioPage({super.key, required this.service_id});
-  final String service_id;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:signalr_netcore/hub_connection.dart';
+import 'package:signalr_netcore/hub_connection_builder.dart';
+
+class ExpressPage extends StatefulWidget {
+  const ExpressPage({super.key});
+  static bool tieneDatos = false;
   @override
-  State<ServicioPage> createState() => _ServicioPageState();
+  State<ExpressPage> createState() => _ExpressPageState();
 }
 
-class _ServicioPageState extends State<ServicioPage> {
+class _ExpressPageState extends State<ExpressPage>
+  with TickerProviderStateMixin {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _categoryController = TextEditingController();
+  final Categorias_service category = Categorias_service();
+  int? _categoriaSeleccionada;
+  String? _categoriaSelec;
+  GoogleMapController? _mapController;
+  final ExpressById_service express = ExpressById_service();
+  final prefsService = PreferencesExpressService();
+  int _paginaActual = 0;
   bool isLoading = false;
-  bool hasMore = true;
-  final ServiciosById_service serviciosById = ServiciosById_service();
-  final ScrollController _scrollController = ScrollController();
-  bool fav = false;
+  bool isactive = false;
+  bool isaccept = false;
+  bool isSearch = false;
+  bool timeout = false;
+  Set<Polyline> polylines = {};
+  HubConnection? hubConnection;
+
+  double longitude = 0;
+  double latitude = 0;
+  File? _image;
+  String? calle;
+  String? ciudad;
+  String? estado;
+  String? pais;
+  String? _payment;
+  String? colonia;
+  LatLng posicionActual = const LatLng(20.9674, -89.5926);
+  LatLng? posicionworker = LatLng(20.9674, -89.5926);
+  Timer? _radarTimer;
+  double _radarSize = 120; // tamaño inicial
+  double _currentZoom = 17;
+  bool onlocation = false;
+
+  // 🔥 controladores del círculo pulsante
+  late AnimationController _pulseController;
+  late AnimationController _ripple1Controller;
+  late AnimationController _ripple2Controller;
+  late AnimationController _ripple3Controller;
 
   @override
   void initState() {
     super.initState();
-    print("Entré a Mi Servicio");
-    _initial();
+    print("Entré a crear servicio");
+    _Initial();
+    obtenerCoordenadas();
+    expressNotifier.addListener(_onRefresh);
+    expressStatusNotifier.addListener(_reload);
+
+    // círculo central que late
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    // tres ondas que salen hacia afuera con delay
+    _ripple1Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+
+    _ripple2Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+
+    _ripple3Controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    )..repeat();
+
+    // stagger: cada onda empieza 600ms después
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) _ripple2Controller.value = 0.3;
+    });
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) _ripple3Controller.value = 0.6;
+    });
   }
 
-  Future<void> _initial() async {
-    bool ok = await serviciosById.fetchServicioData(widget.service_id);
-    if (!ok) {
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    _ripple1Controller.dispose();
+    _ripple2Controller.dispose();
+    _ripple3Controller.dispose();
+    _nameController.dispose();
+    _descriptionController.dispose();
+    _priceController.dispose();
+    _categoryController.dispose();
+    super.dispose();
+  }
+
+Future<void> connectGps() async {
+    hubConnection = HubConnectionBuilder()
+        .withUrl("${dotenv.env['API_URL']}/gpsHub")
+        .withAutomaticReconnect()
+        .build();
+    String workerId =
+        "26bb5b13-bbe7-4c6e-a5bb-33cb6881bbb7"; // ID único para el worker
+    /// Escuchar ubicación del worker
+    hubConnection!.on("ReceiveLocationId", (data) {
+      if (data == null || data.length < 3) return;
+
+      try {
+        String userId = data[0].toString();
+
+        double lat = (data[1] as num).toDouble();
+        double lng = (data[2] as num).toDouble();
+
+        posicionworker = LatLng(lat, lng);
+
+        print("Trabajador: $userId");
+        print("Lat: $lat");
+        print("Lng: $lng");
+
+        if (!onlocation) {
+          print('Generando ruta...');
+          _irAMiUbicacion();
+          getRoute();
+        }
+
+        onlocation = true;
+
+        if (mounted) setState(() {});
+      } catch (e) {
+        print("Error parsing GPS: $e");
+      }
+    });
+
+    try {
+      /// Conectar al Hub
+      await hubConnection!.start();
+      print("✅ SignalR conectado");
+
+      /// Unirse al grupo del worker
+      await hubConnection!.invoke("JoinGroup", args: [workerId]);
+
+      print("✅ Unido al grupo: $workerId");
+    } catch (e) {
+      print("❌ Error conectando SignalR: $e");
+    }
+  }
+
+  
+
+
+  List<LatLng> polylineCoordinates = [];
+
+  Future<void> getRoute() async {
+    PolylinePoints polylinePoints = PolylinePoints(
+      apiKey: "AIzaSyAjcb5WA1kNYLE5Gchmx1sNnpZM31vzXF8",
+    );
+
+    PolylineRequest request = PolylineRequest(
+      origin: PointLatLng(posicionworker!.latitude, posicionworker!.longitude),
+      destination: PointLatLng(posicionActual!.latitude, posicionActual!.longitude),
+      mode: TravelMode.driving,
+    );
+
+    PolylineResult result = await polylinePoints.getRouteBetweenCoordinates(
+      request: request,
+    );
+
+    if (result.points.isNotEmpty) {
+      polylineCoordinates.clear();
+
+      for (var point in result.points) {
+        polylineCoordinates.add(LatLng(point.latitude, point.longitude));
+      }
       if (!mounted) return;
+      setState(() {
+        createPolyline();
+      });
+    }
+  }
+
+  void createPolyline() {
+    polylines.add(
+      Polyline(
+        polylineId: PolylineId("ruta"),
+        points: polylineCoordinates,
+        width: 5,
+      ),
+    );
+  }
+  Future<void> _irAMiUbicacion() async {
+    final position = await Geolocator.getCurrentPosition();
+    final nuevaPos = LatLng(position.latitude, position.longitude);
+    setState(() {
+      posicionActual = nuevaPos;
+      latitude = position.latitude;
+      longitude = position.longitude;
+    });
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: nuevaPos, zoom: 50),
+      ),
+    );
+    getcalle();
+  }
+  
+  void _reload() async{
+    if (!mounted) return;
+    final prefs = await SharedPreferences.getInstance();
+
+    String? id_user = prefs.getString('express_id');
+    print(id_user);
+    if (!mounted) return;
+      setState(() {
+        print('Actualizando datos... $id_user');
+      });
+      bool ok = await express.fetchServicioData(id_user!);
+          await connectGps();
+      setState(() {
+        isaccept = true;
+        isSearch = false;
+        
+      });
+      if (!ok) {
+        if (!mounted) return;
+        Future.microtask(() async {
+          await mostrarAlerta(
+            context,
+            title: "Error",
+            message: "No se pudo obtener la información",
+            type: alert_type.error,
+          );
+
+        });
+      }
+
+    setState(() {
+      // recarga tu data aquí
+    });
+  }
+  
+  void getcalle() {
+    GeocodingHelper.obtenerCiudadDesdeCoordenadas(
+      latitud: latitude,
+      longitud: longitude,
+      onResult:
+          (ciudadResult, calleResult, estadoResult, paisResult, coloniaResult) {
+            setState(() {
+              ciudad = ciudadResult;
+              calle = calleResult;
+              estado = estadoResult;
+              colonia = coloniaResult;
+              pais = paisResult;
+            });
+          },
+    );
+  }
+
+  void obtenerCoordenadas() async {
+    try {
+      Position pos = await LocationService.obtenerUbicacion();
+      latitude = pos.latitude;
+      longitude = pos.longitude;
+      setState(() {
+        posicionActual = LatLng(pos.latitude, pos.longitude);
+        _mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: posicionActual, zoom: 17),
+          ),
+        );
+      });
+      getcalle();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _Cancelar() async {
+    bool? ok = await mostrarAlerta(
+      context,
+      title: 'Cancelar Solicitud',
+      message: '¿Estás seguro de cancelar esta solicitud?',
+      type: alert_type.advertencia,
+    );
+    if (ok!) {
+      if (!mounted) return;
+      setState(() {
+        isactive = false;
+        isaccept = false;
+        isSearch = false;
+        prefsService.clearPreferences();
+      });
+    }
+  }
+
+  void _Crear() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (_image == null) {
+      mostrarAlerta(
+        context,
+        title: 'Imagen requerida',
+        message: 'Por favor ingresa una imagen',
+        type: alert_type.advertencia,
+      );
+      return;
+    }
+    if (_payment == null) {
+      mostrarAlerta(
+        context,
+        title: 'Método de pago requerido',
+        message: 'Selecciona un método de pago',
+        type: alert_type.advertencia,
+      );
+      return;
+    }
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Indicador(),
+    );
+
+    final result = await AddExpressService.Crear(
+      problem: _nameController.text,
+      description: _descriptionController.text,
+      price: double.parse(_priceController.text),
+      category_id: _categoriaSeleccionada!,
+      image: _image!,
+      latitude: latitude,
+      longitude: longitude,
+      maps_address: "$calle, $ciudad",
+      payment_method: _payment!,
+    );
+
+    Navigator.pop(context);
+
+    if (result['success'] == true) {
+      setState(() => isactive = true);
+      setState(() => isSearch = true);
+      radar();
       Future.microtask(() async {
         await mostrarAlerta(
           context,
-          title: "Error",
-          message: "No se pudo obtener la información",
-          type: alert_type.error,
+          title: "Solicitud Enviada",
+          message: "Espera que alguien te acepte",
+          type: alert_type.exito,
         );
-
-        Navigator.pop(context);
       });
+    } else {
+      mostrarAlerta(
+        context,
+        title: "Error",
+        message: result['message'],
+        type: alert_type.error,
+      );
     }
+  }
 
-    setState(() {
-      fav = serviciosById.servicios[0].favorite;
+  void radar() {
+    _radarTimer?.cancel();
+
+    _radarTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!isSearch) {
+        timer.cancel();
+        return;
+      }
+
+      setState(() {
+        posicionActual = LatLng(latitude, longitude);
+
+        // 🔥 Aumenta tamaño del radar
+        _radarSize += 10;
+
+        // 🔥 Se aleja el zoom poco a poco
+        _currentZoom -= 0.1;
+
+        if (_radarSize > 250) {
+          _radarSize = 120; // reinicia tamaño
+          _currentZoom = 17; // reinicia zoom
+        }
+
+        _mapController?.animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: posicionActual, zoom: _currentZoom),
+          ),
+        );
+      });
     });
+  }
+
+  Future<void> _pickImage(int index) async {
+    final File? image = await pickAndCropImage(context);
+    if (image != null) setState(() => _image = image);
+  }
+
+  Future<void> _Initial() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    bool? is_accpet = prefs.getBool('express_is_accept');
+    setState(() {
+      isLoading = true;
+      timeout = false;
+      isaccept = is_accpet ?? false;
+      isactive =  is_accpet ?? false;
+      
+    });
+    print(is_accpet);
+    if( is_accpet ?? false)
+    {
+      _reload();
+    }
+    bool okData = await category.fetchCategoriasData();
+    if (!okData) {
+      if (!mounted) return;
+      mostrarAlerta(
+        context,
+        title: "Error",
+        message: "No se pudo obtener la información",
+        type: alert_type.error,
+      );
+    }
+    _Validation();
+  }
+
+  Future<void> _Validation() async {
+    Future.delayed(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      if (isLoading) setState(() => timeout = true);
+    });
+    if (!mounted) return;
+    setState(() {
+      if (category.categorias.isNotEmpty) isLoading = false;
+    });
+  }
+
+  bool salir() {
+    if (_paginaActual != 0) {
+      setState(() => _paginaActual--);
+      return false;
+    } else {
+      Navigator.pop(context);
+      return true;
+    }
   }
 
   Future<void> _onRefresh() async {
+    final id = expressNotifier.id;
+
+    if (id != null) {
+      print("Nuevo ID recibido: $id");
+    
+    }
+    if (!mounted) return;
     setState(() {
-      print('Actualizando datos...');
-      hasMore = true;
+      print('Actualizando datos... $id');
     });
-    bool ok = await serviciosById.fetchServicioData(widget.service_id);
+    bool ok = await express.fetchServicioData(id!);
+    setState(() {
+      isaccept = true;
+      isSearch= false;
+    });
     if (!ok) {
       if (!mounted) return;
       Future.microtask(() async {
@@ -83,303 +513,739 @@ class _ServicioPageState extends State<ServicioPage> {
           type: alert_type.error,
         );
 
-        Navigator.pop(context);
       });
     }
-    setState(() {});
-  }
-
-  void _fav() async {
+    await prefsService.savePreferences(
+      id: id!,
+      status: express.express[0].job_status ,
+      isaccept: isaccept,
+    );
     setState(() {
-      fav = !fav;
+        expressNotifier.clear();
     });
-    final result = await FavoritoService.Crear(service_id: widget.service_id);
-    print(result);
-    if (result['success'] == true) {
-      setState(() {
-        fav = fav;
-      });
-    } else {
-      setState(() {
-        fav = fav;
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return KeyboardDismisser(
-      child: Scaffold(
-        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        body: FutureBuilder(
-          future: Future.wait([]),
-          builder: (context, snapshot) {
-            if (serviciosById.servicios.isEmpty) {
-              return Indicador();
-            }
-            return KeyboardDismisser(
-              child: Scaffold(
-                backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-                body: RefreshIndicator(
-                  onRefresh: _onRefresh,
-                  child: CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildSliverAppBar(),
-                      SliverPadding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
+    return WillPopScope(
+      onWillPop: () async => salir(),
+      child: KeyboardDismisser(
+        child: Scaffold(
+          resizeToAvoidBottomInset: true,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+          body: Stack(
+            children: [
+              // 🗺️ MAPA DE FONDO
+              Positioned.fill(child: _buildMap()),
+
+              // 📋 PANEL ARRASTRABLE
+              if (_paginaActual == 0)
+                DraggableScrollableSheet(
+                  initialChildSize: 0.45,
+                  minChildSize: 0.40,
+                  maxChildSize: 0.92,
+                  expand: true,
+                  snap: true,
+                  snapSizes: const [0.45, 0.92],
+                  builder: (context, scrollController) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(24),
                         ),
-                        sliver: SliverList(
-                          delegate: SliverChildListDelegate([
-                            const SizedBox(height: 20),
-                            _buildServicio().animate().fade().slideX(
-                              begin: -0.2,
-                            ),
-                            const SizedBox(height: 10),
-                            _buildTrabajador()
-                                .animate()
-                                .fade(duration: 400.ms)
-                                .scale(begin: const Offset(0.9, 0.9)),
-                            const SizedBox(height: 20),
-                            _buildImgServicios(),
-                          ]),
-                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.25),
+                            blurRadius: 24,
+                            offset: const Offset(0, -4),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: _buildFormularioInfo(),
+                      ),
+                    );
+                  },
                 ),
-                bottomNavigationBar: _bottomBar(context),
-              ),
-            );
-          },
+
+              // 📂 CATEGORÍAS (página 1)
+              if (_paginaActual == 1)
+                Container(
+                  color: Theme.of(context).scaffoldBackgroundColor,
+                  child: _buidFormularioCategoria(),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  SliverAppBar _buildSliverAppBar() {
-    return SliverAppBar(
-      backgroundColor: const Color.fromRGBO(0, 0, 0, 0),
-      expandedHeight: 200,
-      pinned: false,
-      floating: false, //  sin efecto raro
-      snap: false, //  sin delay
-      elevation: 0,
-      toolbarHeight: 90,
+  Widget _buildFormularioInfo() {
 
-      iconTheme: IconThemeData(color: colorWhite),
-
-      flexibleSpace: FlexibleSpaceBar(
-        centerTitle: true,
-        title:
-            const SizedBox(), //  quitamos title para evitar desplazamientos
-
-        background: Stack(
-          fit: StackFit.expand,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            ///  IMAGEN
-            CachedNetworkImage(
-              imageUrl: serviciosById.servicios[0].image,
-              fit: BoxFit.cover,
-              placeholder: (context, url) => const Center(child: Indicador()),
-              errorWidget: (context, url, error) =>
-                  const Icon(Icons.broken_image),
-            ),
-
-            /// GRADIENTE
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
-                  colors: [Colors.black.withOpacity(0.6), Colors.transparent],
+            // handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
 
-            ///  NOMBRE + BOTONES
-            Positioned(
-              bottom: 5,
-              left: 16,
-              right: 16,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // título o estado activo
+            isactive ? _buildEstadoActivo() : _buildTituloFormulario(),
+
+            const SizedBox(height: 20),
+
+            // campos del formulario (se ocultan cuando está activo)
+            if (!isactive) ...[
+              CustomTextFormFieldTap(
+                controller: _categoryController,
+                label: 'Tipo de ayuda que necesitas',
+                icon: Icons.category_outlined,
+                readOnly: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return 'Selecciona una categoría';
+                  return null;
+                },
+                tap: () => setState(() => _paginaActual++),
+              ),
+              const SizedBox(height: 16),
+
+              CustomTextFormField(
+                controller: _nameController,
+                label: 'Qué problema tienes',
+                icon: Icons.report_problem_outlined,
+                readOnly: false,
+                validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return 'Por favor ingresa el problema';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              CustomDescriptionFormField(
+                controller: _descriptionController,
+                minLines: 2,
+                maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return 'Por favor agrega una descripción';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+
+              Row(
                 children: [
-                  /// NOMBRE
-                  Text(
-                    serviciosById.servicios[0].service_name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  Expanded(
+                    child: CustomTextFormFieldPrice(
+                      controller: _priceController,
+                      label: 'Precio a proponer',
+                      validator: (value) {
+                        if (value == null || value.isEmpty)
+                          return 'Ingresa el precio';
+                        return null;
+                      },
                     ),
                   ),
+                  const SizedBox(width: 16),
+                  imageBox(0),
+                ],
+              ),
+              const SizedBox(height: 20),
 
-                  const SizedBox(height: 0),
+              // método de pago
+              Text(
+                'Método de pago',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: _paymentChip(
+                      value: 'cash',
+                      label: 'Efectivo',
+                      icon: Icons.payments_outlined,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _paymentChip(
+                      value: 'card',
+                      label: 'Tarjeta',
+                      icon: Icons.credit_card_outlined,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
 
-                  /// BOTONES PEGADOS A LA DERECHA
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      IconButton(
-                        onPressed: _fav,
-                        icon: Icon(
-                          Icons.favorite,
-                          size: 32,
-                          color: !fav ? colorWhite : colorError,
-                        ),
+            // botón crear / cancelar
+            _buildbottom()
+              .animate()
+              .fade(duration: 450.ms, delay: 60.ms)
+              .slideX(begin: -0.2),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTituloFormulario() {
+    return Column(
+      children: [
+        Text(
+          'Servicio Express',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Llena la información y sube una imagen de referencia',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.poppins(
+            fontSize: 12,
+            height: 1.6,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEstadoActivo() {
+    if (isaccept && express.express.isEmpty) {
+      return const SizedBox(height: 120, child: Center(child: Indicador()));
+    }
+    return Column(
+      children: [
+        if (!isaccept) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.green,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Buscando técnico...',
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Theme.of(context).colorScheme.surface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'El radar está activo en el mapa. Espera a que alguien acepte.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.poppins(
+              fontSize: 12,
+              height: 1.5,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+            ),
+          ),
+        ],
+        const SizedBox(height: 14),
+
+        if (isaccept) ...[
+          Barstatus(
+            estadoTrabajo: express.express[0].job_status.isEmpty
+                ? ''
+                : express.express[0].job_status,
+          ),
+        ],
+
+        SizedBox(height: 20),
+        _buildTrabajo()
+            .animate()
+            .fade(duration: 450.ms, delay: 60.ms)
+            .slideX(begin: -0.2),
+        SizedBox(height: 20),
+        if (isaccept) ...[
+          _buildWorker()
+              .animate()
+              .fade(duration: 450.ms, delay: 60.ms)
+              .slideX(begin: -0.2),
+          const SizedBox(height: 16),
+          
+        ],
+       
+      ],
+    );
+  }
+
+  Widget _buildMap() {
+    final h = MediaQuery.of(context).size.height;
+    return Stack(
+      children: [
+        SizedBox(
+          height: h,
+          child: GoogleMap(
+            initialCameraPosition: CameraPosition(
+              target: posicionActual,
+              zoom: 16,
+            ),
+            scrollGesturesEnabled: !isactive,
+            zoomGesturesEnabled: !isactive,
+            rotateGesturesEnabled: !isactive,
+            tiltGesturesEnabled: !isactive,
+            onMapCreated: (controller) => _mapController = controller,
+            gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+              Factory<OneSequenceGestureRecognizer>(
+                () => EagerGestureRecognizer(),
+              ),
+            },
+            onTap: (pos) {
+              setState(() {
+                posicionActual = pos;
+                latitude = pos.latitude;
+                longitude = pos.longitude;
+              });
+              getcalle();
+            },
+            markers: {
+              Marker(
+                markerId: const MarkerId("ubicacion"),
+                position: posicionActual,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueBlue,
+                ),
+              ),
+              if(onlocation && isaccept)...[
+               Marker(
+                markerId: const MarkerId("Trabajador"),
+                position: posicionworker!,
+                icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueOrange,
+                ),
+              ),
+              ]
+            },
+          ),
+        ),
+
+        // botón mi ubicación
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 12,
+          right: 12,
+          child: GestureDetector(
+            onTap: _irAMiUbicacion,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.my_location_rounded,
+                color: colorsecundario,
+                size: 20,
+              ),
+            ),
+          ),
+        ),
+
+        // chip de dirección
+        if (calle != null)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 12,
+            left: 12,
+            right: 64,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on_rounded,
+                    color: colorsecundario,
+                    size: 14,
+                  ),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '$calle, $ciudad',
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: Colors.white70,
                       ),
-
-                      const SizedBox(width: 10), // separación
-
-                      IconButton(
-                        onPressed: () {},
-                        icon: Icon(Icons.share, size: 32, color: colorWhite),
-                      ),
-                    ],
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
+          ).animate().fadeIn(delay: 300.ms).slideY(begin: -0.2),
+
+        // 🔥 RADAR EN EL MAPA — solo cuando isactive
+        if (isSearch)
+          Positioned.fill(child: Center(child: _buildRadarEnMapa())),
+      ],
+    );
+  }
+
+  Widget _buildRadarEnMapa() {
+    return SizedBox(
+      width: 300,
+      height: 300,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // onda 1
+          AnimatedBuilder(
+            animation: _ripple1Controller,
+            builder: (_, __) {
+              final v = _ripple1Controller.value;
+              return Container(
+                width: 60 + (240 * v),
+                height: 60 + (240 * v),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorsecundario.withOpacity((1 - v) * 0.12),
+                  border: Border.all(
+                    color: colorsecundario.withOpacity((1 - v) * 0.5),
+                    width: 1.5,
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // onda 2
+          AnimatedBuilder(
+            animation: _ripple2Controller,
+            builder: (_, __) {
+              final v = _ripple2Controller.value;
+              return Container(
+                width: 60 + (240 * v),
+                height: 60 + (240 * v),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorsecundario.withOpacity((1 - v) * 0.12),
+                  border: Border.all(
+                    color: colorsecundario.withOpacity((1 - v) * 0.5),
+                    width: 1.5,
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // onda 3
+          AnimatedBuilder(
+            animation: _ripple3Controller,
+            builder: (_, __) {
+              final v = _ripple3Controller.value;
+              return Container(
+                width: 60 + (240 * v),
+                height: 60 + (240 * v),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorsecundario.withOpacity((1 - v) * 0.12),
+                  border: Border.all(
+                    color: colorsecundario.withOpacity((1 - v) * 0.5),
+                    width: 1.5,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTitle() {
-    return Expanded(
-      child: Text(
-        serviciosById.servicios[0].service_name,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: TextStyle(
-          fontSize: 25,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.surface,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTrabajador() {
-    return Column(
-      children: [
-        SizedBox(height: 20),
-        Row(
+  Widget _buidFormularioCategoria() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(height: 20),
             Text(
-              'Trabajador',
+              'Categoría del servicio',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
                 color: Theme.of(context).colorScheme.surface,
               ),
             ),
-            Spacer(),
+            const SizedBox(height: 6),
+            Text(
+              'Selecciona la categoría que mejor describa tu servicio',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                height: 1.6,
+                color: Theme.of(context).colorScheme.surface.withOpacity(0.45),
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildCategoriaItem(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoriaItem() {
+    final isLoadingCats = category.categorias.isEmpty;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 1,
+        mainAxisSpacing: 12,
+        childAspectRatio: 4,
+      ),
+      itemCount: isLoadingCats ? 3 : category.categorias.length,
+      itemBuilder: (context, index) {
+        if (isLoadingCats) return const OptionsSkeleton();
+        final categoria = category.categorias[index];
+        return OptionsCategorias(
+          nombre: categoria.name,
+          img: categoria.image_url,
+          id: categoria.category_id,
+          selectedId: _categoriaSeleccionada,
+          onSelected: (id) {
+            setState(() {
+              _categoriaSeleccionada = id;
+              _categoryController.text = categoria.name;
+              _paginaActual--;
+            });
+          },
+        ).animate(delay: (index * 50).ms).fade().slideX(begin: -0.15);
+      },
+    );
+  }
+
+  Widget imageBox(int index) {
+    return GestureDetector(
+      onTap: () => _pickImage(index),
+      child: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface.withOpacity(0.05),
+          border: Border.all(
+            color: _image != null
+                ? colorsecundario.withOpacity(0.5)
+                : Theme.of(context).colorScheme.surface.withOpacity(0.12),
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: _image == null
+            ? Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 28,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surface.withOpacity(0.25),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Foto',
+                    style: GoogleFonts.poppins(
+                      fontSize: 11,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.3),
+                    ),
+                  ),
+                ],
+              )
+            : ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.file(
+                  _image!,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              ),
+      ),
+    );
+  }
+
+  Widget _paymentChip({
+    required String value,
+    required String label,
+    required IconData icon,
+  }) {
+    final isSelected = _payment == value;
+    return GestureDetector(
+      onTap: () => setState(() => _payment = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorsecundario.withOpacity(0.08)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? colorsecundario
+                : Theme.of(context).colorScheme.surface.withOpacity(0.12),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
             Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
+              icon,
+              size: 16,
+              color: isSelected
+                  ? colorsecundario
+                  : Theme.of(context).colorScheme.surface.withOpacity(0.4),
+            ),
+            const SizedBox(width: 7),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected
+                    ? colorsecundario
+                    : Theme.of(context).colorScheme.surface.withOpacity(0.55),
+              ),
             ),
           ],
         ),
-        SizedBox(height: 20),
+      ),
+    );
+  }
+
+  Widget _buildWorker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Trabajador',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 14),
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.primary,
             borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.06),
+              width: 1,
+            ),
           ),
           child: Row(
             children: [
               Circleimage(
-                w: 80,
-                h: 80,
-                image_url: serviciosById.servicios[0].worker_img,
+                w: 56,
+                h: 56,
+                image_url: '${express.express[0].worker_image}',
               ),
-              const SizedBox(width: 20),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Row(
-                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Flexible(
                           child: Text(
-                            serviciosById.servicios[0].worker_name,
+                            '${express.express[0].worker_username}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
+                            style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
                               color: Theme.of(context).colorScheme.surface,
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorWhite.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.star_rounded,
-                                color: Colors.amber,
-                                size: 18,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${serviciosById.servicios[0].worker_rating}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 13,
-                                  color: colorBlack,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
+                        Icon(Icons.star_rounded, color: Colors.amber, size: 15),
+                        const SizedBox(width: 3),
+                        Text(
+                           '${express.express[0].worker_rating}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surface.withOpacity(0.7),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      serviciosById.servicios[0].des_trabajador,
+                      '${express.express[0].worker_description}',
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
+                      style: GoogleFonts.poppins(
                         fontSize: 12,
-                        color: Theme.of(context).colorScheme.surface,
+                        height: 1.6,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surface.withOpacity(0.45),
                       ),
                     ),
                   ],
@@ -392,475 +1258,215 @@ class _ServicioPageState extends State<ServicioPage> {
     );
   }
 
-  Widget _buildopcions() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              'Descripción',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
-        ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: colorsecundario, // Fondo suave del mismo color
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.attach_money, // Tu icono original
-                          size: 25,
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Precio',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '\$ ${serviciosById.servicios[0].price}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: colorsecundario, // Fondo suave del mismo color
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.schedule, // Tu icono original
-                          size: 25,
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Duración',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '${serviciosById.servicios[0].price}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Container(
-                      height: 50,
-                      width: 50,
-                      decoration: BoxDecoration(
-                        color: colorsecundario, // Fondo suave del mismo color
-                        shape: BoxShape.circle,
-                        // border: Border.all(
-                        //   color: colorprimario.withOpacity(0.2),
-                        //   width: 1,
-                        // ),
-                      ),
-                      child: Center(
-                        child: Icon(
-                          Icons.star_rounded, // Tu icono original
-                          size: 25,
-                          color: colorWhite,
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      'Estrellas',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                    SizedBox(height: 5),
-                    Text(
-                      '${serviciosById.servicios[0].rating}',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).colorScheme.surface,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildImgServicios() {
-    final isLoading1 = serviciosById.servicios[0].images.isEmpty;
-    return Column(
-      children: [
-        Row(
-          children: [
-            Text(
-              'Mis Referencias ',
-              style: GoogleFonts.poppins(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            InkWell(
-              onTap: () {
-                // Navigator.push(
-                //   context,
-                //   MaterialPageRoute(builder: (context) => CategoriasPage()),
-                // );
-              },
-              child: Icon(
-                Icons.arrow_forward_ios,
-                size: 20,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 200,
-                child: GridView.builder(
-                  controller: _scrollController,
-                  scrollDirection: Axis.horizontal,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 1,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 1.5,
-                  ),
-                  itemCount: isLoading1
-                      ? 3 //  skeletons visibles
-                      : serviciosById.servicios[0].images.length,
-                  itemBuilder: (context, index) {
-                    if (isLoading1) {
-                      return const CardsImgSkeleton();
-                    }
-                    try {
-                      final servicio = serviciosById.servicios[0].images[index];
-
-                      return CardsImage(url_img: servicio)
-                          .animate()
-                          .fade(duration: 400.ms)
-                          .slideY(begin: 0.15)
-                          .scale(begin: const Offset(0.96, 0.96));
-                    } catch (e) {
-                      return const SizedBox(); // widget vacío
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildServicio() {
+  Widget _buildTrabajo() {
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            SizedBox(height: 20),
-            Text(
-              'Descripción',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.surface,
-              ),
-            ),
-            Spacer(),
-            Icon(
-              Icons.home_repair_service,
-              size: 25,
-              color: Theme.of(context).colorScheme.surface,
-            ),
-          ],
-        ),
-        SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        Text(
+          'Problema a resolver',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
           ),
-          child: Text(
-            serviciosById.servicios[0].description,
-            style: TextStyle(
-              fontSize: 15,
-              color: Theme.of(context).colorScheme.surface,
-            ),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '${_nameController.text == '' ? express.express[0].problem : _nameController.text}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
           ),
         ),
 
         SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
+        Text(
+          'Descripción',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
           ),
-          child: Row(
-  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  crossAxisAlignment: CrossAxisAlignment.center,
-  children: [
-    _InfoCard(
-      icon: Icons.monetization_on_outlined,
-      label: 'Precio',
-      value: '\$ ${serviciosById.servicios[0].price}',
-      context: context,
-    ),
-    _VerticalDivider(),
-    _InfoCard(
-      icon: Icons.hourglass_top_rounded,
-      label: 'Duración',
-      value: '${serviciosById.servicios[0].price}',
-      context: context,
-    ),
-    _VerticalDivider(),
-    _InfoCard(
-      icon: Icons.auto_awesome_outlined,
-      label: 'Rating',
-      value: '${serviciosById.servicios[0].rating}',
-      context: context,
-    ),
-  ],
-),
+        ),
+        SizedBox(height: 10),
+        Text(
+          '${_descriptionController.text == '' ? express.express[0].description : _descriptionController.text}',
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            height: 1.75,
+            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
+          ),
+        ),
+        SizedBox(height: 20),
+
+        Text(
+          'Pago y Metodo',
+          style: GoogleFonts.poppins(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Theme.of(context).colorScheme.surface,
+            letterSpacing: -0.2,
+          ),
+        ),
+
+        SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Precio',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+                  Text(
+                    '${isaccept ? express.express[0].price : _priceController.text}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 40,
+              color: Theme.of(context).colorScheme.surface.withOpacity(0.1),
+            ),
+            SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'Metodo',
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surface.withOpacity(0.55),
+                    ),
+                  ),
+
+                  SizedBox(height: 10),
+                  Text(
+                    '${_payment}',
+                    style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+
+                      color: Theme.of(context).colorScheme.surface,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 20),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _buildbottom() {
+   
+
+    IconData icon = Icons.info;
+    String text = '';
+    VoidCallback? action;
+    Color bgColor = colorsecundario;
+    if(isactive)
+    {
+
+     final jobStatus = express.express[0].job_status.toLowerCase() ?? 'pending';
+    switch (jobStatus) {
+      case 'pending':
+      case 'accepted':
+      case 'going':
+      case 'arrived':
+      case 'in_progress':
+        icon = Icons.cancel_outlined;
+        bgColor =Colors.red;
+        text = 'Cancelar solicitud';
+        action = ()
+        {
+          _Cancelar();
+        };
+        break;
+
+      case 'finalized':
+        icon = Icons.payment;
+        text = 'Pagar';
+        action = () {
+          print('pagar');
+        };
+        break;
+      case 'completed':
+        icon = Icons.payment;
+        text = 'ver registro de pago';
+        action = () {
+          print('pagar');
+        };
+        break;
+      default:
+        icon = Icons.help;
+        text = jobStatus;
+        action = null;
+        bgColor = Theme.of(context).colorScheme.surface.withOpacity(0.6);
+    }
+    }
+    else{
+      icon = Icons.flash_on_rounded;
+        text = 'Enviar solicitud';
+        action = (){
+          _Crear();
+        };
+    }
+
+    return SizedBox(
+      width:  double.infinity,
+      child: 
+    ElevatedButton.icon(
+        onPressed: action,
+        icon: Icon(icon, color: colorWhite),
+        label: Text(
+          text,
+          style: const TextStyle(fontSize: 18, color: colorWhite),
+        ),
+        style: ElevatedButton.styleFrom(
+          fixedSize: const Size(300, 50),
+          backgroundColor: bgColor,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+    )
     );
   }
 
   
-
-Widget _bottomBar(BuildContext context) {
-  return SizedBox(
-    height: 90,
-    child: Center(
-      child: ElevatedButton.icon(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ReservaPage(
-                service_id: serviciosById.servicios[0].service_id,
-                name: serviciosById.servicios[0].service_name,
-                description: serviciosById.servicios[0].description,
-              ),
-            ),
-          );
-        },
-
-        /// 🔥 ESTILO
-        style: ElevatedButton.styleFrom(
-          elevation: 0,
-          backgroundColor: colorsecundario,
-          foregroundColor: colorWhite,
-          padding: const EdgeInsets.symmetric(
-            horizontal: 50,
-            vertical: 14,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(18),
-          ),
-        ),
-
-        icon: const Icon(
-          Icons.calendar_month,
-          size: 22,
-        ),
-        label: const Text(
-          'Reservar',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    ),
-  );
-}
-
-}
-
-class _InfoCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final BuildContext context;
-
-  const _InfoCard({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.context,
-  });
-
-  @override
-  Widget build(BuildContext ctx) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 48,
-          width: 48,
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: colorsecundario.withOpacity(0.35),
-              width: 1.4,
-            ),
-          ),
-          child: Icon(
-            icon,
-            size: 22,
-            color: colorsecundario,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            letterSpacing: 0.8,
-            fontWeight: FontWeight.w500,
-            color: Theme.of(context).colorScheme.surface.withOpacity(0.55),
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.2,
-            color: Theme.of(context).colorScheme.surface,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _VerticalDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      width: 1,
-      color: Colors.grey.withOpacity(0.2),
-    );
-  }
 }

@@ -404,7 +404,7 @@ Widget build(BuildContext context) {
       return CardsSN(img: 'assets/Banner1.png');
     }
     return SizedBox(
-      height: 360,
+      height: 370,
       child: GridView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
@@ -544,7 +544,7 @@ Widget build(BuildContext context) {
   Widget _buildServiciosFav() {
     final isLoading1 = fav.servicios.isEmpty;
     return SizedBox(
-      height: 360,
+      height: 370,
       child: GridView.builder(
         controller: _scrollController,
         scrollDirection: Axis.horizontal,
